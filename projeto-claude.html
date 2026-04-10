@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APP_Polimetal – Inspeção</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1038c1;
+    --blue-dark: #0d2fa8;
+    --blue-deeper: #0a2590;
+    --blue-light: #e8eefb;
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --border: #dde3ec;
+    --text: #1a1a2e;
+    --muted: #6b7a96;
+    --danger: #A80000;
+    --success: #107C10;
+    --red-rec: #cc0000;
+    --radius: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* SPLASH */
+  #splash {
+    position: fixed; inset: 0; background: var(--blue);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 1000; transition: opacity 0.6s ease;
+  }
+  #splash .logo-text { font-family: 'Barlow Condensed', sans-serif; font-size: 56px; font-weight: 700; color: white; letter-spacing: 4px; margin-bottom: 12px; }
+  #splash .logo-sub { font-size: 14px; color: rgba(255,255,255,0.7); letter-spacing: 6px; text-transform: uppercase; }
+  #splash .loader { margin-top: 40px; width: 200px; height: 3px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
+  #splash .loader-bar { height: 100%; background: white; border-radius: 3px; animation: load 2.8s ease-in-out forwards; }
+  @keyframes load { 0%{width:0%} 100%{width:100%} }
+  #splash.hidden { opacity: 0; pointer-events: none; }
+
+  /* APP */
+  #app { display: none; min-height: 100vh; flex-direction: column; }
+  #app.visible { display: flex; }
+
+  /* HEADER */
+  header { background: var(--blue); color: white; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.15); flex-shrink: 0; }
+  header .brand { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; }
+  header .subtitle { font-size: 12px; opacity: 0.75; letter-spacing: 1px; text-transform: uppercase; }
+  .badge { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; letter-spacing: 1px; }
+
+  /* LAYOUT */
+  .layout { display: grid; grid-template-columns: 1fr 420px; gap: 20px; padding: 20px 24px; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; }
+
+  /* PANEL */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .panel-header { background: var(--blue); color: white; padding: 12px 20px; font-weight: 600; font-size: 14px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+  .panel-body { padding: 20px; }
+
+  /* FORM GRIDS */
+  .form-grid   { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-grid-id { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+  .field label .req { color: var(--danger); }
+  .field input, .field select {
+    font-family: 'Barlow', sans-serif; font-size: 14px; padding: 9px 12px;
+    border: 1px solid var(--border); border-radius: 4px; color: var(--text);
+    background: #fafbfc; transition: border-color 0.15s, box-shadow 0.15s; width: 100%;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(16,56,193,0.12); background: white; }
+  .field input.error, .field select.error { border-color: var(--danger); }
+  .field .error-msg { font-size: 11px; color: var(--danger); font-weight: 500; display: none; }
+  .field .error-msg.show { display: block; }
+
+  /* ID FIELD */
+  .field-id input { background: #eef3fa; color: var(--blue); font-weight: 700; font-size: 14px; text-align: center; cursor: not-allowed; border-color: rgba(16,56,193,0.3); letter-spacing: 1px; }
+  .auto-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--blue-light); color: var(--blue); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 8px; letter-spacing: 0.5px; }
+
+  /* DROPDOWN */
+  .field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a96' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+  /* SECTION LABEL */
+  .section-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); margin-top: 4px; }
+
+  /* MEDIA TABS */
+  .media-tabs { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 14px; }
+  .media-tab { flex: 1; padding: 9px 10px; font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 600; background: #f4f6f9; color: var(--muted); border: none; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .media-tab:not(:last-child) { border-right: 1px solid var(--border); }
+  .media-tab.active { background: var(--blue); color: white; }
+  .media-tab:hover:not(.active) { background: var(--blue-light); color: var(--blue); }
+
+  .media-panel { display: none; }
+  .media-panel.active { display: block; }
+
+  /* UPLOAD */
+  .photo-upload-area { border: 2px dashed var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; background: #fafbfc; position: relative; }
+  .photo-upload-area:hover { border-color: var(--blue); background: var(--blue-light); }
+  .photo-upload-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .photo-upload-area .uicon { font-size: 28px; color: var(--blue); margin-bottom: 8px; }
+  .photo-upload-area p { font-size: 13px; color: var(--muted); }
+  .photo-upload-area p strong { color: var(--blue); }
+  .photo-thumb { position: relative; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); display: inline-block; }
+  .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin-top: 12px; }
+  .gallery-item { position: relative; aspect-ratio: 1; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+  .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gallery-item .remove { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; background: rgba(0,0,0,0.65); color: white; border: none; border-radius: 50%; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  .gallery-item .remove:hover { background: rgba(168,0,0,0.9); }
+  .gallery-count { font-size: 12px; color: var(--muted); margin-top: 8px; font-weight: 600; }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-thumb .remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .photo-thumb .remove:hover { background: rgba(168,0,0,0.85); }
+
+  /* CAMERA */
+  .camera-container { background: #000; border-radius: var(--radius); overflow: hidden; position: relative; aspect-ratio: 4/3; margin-bottom: 10px; border: 1px solid var(--border); }
+  .cam-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .camera-offline { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.6); font-size: 13px; gap: 10px; }
+  .camera-offline svg { opacity: 0.4; }
+
+  /* REC INDICATOR */
+  .rec-indicator { position: absolute; top: 10px; left: 10px; background: var(--red-rec); color: white; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; display: none; align-items: center; gap: 5px; letter-spacing: 1px; }
+  .rec-indicator.show { display: flex; }
+  .rec-dot { width: 8px; height: 8px; background: white; border-radius: 50%; animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .video-preview-wrap { margin-top: 10px; display: none; }
+  .video-preview-wrap video { width: 100%; border-radius: 6px; border: 1px solid var(--border); display: block; }
+  .video-preview-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+
+  .cam-controls { display: flex; gap: 8px; margin-bottom: 12px; }
+  .cam-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 220px; overflow-y: auto; }
+  .cam-photo-thumb { position: relative; aspect-ratio: 1; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+  .cam-photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cam-photo-thumb .del { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .cam-photo-thumb .del:hover { background: rgba(168,0,0,0.85); }
+
+  .cam-select-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .cam-select-bar label { font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  .cam-select-bar select { flex: 1; font-family: 'Barlow', sans-serif; font-size: 13px; padding: 6px 28px 6px 10px; border: 1px solid var(--border); border-radius: 4px; background: #fafbfc; color: var(--text); appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a96' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+  .cam-select-bar select:focus { outline: none; border-color: var(--blue); }
+
+  /* BUTTONS */
+  .btn { font-family: 'Barlow', sans-serif; font-size: 14px; font-weight: 600; padding: 10px 18px; border-radius: 4px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; white-space: nowrap; }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:hover { background: var(--blue-dark); }
+  .btn-primary:active { background: var(--blue-deeper); transform: scale(0.98); }
+  .btn-secondary { background: var(--blue-light); color: var(--blue); border: 1px solid rgba(16,56,193,0.25); }
+  .btn-secondary:hover { background: #cce4f8; }
+  .btn-danger { background: #fce8e8; color: var(--danger); border: 1px solid rgba(168,0,0,0.2); }
+  .btn-danger:hover { background: #f7d0d0; }
+  .btn-rec { background: var(--red-rec); color: white; }
+  .btn-rec:hover { background: #aa0000; }
+  .btn-sm { padding: 7px 12px; font-size: 13px; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .action-bar { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border); background: #fafbfc; }
+
+  /* TOAST */
+  #toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: var(--radius); font-weight: 600; font-size: 14px; color: white; box-shadow: 0 4px 16px rgba(0,0,0,0.2); transform: translateY(80px); opacity: 0; transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1); z-index: 9999; max-width: 340px; }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { background: var(--success); }
+  #toast.error-toast { background: var(--danger); }
+
+  /* FILTER BAR */
+  .filter-bar { display: grid; grid-template-columns: 80px 1fr 1fr 1fr 1fr 1fr; gap: 6px; padding: 10px 16px; background: #f8fafc; border-bottom: 1px solid var(--border); }
+  .filter-bar input, .filter-bar select {
+    font-family: 'Barlow', sans-serif; font-size: 12px; padding: 5px 8px;
+    border: 1px solid var(--border); border-radius: 4px; color: var(--text);
+    background: white; width: 100%; outline: none;
+  }
+  .filter-bar input:focus, .filter-bar select:focus { border-color: var(--blue); }
+  .filter-bar input::placeholder { color: var(--muted); }
+  .filter-clear { grid-column: 1 / -1; display: flex; justify-content: flex-end; padding-top: 2px; }
+  .filter-clear button { font-family: 'Barlow', sans-serif; font-size: 12px; font-weight: 600; color: var(--muted); background: none; border: none; cursor: pointer; padding: 2px 6px; }
+  .filter-clear button:hover { color: var(--danger); }
+
+  /* TABLE */
+  .records-section { padding: 0 24px 24px; max-width: 1200px; margin: 0 auto; width: 100%; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 14px; background: #f0f3f8; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid #eef1f5; color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafc; }
+  .td-img img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); }
+  .td-media { display: flex; gap: 4px; align-items: center; }
+  .td-media img { width: 32px; height: 32px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); }
+  .count-badge { font-size: 11px; background: var(--blue-light); color: var(--blue); padding: 2px 6px; border-radius: 10px; font-weight: 600; }
+  .video-badge { font-size: 11px; background: #fff0f0; color: var(--danger); padding: 2px 7px; border-radius: 10px; font-weight: 600; border: 1px solid rgba(168,0,0,0.2); }
+  .empty-state { text-align: center; padding: 32px 16px; color: var(--muted); font-size: 13px; }
+
+  /* LOGIN */
+  #loginScreen { position: fixed; inset: 0; background: var(--blue); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+  .login-box { background: white; border-radius: 12px; padding: 40px 36px; width: 100%; max-width: 380px; box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
+  .login-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; justify-content: center; }
+  .login-logo img { height: 44px; }
+  .login-logo span { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 700; color: var(--blue); letter-spacing: 3px; }
+  .login-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 20px; text-align: center; }
+  .login-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+  .login-field label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .login-field input { font-family: 'Barlow', sans-serif; font-size: 14px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 4px; color: var(--text); background: #fafbfc; width: 100%; outline: none; }
+  .login-field input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(16,56,193,0.12); background: white; }
+  .login-btn { width: 100%; margin-top: 6px; padding: 12px; background: var(--blue); color: white; font-family: 'Barlow', sans-serif; font-size: 15px; font-weight: 700; border: none; border-radius: 4px; cursor: pointer; transition: background 0.15s; }
+  .login-btn:hover { background: var(--blue-dark); }
+  .login-error { font-size: 12px; color: var(--danger); font-weight: 600; margin-top: 10px; text-align: center; display: none; }
+  .login-error.show { display: block; }
+  .btn-logout { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 6px 14px; border-radius: 4px; font-family: 'Barlow', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: background 0.15s; }
+  .btn-logout:hover { background: rgba(255,255,255,0.25); }
+  #userInfo { display: flex; align-items: center; gap: 10px; }
+  .user-name { font-size: 13px; opacity: 0.85; }
+
+  /* LIGHTBOX */
+  #lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; align-items: center; justify-content: center; z-index: 5000; flex-direction: column; }
+  #lightbox.open { display: flex; }
+  #lightbox img { max-width: 88vw; max-height: 85vh; border-radius: 6px; object-fit: contain; box-shadow: 0 4px 32px rgba(0,0,0,0.6); user-select: none; }
+  #lightbox .lb-close { position: absolute; top: 16px; right: 20px; color: white; font-size: 32px; cursor: pointer; line-height: 1; opacity: 0.8; z-index: 1; }
+  #lightbox .lb-close:hover { opacity: 1; }
+  .lb-nav { position: absolute; top: 50%; transform: translateY(-50%); color: white; font-size: 56px; font-weight: 300; cursor: pointer; opacity: 0.7; line-height: 1; padding: 0 16px; user-select: none; z-index: 1; }
+  .lb-nav:hover { opacity: 1; }
+  .lb-prev { left: 0; }
+  .lb-next { right: 0; }
+  .lb-counter { position: absolute; bottom: 18px; color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; letter-spacing: 1px; }
+  .clickable-img { cursor: zoom-in; }
+
+  /* CARACTERÍSTICAS DO PRODUTO */
+  .caract-table { width: 100%; border-collapse: collapse; margin-top: 0; font-size: 13px; }
+  .caract-table th {
+    background: var(--blue); color: white; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 10px;
+    text-align: center; border: 1px solid var(--blue-dark);
+  }
+  .caract-table th:first-child { text-align: left; }
+  .caract-table td {
+    padding: 6px 10px; border: 1px solid var(--border);
+    vertical-align: middle; background: white;
+  }
+  .caract-table tr:nth-child(even) td { background: #f8fafc; }
+  .caract-table td:first-child { font-weight: 500; color: var(--text); font-size: 13px; }
+  .caract-table td.caract-cell { text-align: center; width: 110px; }
+  .caract-radio { display: none; }
+  .caract-label {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border: 2px solid var(--border);
+    border-radius: 4px; cursor: pointer; font-size: 18px; font-weight: 700;
+    transition: all 0.15s; background: white; user-select: none;
+  }
+  .caract-radio:checked + .caract-label { border-color: var(--blue); }
+  /* Conforme = verde */
+  .caract-radio.r-c:checked + .caract-label {
+    background: #e6f4ea; border-color: #2e7d32; color: #2e7d32;
+  }
+  /* Não Conforme = vermelho */
+  .caract-radio.r-nc:checked + .caract-label {
+    background: #fce8e8; border-color: var(--danger); color: var(--danger);
+  }
+  /* Não Aplicável = cinza */
+  .caract-radio.r-na:checked + .caract-label {
+    background: #f0f0f0; border-color: #888; color: #555;
+  }
+  .caract-label:hover { border-color: var(--blue); background: var(--blue-light); }
+  .caract-err { font-size: 11px; color: var(--danger); display: none; padding: 4px 10px; }
+  .caract-err.show { display: block; }
+
+  /* Badges na tabela de registros */
+  .badge-c  { display:inline-block;padding:1px 6px;border-radius:10px;font-size:11px;font-weight:700;background:#e6f4ea;color:#2e7d32;border:1px solid #a5d6a7; }
+  .badge-nc { display:inline-block;padding:1px 6px;border-radius:10px;font-size:11px;font-weight:700;background:#fce8e8;color:#a80000;border:1px solid #ef9a9a; }
+  .badge-na { display:inline-block;padding:1px 6px;border-radius:10px;font-size:11px;font-weight:700;background:#f0f0f0;color:#555;border:1px solid #bbb; }
+</style>
+</head>
+<body>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="lbOverlayClick(event)">
+  <span class="lb-close" onclick="closeLightbox()">✕</span>
+  <span class="lb-nav lb-prev" onclick="event.stopPropagation();lbNav(-1)">&#8249;</span>
+  <img id="lightboxImg" src="" alt="" />
+  <span class="lb-nav lb-next" onclick="event.stopPropagation();lbNav(1)">&#8250;</span>
+  <div class="lb-counter" id="lbCounter"></div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo" style="flex-direction:column;gap:8px;">
+      <img src="data:image/png;base64,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" alt="Logo" style="height:64px;width:64px;object-fit:contain;border-radius:8px;" />
+      <span>POLIMETAL</span>
+    </div>
+    <div class="login-title">Acesso ao Sistema de Inspeção</div>
+    <div class="login-field">
+      <label>Usuário</label>
+      <input type="text" id="loginUser" placeholder="Digite seu usuário" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="loginPass" placeholder="Digite sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="loginError">Usuário ou senha incorretos.</div>
+  </div>
+</div>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="logo-text">POLIMETAL</div>
+  <div class="logo-sub">Sistema de Inspeção</div>
+  <div class="loader"><div class="loader-bar"></div></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCADhAOEDASIAAhEBAxEB/8QAHQABAAMAAwEBAQAAAAAAAAAAAAYHCAMEBQkCAf/EAEgQAAEDAgMEBgQJCgUFAQAAAAEAAgMEBQYRIQcSMUETFFFhcYEIFSIyFkJicpGhsbKzIzM1NjdSdHXB0SRDg5LCRHOCorTw/8QAGwEBAAMBAQEBAAAAAAAAAAAAAAUGBwQDAQL/xAA8EQACAQMBBQMJBQgDAQAAAAAAAQIDBBEFBhIhMUFRgZETIjI0YXGhwdEUUrHh8AcjJDVCYnKyFTOCwv/aAAwDAQACEQMRAD8A2WiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIq32m7acD4EEtNV3AXK6s09X0JEkjT2POe7H4OIPYCsvbTNvmOcZdJSUlT8HrW7MdWoJCJHt7HzaOd4N3QRxBU9pmzl7f4ko7sO1/Jc3+HtOG41CjQ4N5fYjU+P9suAMFVnULreOsV4dlJS0TOnki7d/LRngSD2AqSYLxjhnGVt9YYavFNcIRlviN2UkZPJ7Dk5p7iAvm2u5ZrpcrLco7laK+qoKyL3J6aV0bx3Zg8O0cCrXV2HoeRxTqPf7Xyfd08X3kZHWZ7/AJ0eB9JMSX+y4btj7lfrpS26kZoZZ5A0E9g5k9wzKguEduuzXE13da6O+GkqC/dhNdE6nZP2bjnaZnk05OPYsOYkxBfMSXD1hf7tWXOpAybJUyl+4OxoOjR3DILzDqMivlvsRRVJqtUbn7OS8efwFTWZ73mR4e0+oQ14IsCbM9s+OcCdFTUdw9ZWpmQ9X1xMkbW9kbs96PTgAd35JWodmW37A+Meio6yo+D92fk3q1c8CN7uyOXRrtdADuuPIKs6nsxe2OZJb8O1fNc18V7SRt9So1uDeH7S2kRFXSQCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgIRtb2nYc2a2qnqr11iepqy5tJR0zQZJS3LeOpAa0ZjMk8xkCdFk7aZt9xzjHpaSkqfg/an5jq1C8iR4+XNo4+Dd0EcQVqXbZsps+062UkdZV1FBcKHf6nVRAODd/Lea9p95p3WnQg6aHjnkXaXsaxzgR0lRXW03C1tzIuFCDJGB8tvvR95cN3XQlXzZWGkyivKYdb+7l7N3p88kJqcrpN7voez5ldDRDoMyvXtGH7jcS17Y+hgOvSyaAjuHE/Z3qX2jDlut+TyzrMw+PIMwPAcB9qu1zqVGhwzl9iKddanQt+DeX2Ih9sw/c7hH0kUIjjI0fKd0Hw5/0XTuFBV0EvR1cD4ieBI0d4HgVbMEM1RII4Y3SOPIBe3TYYini3bnuSMdxhAzHmT/T6VXrjaqFpLNbGOxcyCntL5GWaqWOzqURR0tTWTCGlhfNJ2NHDvPYF6Nbhu7UsHTOgErcs3CI7xb4j+2auebCtHBEW2pkdKzPMRAez9PH6c14tVS1FK/cnicw8s+B8CvlDayndy/cY9z5/r3ZEdpvLS/cpY7Hz/XiU2v4dRkVZd3sVvuWbpYujmP+bHo7z5HzUQu2GbjQ5vib1qEfGjHtDxb/AGzVgttTo1+DeH7fqTdrqtCvwb3X2P6kr2Z7Z8c4E6Kmo7h6xtTMh6vriZI2t7I3e9H3AHd+SVrHYztjw7tL6WjpKeot14p4ulnopiHZszALo3jR7QSBqAdRosd7Otl+NceTN9Q2h4o97J9fU5xUzO32iPaPcwOI5ha12F7E7Xs1qJbvLcpbpe6in6CSbcEcMTC4Oc1jdTqWtzcSc90ZAa51PaqGkqEnwVbpu/8A108eJb9MldNr7nt+RbKIizsnwiIgCIiAIiIAiIgCIiAIiIAiIgCIuCvrKWgpX1VZUR08LPefI7IBD8ynGEXKTwkeTjDFFBhqmjkq2ySyzZ9FFHxdllmSeQ1CqbE2Or5et+FsvUqV2nQwEguHY53E/UO5WZiSx2bHFvimpq9pfDvdFPC4PAJ4hw58BpoVVeJsG3uxb8k1P1ilb/1EObmgfKHFvnp3rmrOfTkZXttW1yTcrdv7M0sOHXhx3muOM/8AnBC6+y0VVm5regk/ejGnLi3h9i6NHhwB+9VTBzR8VnPzUgRe1PVbunT8nGbx+upl8b2tGO6pHHTwQ08Yjgjaxo5ALkXbtdurrnVCmt9LLUyn4rG55d5PADvKsbDOy8DcqL/UZnj1aE/U539vpXGozqPPMkNK0DUNXn/DwbXWT4Lx+Sy/YVcvzNFHNGY5WNe08Q4ZhW5iTZfSTNM1iqDTSAfmZnFzD4O4j6/JVrerNc7NUdBcqOSBx91xGbXeDhoV8lCVN5PTVtnNR0h5rw837y4rx6d+GRKuw7G871JJ0ZPxH6jyPFc9usVLT5Pn/wARJ8oeyOHLn5/QvWRdstVu5U/Jubx8fHmRbva7ju7318SQYYxfesPtZDSziWkbp1aXVgHyebfJW1gvGVBiUugjikpqxjN98TzmCOBLTzGo5BU/hzC95vzx1ClIhzyM8nsxjz5+WatXCOFLbg6GW5Vte185j3JJ5CGRsbnnkAfAans5LwoufcaPsRV1xTi239m6ufJL+1vj4cO0mKLq2y40Nzp+nt9VFUxA7pdG7PI9hXaXVzNcp1IVIqcHlPqgiIh+wiIgCIiAIiIAiIgCIiALpXy7Wyx2ua6Xivp6CigAMk88gYxuZyGp7SQB2ruqh/Tgc5uya2NDiA6+QhwB4joJzr5gHyXbptory6p0G8KTweNxVdKlKa6FzYcv9kxHbm3Gw3WjuVITl0tNKHgHsOXA9x1UT24kjC9IATka1uf+x6wfhjEN8wxdG3TD91qrbWN0MkEm7vDscODx3OBCvOz7crpjWzx2HE1up21VM8Tivps2iUAFuTo+R9rPNpy090Ke1nZG4tacqlB78fBr693gVLX9Rjc6TXp4xJx8STWu411rqRU2+qlppR8Zjss+4jgR3FWNhnagDu09/p8uXWIG/eb/AG+hVXBNFPGJIZGyNPNpX7VFUp03jkY7pWv6hpE/4ebS6xfFeH0wy6bphDC2KqU19pmiglfr01NkWk/KZ2668CvLseyuGOoMl4runjafZigBaHDvJ18h9KhOz2qqKXGFtEEz4xLO2OQA6OaTkQRzWgV7wUanFo0/Z+10naSLva1qo1IvDx6LeM5xwXjn2tnWttvorbTCmoKWKniHxWNyz7z2nvK7KIug0SEI04qMFhLoguKrpqesp3U9VBHPE73mSNDmnyK5UQ+yipJxkspldYj2X0dQ4zWWp6o8/wCTLm6PyPEfWuxZMA2CxU5rr5UR1bmDNzpyGQs8jx8/oU9VI7X6ypmxlUUskz3QQMjEcefstzYCTl25k6rwqRhBb2DP9obDR9Bp/wDIxtVKbaSX9OXl5xy6dF4cyT4j2mUVI00tgphUOaN0TSAtib4N4n6vNVter1dLzP01yrJJyD7LScmt8GjQLz1+ZHsjYXyPaxo4lxyAXNKcqjwZdq20eoas8Vp+b0iuEfDr35LS2DuOd4bmch0JA/3qxLxdLbZrfLcbtX01BRxDOSeolDGN8SdFlap2y1Gz+hq4rFbIa2tuG6I56lxEUO5nmdwZF/vjTNvDmqRxpjLE+Mrh13Et5qrg9pJjY92UUWf7jBk1vkNeau2ibKXV5TjUqvch8X3dO/wNX2Vv1a6LRptZkt7h2edI+h+GMRWLE9t9ZYeu1Jc6QPMZlp5A8NcOLT2HUaHtC9RZj9A57uq4wj3juCSjcG56AkTZn6h9AWnFF6vYxsLydvF5UcfFJ/MudpXdeiqjWMhERRp0BERAEREAREQBERAFQ3pxfsotf89h/AqFfKob04v2UWv+ew/gVCmNn/5lR/yOS/8AV5+4xupLs8/S8/8ADn7zVGlJdnn6Xn/hz95q13UPVp+4oWo+qz9xY1jmliucAjeWh7w1wB0IJ4FTZQa0/pSl/wC637VOVjW0iSrwfs+ZleqenH3Hs4H/AFwtP8XH95aHWd8EuDcX2kuIA63GP/YLRCh7bkzUv2Z+pVv8vkgiIug0oIiIAqJ2sfr5X/Ni/Dar2VE7VyDjyvyIOkX4bV4XHomf/tI/lUP81/rIiqiOKJZHXV8bnksYBut5DMAqXKHYl/TM3g37oUls6k7p5+6/xRkGmf8Ac/d9Cvto/Cg/1P8AiogpftH4UH+p/wAVEFs2leqx7/xZqek+qQ7/AMWak9A78xjH51F9k606sxegd+Yxj86i+ydadWXbU/zWr3f6ovumeqx7/wAWERFXzvCIiAIiIAiIgCIiAKhvTi/ZRa/57D+BUK+VB9t2z+LaTgh1gNd1GoiqGVVLOWb7WyNDm+03MZgte4cdM8+WSktIuKdtfUqtR4inxOe7pyqUZRjzaPnsvSw5dPVNeah0RlY5hY9oORyzBzHfopFtH2X40wDKXX+1ONFvBrK+mJlpnk6D2sgWknQB4aTyCha2eE6F5RzBqUX2Mpde3ynTqrmW1hW60NyuVL1ScOeJGkxnRw17FY6zdhtxbf6FzSQembqFc9vv1TDkyoHTs7To4efNZvtXoNR1YyoPPDk+fP8AXYZ1tDpDp1Y+SeeHJkra4tcHNJDgcwQdQVOMM7SLtb9yC5t9Y0403nHKVo+dz8/pVeUNwpawfkZRvc2HRw8l2lQJRqUZbsk0yCsdSvdKq79vNwfXsfvT4M0Ph3E1mv0YNBVt6XLN0EnsyN8ufiMwvZWYY3vjkbJG9zHtObXNORB7QVZmy/GN2rbxDZLjJ1qORjujlcPbaWtJ1PMaHjr3r2hXzwZq2z230b2rC1u4bs5NJNcm3yyua+PcWkvOvl8tdlg6a5VkcOfuszze7waNSoftVxbcrJUw2y2lkL5YelfMW5uAJIyGeg4HVVJUzz1MzpqmaSaV3vPkcXOPiSvtStuvCPfaPbqnptWVrbQ3qkebfCK+b+HvJ/ibadXVW9BZIepxcOmkAdI7wHBv1qAVE0tRO+eeR8srzvPe85lx7SVxrgrKunpGb88rWdgz1PgFzpTrSUUssyXUdXvtWqb1xNyfRdF7kuBzqC41r6S33SaSrnbGMm5A8T7I4DivUuGIZZM2UjOhb++7Vx/oPrVQ47kfLiaofI9z3FrNXHM8AftJ+lXnZXQqv2lzrPCxy680SugaTKrXflXhY7+hx4pvTLvPF0MTo4Yc93e952eWp7OAXjIpLgLAeLMc1xpcNWeerax27LUH2IITx9uQ6A5HPLUkcAVp68jaUeLUYrq2aRb26hFUqSL/APQO/MYx+dRfZOtOqr/R52VybMbDXR1txjrrncnxvqXQtIijDAQ1jc9XZFzjvEDPMaDJWgse1+6pXWoVKtJ5i8YfuSXyLnYUpUreMJc/zCIihzrCIiAIiIAiIgCIiAIiICIbao45dkOLmSsa9vqaqdkRnqInEHyIBXzsX05u1BSXW11dsr4RNSVcL4J4zwexwLXDzBKyftM9GC9250tdgaubdqQZu6jVOEdSwdjX+7J57h8VeNkdWtbSM6NeW65NNZ5ePTvIXVbWpVanBZwZ6pppKeojniduyRuDmnvCmtoxdSzgR3BnVpP326sP9R/+1UPudBXWu4S2+50VTQ1kJykp6iJ0cjPFrgCF11fri0o3cU5dzRU7uxpXKxUXFdepbsMrXNbLDIHNOrXsdmPIhSLD11qZaplJO7pGuBycfeGQz481RdtuVbbn71HO6ME5lnFp8RwVmbJ7vPiTFtHZ4KJxr5WyFjYz7L92NzjlnwOQOip2vaG42tSeFJJNp9VhfrkVTUtBqqnLcW/2Y5+H0LKUr2Tfr5QfNl/DcoxUQzU8zoKiKSGVhycyRpa5p7weCk+yb9fKD5sv4bllMPSRWdATjq1snz8pH/ZHp7cf1npP4Jv33qAqfbcf1npP4Jv33qBxsfI8Mja573HINaMySv1V9NnVtam9auEvvfJHhYjuk9JIynp8mOczec8jM5HTIfQVGZpHPLpZXlx4uc4/1XZ2x11Rha8UlJX0EzauejbPHE/2cmF72gu5g5tOmWenJVLdbxcLk4ipnIj5RM0YPLn55rTdnNFlUtIVFFRyuL6smNK0KtKnFzjuduVx8PqS+7YqoKTOOl/xco5tOTB58/L6VCLhVzV1ZJV1BHSSHXIZAdgHcuBfumgnqqiOmpYJaieV27HFEwve93Y1o1J7grva2VK1WY8+1lutLClbeguPafhbt9E+KOPYPYHMY1pkfUueQPePWJBme/IAeSojZp6NWKr/ANFW4qm+DtA7Xocg+rePm+7H4uzPyVrXB2HbXhPDNDh6zROioaKPcjDnbzjmSXOceZJJJ7yqTtdq9rcUY21GW9JSy8cuTXPv6Fq0q0q05upNYWD1kRFQCdCIiAIiIAiIgCIiAIiIAiIgCIiAjuOME4Wxrbuo4ls9PXMA/JyHNssXeyRuTm+R155rM20z0Yb5bOkrsD13rmlGbupVLmx1LR2NdoyTz3D4la7RS2na1eae/wBzLzex8V4dO7By3FnSuPTXHt6nzGudBXWuvlt9zoqmirITlLBUROjkYe9rgCFZXoo/t4w/82p/+eRbNxzgfCuNqAUeJbNTV7WgiKVw3ZYs/wByQZOb5HI881A9mGwPDWA8a/CeiutzrpYmPZSQ1G5lDvjdcSWtBcd0kDgNToTkRbqu11td2NWnUi4zcWsc021jn9fiRUdKqU60ZReUmiy79YbTe4OiuVGyYgey/g9vg4ajw4LwsK4Ct9gvJucdXPUOa0tha8AbmYyJJHE5ZjlxUwRZy4JvODtr6RY17iNzUpJ1I8U+v546Z5EXxpgujxNVQVUtVLTTRN6MuaA4OZnnlkeBzJ1713sOYXs1hZ/gKUdMRk6aQ70jvPl4DIL2kTcWc4ENIsYXUrtUl5R/1dfy7jGvpv8A7WLb/JIvxp1RlLBPVVMdNSwSzzyu3Y4omFz3u7ABqT3Bbs2y7FrFtLu9Bdq2511trKWLq7304a4SxbxcGkOGhBc7Ij945g6ZSLZ3s2wfgOlEeH7TGypLd2Stm/KVEvi88B3NyHctCstqray06nSjFymljHJeP0OOtpdStXlJvCZmPZn6NWKr/wBHW4rm+DtA7Xocg+rePm+7H/5Zkc2rTuzzZtg7AdN0eHrRFFUFuUlZL+UqJPF51A7hkO5S5FWNS1281DKqSxH7q4L8+8k7eyo0PRXHtCIihjrCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiA//2Q==" alt="Logo Polimetal" style="height:36px;width:36px;object-fit:contain;border-radius:4px;" />
+      <div>
+        <div class="brand">POLIMETAL</div>
+        <div class="subtitle">Registro de Inspeção</div>
+      </div>
+    </div>
+    <div id="userInfo">
+      <span class="user-name" id="userNameDisplay"></span>
+      <button class="btn-logout" onclick="doLogout()">⏻ Sair</button>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <!-- FORMULÁRIO -->
+    <div>
+      <div class="panel">
+        <div class="panel-header">📋 Novo Registro de Inspeção</div>
+        <div class="panel-body">
+
+          <!-- ID + Item + Quantidade -->
+          <div class="section-label">Identificação</div>
+          <div class="form-grid-id">
+
+            <div class="field field-id">
+              <label>
+                ID
+                <span class="auto-badge">🔒 Auto</span>
+              </label>
+              <input type="text" id="f_id" readonly tabindex="-1" value="1" />
+            </div>
+
+            <div class="field">
+              <label>OP <span class="req">*</span></label>
+              <input type="text" id="f_op" placeholder="Ex: 001234" />
+              <span class="error-msg" id="err_op">Campo obrigatório</span>
+            </div>
+
+            <div class="field">
+              <label>Item <span class="req">*</span></label>
+              <input type="number" id="f_item" placeholder="Ex: 1001" min="0" step="1" />
+              <span class="error-msg" id="err_item">Campo obrigatório</span>
+            </div>
+
+            <div class="field">
+              <label>Quantidade <span class="req">*</span></label>
+              <input type="number" id="f_quantidade" placeholder="0" min="0" />
+              <span class="error-msg" id="err_quantidade">Campo obrigatório</span>
+            </div>
+
+          </div>
+
+          <!-- Bandeira + Setor + Colaborador (dropdowns) -->
+          <div class="section-label">Classificação</div>
+          <div class="form-grid" style="margin-bottom:20px;">
+
+            <div class="field">
+              <label>Bandeira <span class="req">*</span></label>
+              <select id="f_bandeira">
+                <option value="">— Selecione —</option>
+                <option>Bandeira Branca</option>
+                <option>BR</option>
+                <option>Honda</option>
+                <option>Incoleed</option>
+                <option>Ipiranga</option>
+                <option>Petronas</option>
+                <option>Shell</option>
+                <option>Texaco</option>
+              </select>
+              <span class="error-msg" id="err_bandeira">Campo obrigatório</span>
+            </div>
+
+            <div class="field">
+              <label>Setor <span class="req">*</span></label>
+              <select id="f_setor">
+                <option value="">— Selecione —</option>
+                <option>ACM</option>
+                <option>Adesivagem</option>
+                <option>Almoxarifado</option>
+                <option>Caldeiraria Leve</option>
+                <option>Caldeiraria Pesada</option>
+                <option>Composto Plástico</option>
+                <option>Corte a Laser</option>
+                <option>Dobra</option>
+                <option>Embalagem</option>
+                <option>Estoque</option>
+                <option>Expedição</option>
+                <option>Montagem Leve/Elétrica</option>
+              </select>
+              <span class="error-msg" id="err_setor">Campo obrigatório</span>
+            </div>
+
+            <div class="field">
+              <label>Colaborador <span class="req">*</span></label>
+              <select id="f_colaborador">
+                <option value="">— Selecione —</option>
+                <option>Bruna Garcia</option>
+                <option>Júlio Caldeira</option>
+                <option>Keli Medici</option>
+                <option>Rafael Barbosa</option>
+              </select>
+              <span class="error-msg" id="err_colaborador">Campo obrigatório</span>
+            </div>
+
+          </div>
+
+          <!-- Imagem -->
+          <div class="section-label">Imagem em Anexo</div>
+          <div class="photo-upload-area">
+            <input type="file" id="f_imagem" accept="image/*" multiple onchange="handleImageUpload(event)" />
+            <div class="uicon">🖼</div>
+            <p>Clique ou arraste para selecionar <strong>várias imagens</strong><br><strong>JPG, PNG</strong> — múltipla seleção permitida</p>
+          </div>
+          <div id="imageGalleryWrap">
+            <div class="gallery-grid" id="imageGallery"></div>
+            <div class="gallery-count" id="imageCount"></div>
+          </div>
+
+          <!-- Observações -->
+          <div class="section-label" style="margin-top:20px;">Observações</div>
+          <textarea id="f_observacoes" placeholder="Digite aqui qualquer observação sobre a inspeção..." style="font-family:'Barlow',sans-serif;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:4px;color:var(--text);background:#fafbfc;width:100%;min-height:90px;resize:vertical;outline:none;transition:border-color 0.15s,box-shadow 0.15s;" onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(16,56,193,0.12)';this.style.background='white'" onblur="this.style.borderColor='';this.style.boxShadow='';this.style.background='#fafbfc'"></textarea>
+
+
+          <!-- Características do Produto -->
+          <div class="section-label" style="margin-top:20px;">Características do Produto</div>
+          <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+            <table class="caract-table">
+              <thead>
+                <tr>
+                  <th>Característica</th>
+                  <th>✓ Conforme</th>
+                  <th>✗ Não Conforme</th>
+                  <th>— Não Aplicável</th>
+                </tr>
+              </thead>
+              <tbody>
+          <tr>
+            <td>Amassado</td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-c" name="caract_amassado" id="c_amassado_c" value="C">
+              <label class="caract-label" for="c_amassado_c" title="Conforme">✓</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-nc" name="caract_amassado" id="c_amassado_nc" value="NC">
+              <label class="caract-label" for="c_amassado_nc" title="Não Conforme">✗</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-na" name="caract_amassado" id="c_amassado_na" value="NA">
+              <label class="caract-label" for="c_amassado_na" title="Não Aplicável">—</label>
+            </td>
+          </tr>
+          <tr>
+            <td>Pintura/Cor</td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-c" name="caract_pintura_cor" id="c_pintura_cor_c" value="C">
+              <label class="caract-label" for="c_pintura_cor_c" title="Conforme">✓</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-nc" name="caract_pintura_cor" id="c_pintura_cor_nc" value="NC">
+              <label class="caract-label" for="c_pintura_cor_nc" title="Não Conforme">✗</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-na" name="caract_pintura_cor" id="c_pintura_cor_na" value="NA">
+              <label class="caract-label" for="c_pintura_cor_na" title="Não Aplicável">—</label>
+            </td>
+          </tr>
+          <tr>
+            <td>Adesivo/Impressão</td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-c" name="caract_adesivo_impressão" id="c_adesivo_impressão_c" value="C">
+              <label class="caract-label" for="c_adesivo_impressão_c" title="Conforme">✓</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-nc" name="caract_adesivo_impressão" id="c_adesivo_impressão_nc" value="NC">
+              <label class="caract-label" for="c_adesivo_impressão_nc" title="Não Conforme">✗</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-na" name="caract_adesivo_impressão" id="c_adesivo_impressão_na" value="NA">
+              <label class="caract-label" for="c_adesivo_impressão_na" title="Não Aplicável">—</label>
+            </td>
+          </tr>
+          <tr>
+            <td>Conjunto Peça/Gabarito</td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-c" name="caract_conjunto_peça_gabarito" id="c_conjunto_peça_gabarito_c" value="C">
+              <label class="caract-label" for="c_conjunto_peça_gabarito_c" title="Conforme">✓</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-nc" name="caract_conjunto_peça_gabarito" id="c_conjunto_peça_gabarito_nc" value="NC">
+              <label class="caract-label" for="c_conjunto_peça_gabarito_nc" title="Não Conforme">✗</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-na" name="caract_conjunto_peça_gabarito" id="c_conjunto_peça_gabarito_na" value="NA">
+              <label class="caract-label" for="c_conjunto_peça_gabarito_na" title="Não Aplicável">—</label>
+            </td>
+          </tr>
+          <tr>
+            <td>Risco</td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-c" name="caract_risco" id="c_risco_c" value="C">
+              <label class="caract-label" for="c_risco_c" title="Conforme">✓</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-nc" name="caract_risco" id="c_risco_nc" value="NC">
+              <label class="caract-label" for="c_risco_nc" title="Não Conforme">✗</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-na" name="caract_risco" id="c_risco_na" value="NA">
+              <label class="caract-label" for="c_risco_na" title="Não Aplicável">—</label>
+            </td>
+          </tr>
+          <tr>
+            <td>Conjunto Montado/Articulação</td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-c" name="caract_conjunto_montado_articulação" id="c_conjunto_montado_articulação_c" value="C">
+              <label class="caract-label" for="c_conjunto_montado_articulação_c" title="Conforme">✓</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-nc" name="caract_conjunto_montado_articulação" id="c_conjunto_montado_articulação_nc" value="NC">
+              <label class="caract-label" for="c_conjunto_montado_articulação_nc" title="Não Conforme">✗</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-na" name="caract_conjunto_montado_articulação" id="c_conjunto_montado_articulação_na" value="NA">
+              <label class="caract-label" for="c_conjunto_montado_articulação_na" title="Não Aplicável">—</label>
+            </td>
+          </tr>
+          <tr>
+            <td>Vazão de Luz</td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-c" name="caract_vazão_de_luz" id="c_vazão_de_luz_c" value="C">
+              <label class="caract-label" for="c_vazão_de_luz_c" title="Conforme">✓</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-nc" name="caract_vazão_de_luz" id="c_vazão_de_luz_nc" value="NC">
+              <label class="caract-label" for="c_vazão_de_luz_nc" title="Não Conforme">✗</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-na" name="caract_vazão_de_luz" id="c_vazão_de_luz_na" value="NA">
+              <label class="caract-label" for="c_vazão_de_luz_na" title="Não Aplicável">—</label>
+            </td>
+          </tr>
+          <tr>
+            <td>Instalação Elétrica</td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-c" name="caract_instalação_elétrica" id="c_instalação_elétrica_c" value="C">
+              <label class="caract-label" for="c_instalação_elétrica_c" title="Conforme">✓</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-nc" name="caract_instalação_elétrica" id="c_instalação_elétrica_nc" value="NC">
+              <label class="caract-label" for="c_instalação_elétrica_nc" title="Não Conforme">✗</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-na" name="caract_instalação_elétrica" id="c_instalação_elétrica_na" value="NA">
+              <label class="caract-label" for="c_instalação_elétrica_na" title="Não Aplicável">—</label>
+            </td>
+          </tr>
+          <tr>
+            <td>Router</td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-c" name="caract_router" id="c_router_c" value="C">
+              <label class="caract-label" for="c_router_c" title="Conforme">✓</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-nc" name="caract_router" id="c_router_nc" value="NC">
+              <label class="caract-label" for="c_router_nc" title="Não Conforme">✗</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-na" name="caract_router" id="c_router_na" value="NA">
+              <label class="caract-label" for="c_router_na" title="Não Aplicável">—</label>
+            </td>
+          </tr>
+          <tr>
+            <td>Rebarba</td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-c" name="caract_rebarba" id="c_rebarba_c" value="C">
+              <label class="caract-label" for="c_rebarba_c" title="Conforme">✓</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-nc" name="caract_rebarba" id="c_rebarba_nc" value="NC">
+              <label class="caract-label" for="c_rebarba_nc" title="Não Conforme">✗</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-na" name="caract_rebarba" id="c_rebarba_na" value="NA">
+              <label class="caract-label" for="c_rebarba_na" title="Não Aplicável">—</label>
+            </td>
+          </tr>
+          <tr>
+            <td>Solda</td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-c" name="caract_solda" id="c_solda_c" value="C">
+              <label class="caract-label" for="c_solda_c" title="Conforme">✓</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-nc" name="caract_solda" id="c_solda_nc" value="NC">
+              <label class="caract-label" for="c_solda_nc" title="Não Conforme">✗</label>
+            </td>
+            <td class="caract-cell">
+              <input type="radio" class="caract-radio r-na" name="caract_solda" id="c_solda_na" value="NA">
+              <label class="caract-label" for="c_solda_na" title="Não Aplicável">—</label>
+            </td>
+          </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="caract-err" id="caract_err">Preencha pelo menos uma característica antes de salvar.</div>
+
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-danger btn-sm" onclick="clearForm()">🗑 Limpar</button>
+          <button class="btn btn-primary" id="btnSalvar" onclick="saveRecord()">💾 Salvar Registro de Inspeção</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CÂMERA UNIFICADA -->
+    <div>
+      <div class="panel">
+        <div class="panel-header" id="camPanelHeader">📷 Câmera</div>
+        <div class="panel-body">
+
+          <!-- SELETOR DE CÂMERA -->
+          <div class="cam-select-bar">
+            <label>Câmera:</label>
+            <select id="cameraSelect" onchange="switchCamera()"><option value="">Nenhuma</option></select>
+          </div>
+
+          <!-- TOGGLE FOTO / VÍDEO -->
+          <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:12px;">
+            <button id="togglePhoto" onclick="setCamMode('photo')" style="flex:1;padding:9px 10px;font-family:Barlow,sans-serif;font-size:13px;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;border-right:1px solid var(--border);background:var(--blue);color:white;transition:all 0.15s;">
+              📸 Tirar Foto
+            </button>
+            <button id="toggleVideo" onclick="setCamMode('video')" style="flex:1;padding:9px 10px;font-family:Barlow,sans-serif;font-size:13px;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;background:#f4f6f9;color:var(--muted);transition:all 0.15s;">
+              🎥 Gravar Vídeo
+            </button>
+          </div>
+
+          <!-- CÂMERA (única, compartilhada) -->
+          <div class="camera-container">
+            <video id="cameraFeed" autoplay playsinline muted class="cam-video"></video>
+            <div class="rec-indicator" id="recIndicator"><div class="rec-dot"></div>REC</div>
+            <div class="camera-offline" id="cameraOffline">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              <span>Câmera não disponível<br>ou sem permissão</span>
+              <button class="btn btn-secondary btn-sm" onclick="initCamera()">↺ Tentar novamente</button>
+            </div>
+          </div>
+          <canvas id="capturedCanvas" style="display:none;"></canvas>
+
+          <!-- CONTROLES FOTO -->
+          <div id="photoControls" class="cam-controls">
+            <button class="btn btn-primary" onclick="takePhoto()" style="flex:1;">📸 Tirar Foto</button>
+            <button class="btn btn-danger btn-sm" onclick="clearCamPhotos()">🗑 Limpar</button>
+          </div>
+          <div id="camPhotoCount" style="font-size:12px;color:var(--muted);margin-bottom:8px;"></div>
+          <div class="cam-photos" id="camPhotosGrid"></div>
+
+          <!-- CONTROLES VÍDEO -->
+          <div id="videoControls" style="display:none;">
+            <div class="cam-controls">
+              <button class="btn btn-rec"    id="btnStartRec" onclick="startRecording()" style="flex:1;">⏺ Iniciar Gravação</button>
+              <button class="btn btn-danger" id="btnStopRec"  onclick="stopRecording()"  style="flex:1;" disabled>⏹ Parar</button>
+            </div>
+            <div id="recTimer" style="font-size:12px;color:var(--red-rec);font-weight:600;margin-bottom:8px;display:none;">
+              ⏱ Gravando: <span id="recTimerVal">00:00</span>
+            </div>
+            <div class="video-preview-wrap" id="videoPreviewWrap">
+              <div class="video-preview-label">
+                <span>📹 Vídeo gravado</span>
+                <button class="btn btn-danger btn-sm" onclick="clearVideo()">🗑 Remover</button>
+              </div>
+              <video id="recordedVideoPreview" controls></video>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TABELA DE REGISTROS -->
+  <div class="records-section">
+    <div class="panel">
+      <div class="panel-header" style="background:#1038c1;">
+        📊 Registros Salvos
+        <button onclick="exportExcel()" style="margin-left:12px;background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.35);padding:5px 12px;border-radius:4px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;" title="Exportar tabela para Excel">📥 Excel</button>
+        <span id="recordCount" style="margin-left:auto;font-size:12px;opacity:0.8;">0 registros</span>
+      </div>
+      <div class="filter-bar">
+        <input type="text"   id="f_fid"      placeholder="🔍 ID"          oninput="applyFilters()" />
+        <input type="text"   id="f_fop"      placeholder="🔍 OP"          oninput="applyFilters()" />
+        <select              id="f_fbandeira"                              onchange="applyFilters()">
+          <option value="">Bandeira</option>
+          <option>Bandeira Branca</option><option>BR</option><option>Honda</option>
+          <option>Incoleed</option><option>Ipiranga</option><option>Petronas</option>
+          <option>Shell</option><option>Texaco</option>
+        </select>
+        <select              id="f_fsetor"                                 onchange="applyFilters()">
+          <option value="">Setor</option>
+          <option>ACM</option><option>Adesivagem</option><option>Almoxarifado</option>
+          <option>Caldeiraria Leve</option><option>Caldeiraria Pesada</option>
+          <option>Composto Plástico</option><option>Corte a Laser</option><option>Dobra</option>
+          <option>Embalagem</option><option>Estoque</option><option>Expedição</option>
+          <option>Montagem Leve/Elétrica</option>
+        </select>
+        <select              id="f_fcolab"                                 onchange="applyFilters()">
+          <option value="">Colaborador</option>
+          <option>Bruna Garcia</option><option>Júlio Caldeira</option>
+          <option>Keli Medici</option><option>Rafael Barbosa</option>
+        </select>
+        <input type="text"   id="f_fdate"    placeholder="🔍 Data"        oninput="applyFilters()" />
+        <div class="filter-clear"><button onclick="clearFilters()">✕ Limpar filtros</button></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th style="width:40px;"></th>
+              <th>OP</th>
+              <th>Item</th>
+              <th>Qtd.</th>
+              <th>Bandeira</th>
+              <th>Setor</th>
+              <th>Colaborador</th>
+              <th>Vídeo</th>
+              <th>Fotos</th>
+              <th style="font-size:10px;white-space:nowrap;">Amassado</th>
+              <th style="font-size:10px;white-space:nowrap;">Pintura/Cor</th>
+              <th style="font-size:10px;white-space:nowrap;">Adesivo/Impressão</th>
+              <th style="font-size:10px;white-space:nowrap;">Conjunto Peça/Gabarito</th>
+              <th style="font-size:10px;white-space:nowrap;">Risco</th>
+              <th style="font-size:10px;white-space:nowrap;">Conjunto Montado/Articulação</th>
+              <th style="font-size:10px;white-space:nowrap;">Vazão de Luz</th>
+              <th style="font-size:10px;white-space:nowrap;">Instalação Elétrica</th>
+              <th style="font-size:10px;white-space:nowrap;">Router</th>
+              <th style="font-size:10px;white-space:nowrap;">Rebarba</th>
+              <th style="font-size:10px;white-space:nowrap;">Solda</th>
+              <th>Observações</th>
+              <th>Data/Hora</th>
+            </tr>
+          </thead>
+          <tbody id="recordsBody">
+            <tr><td colspan="22"><div class="empty-state">Nenhum registro ainda. Preencha o formulário e clique em Salvar.</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ── SUPABASE CONFIG ──────────────────────────────────────────────────────────
+const SUPA_URL  = 'https://tbpgmccjfwxkzenyhkgi.supabase.co';
+const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRicGdtY2NqZnd4a3plbnloa2dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MjA5OTcsImV4cCI6MjA5MDk5Njk5N30.Wn-R823F10rEd1e9gIBRTVVWzfNqh1XilCNTUTjVkoA';
+const db = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+const BUCKET    = 'imagens-inspecao';
+
+// Salvar inspeção no Supabase
+async function saveToSupabase(rec, imgs, videoBlob) {
+  try {
+    // 1. Inserir registro principal
+    const { data, error } = await db.from('inspecoes').insert([{
+      item:        parseInt(rec.item),
+      op:          rec.op,
+      quantidade:  parseInt(rec.quantidade),
+      bandeira:    rec.bandeira,
+      setor:       rec.setor,
+      colaborador: rec.colaborador,
+      media_type:    rec.mediaType || null,
+      observacoes:   rec.observacoes || null,
+      caracteristicas: rec.caracteristicas || null
+    }]).select().single();
+    if (error) throw error;
+    const inspecaoId = data.id;
+
+    // 2. Upload de imagens anexadas
+    for (const img of imgs) {
+      const resp = await fetch(img.url);
+      const blob = await resp.blob();
+      const path = `${inspecaoId}/${Date.now()}_${img.name}`;
+      await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type });
+      const { data: pub } = db.storage.from(BUCKET).getPublicUrl(path);
+      await db.from('inspecoes_imagens').insert([{ inspecao_id: inspecaoId, url: pub.publicUrl, nome: img.name }]);
+    }
+
+    // 3. Upload de fotos da câmera
+    for (const p of rec.camPhotos) {
+      const resp = await fetch(p.dataUrl);
+      const blob = await resp.blob();
+      const path = `${inspecaoId}/cam_${Date.now()}.png`;
+      await db.storage.from(BUCKET).upload(path, blob, { contentType: 'image/png' });
+      const { data: pub } = db.storage.from(BUCKET).getPublicUrl(path);
+      await db.from('inspecoes_imagens').insert([{ inspecao_id: inspecaoId, url: pub.publicUrl, nome: 'foto_camera.png' }]);
+    }
+
+    // 4. Upload de vídeo
+    if (videoBlob) {
+      const path = `${inspecaoId}/video_${Date.now()}.webm`;
+      await db.storage.from(BUCKET).upload(path, videoBlob, { contentType: videoBlob.type });
+    }
+
+    showToast('✅ Inspeção salva no banco de dados!', true);
+    return inspecaoId;
+  } catch (e) {
+    const msg = e?.message || e?.details || JSON.stringify(e);
+    console.error('Supabase error:', msg);
+    showToast('⚠️ Salvo localmente. Erro ao conectar ao banco.', false);
+    return null;
+  }
+}
+
+// Carregar registros do Supabase ao iniciar
+async function loadFromSupabase() {
+  try {
+    const { data, error } = await db
+      .from('inspecoes')
+      .select('*, inspecoes_imagens(url, nome)')
+      .order('id', { ascending: false });
+    if (error || !data) return;
+    records = data.map(r => ({
+      id:          r.id,
+      item:        r.item,
+      op:          r.op,
+      quantidade:  r.quantidade,
+      bandeira:    r.bandeira,
+      setor:       r.setor,
+      colaborador: r.colaborador,
+      mediaType:   r.media_type,
+      observacoes:     r.observacoes || '',
+      caracteristicas: r.caracteristicas || {},
+      mediaSrc:        null,
+      imageFiles:  (r.inspecoes_imagens || []).map(i => ({ url: i.url, name: i.nome })),
+      camPhotos:   [],
+      date:        new Date(r.criado_em).toLocaleString('pt-BR')
+    }));
+    nextId = records.length > 0 ? Math.max(...records.map(r => r.id)) + 1 : 1;
+    renderTable();
+    updateIdField();
+  } catch(e) { console.warn('Não foi possível carregar do Supabase:', e); }
+}
+
+let records = [], camPhotos = [], imageFiles = [];
+let cameraStream = null, vidStream = null;
+let mediaRecorder = null, recordedChunks = [], recordedVideoURL = null, recordedBlob = null;
+let recTimerInterval = null, recSeconds = 0;
+let nextId = 1;
+
+// AUTH — usuários válidos (login local simples)
+const USERS = [
+  { user: 'rafael.barbosa', pass: 'poliusu!@#456', name: 'Rafael Barbosa' },
+  { user: 'inspetor', pass: 'insp@2024', name: 'Inspetor' }
+];
+
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const found = USERS.find(x => x.user === u && x.pass === p);
+  if (!found) {
+    document.getElementById('loginError').classList.add('show');
+    document.getElementById('loginPass').value = '';
+    return;
+  }
+  document.getElementById('loginError').classList.remove('show');
+  sessionStorage.setItem('polimetal_user', JSON.stringify({ user: found.user, name: found.name }));
+  showApp(found.name);
+}
+
+function doLogout() {
+  sessionStorage.removeItem('polimetal_user');
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+}
+
+function showApp(name) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('userNameDisplay').textContent = name;
+  document.getElementById('splash').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hidden');
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('app').classList.add('visible');
+    updateIdField();
+    initCamera();
+    loadFromSupabase();
+  }, 3000);
+}
+
+// LIGHTBOX com navegação, swipe e teclado
+let lbImages = [], lbIndex = 0;
+
+// Abre lightbox — src pode ser URL ou dataURL, gallery é array de srcs
+function openLightbox(src, gallery) {
+  lbImages = (gallery && gallery.length > 0) ? gallery : [src];
+  lbIndex  = lbImages.indexOf(src);
+  if (lbIndex < 0) lbIndex = 0;
+  lbShow();
+  document.getElementById('lightbox').classList.add('open');
+  document.addEventListener('keydown', lbKeyHandler);
+}
+
+// Auxiliar para abrir pelo índice do dataset (usado nos thumbnails)
+function openLightboxIdx(idx, galleryJson) {
+  try { lbImages = JSON.parse(galleryJson); } catch { lbImages = []; }
+  lbIndex = parseInt(idx) || 0;
+  lbShow();
+  document.getElementById('lightbox').classList.add('open');
+  document.addEventListener('keydown', lbKeyHandler);
+}
+
+function lbOverlayClick(e) {
+  if (e.target === document.getElementById('lightbox')) closeLightbox();
+}
+function lbShow() {
+  const img = document.getElementById('lightboxImg');
+  img.src = lbImages[lbIndex] || '';
+  const nav = document.querySelectorAll('.lb-nav');
+  nav.forEach(n => n.style.display = lbImages.length > 1 ? 'block' : 'none');
+  document.getElementById('lbCounter').textContent =
+    lbImages.length > 1 ? `${lbIndex + 1} / ${lbImages.length}` : '';
+}
+function lbNav(dir) {
+  lbIndex = (lbIndex + dir + lbImages.length) % lbImages.length;
+  lbShow();
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightboxImg').src = '';
+  document.removeEventListener('keydown', lbKeyHandler);
+}
+function lbKeyHandler(e) {
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); lbNav(-1); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); lbNav(1);  }
+  if (e.key === 'Escape')     closeLightbox();
+}
+// Swipe touch
+(function() {
+  let startX = 0, startY = 0;
+  const lb = document.getElementById('lightbox');
+  lb.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  lb.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) lbNav(dx < 0 ? 1 : -1);
+  });
+})();
+
+// SPLASH
+window.addEventListener('load', () => {
+  const saved = sessionStorage.getItem('polimetal_user');
+  if (saved) {
+    const u = JSON.parse(saved);
+    showApp(u.name);
+  }
+  // login screen stays visible if not logged in
+});
+
+function updateIdField() {
+  document.getElementById('f_id').value = nextId;
+}
+
+// CAMERA HELPERS
+async function getCameraDevices() {
+  const all = await navigator.mediaDevices.enumerateDevices();
+  return all.filter(d => d.kind === 'videoinput');
+}
+async function populateSelect(selectId, devices) {
+  const sel = document.getElementById(selectId);
+  sel.innerHTML = '';
+  if (!devices.length) { sel.innerHTML = '<option>Nenhuma câmera</option>'; return; }
+  devices.forEach((d, i) => {
+    const o = document.createElement('option');
+    o.value = d.deviceId;
+    o.textContent = d.label || `Câmera ${i + 1}`;
+    sel.appendChild(o);
+  });
+}
+
+// CAMERA MODE TOGGLE
+let camMode = 'photo';
+function setCamMode(mode) {
+  camMode = mode;
+  const isPhoto = mode === 'photo';
+  document.getElementById('togglePhoto').style.background = isPhoto ? 'var(--blue)' : '#f4f6f9';
+  document.getElementById('togglePhoto').style.color     = isPhoto ? 'white' : 'var(--muted)';
+  document.getElementById('toggleVideo').style.background = !isPhoto ? 'var(--blue)' : '#f4f6f9';
+  document.getElementById('toggleVideo').style.color     = !isPhoto ? 'white' : 'var(--muted)';
+  document.getElementById('photoControls').style.display = isPhoto ? 'flex' : 'none';
+  document.getElementById('videoControls').style.display = isPhoto ? 'none' : 'block';
+  document.getElementById('camPanelHeader').textContent  = isPhoto ? '📷 Câmera — Tirar Foto' : '🎥 Câmera — Gravar Vídeo';
+  // restart stream with audio if switching to video
+  const sel = document.getElementById('cameraSelect').value;
+  if (sel) startCamera(sel);
+}
+
+// UNIFIED CAMERA
+async function initCamera() {
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    s.getTracks().forEach(t => t.stop());
+    const devs = await getCameraDevices();
+    await populateSelect('cameraSelect', devs);
+    if (devs.length) startCamera(devs[0].deviceId);
+  } catch(e) {
+    document.getElementById('cameraOffline').style.display = 'flex';
+    document.getElementById('cameraFeed').style.display = 'none';
+  }
+}
+async function startCamera(deviceId) {
+  if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: deviceId ? { deviceId: { exact: deviceId } } : true,
+      audio: true
+    });
+    const v = document.getElementById('cameraFeed');
+    v.srcObject = cameraStream; v.style.display = 'block';
+    document.getElementById('cameraOffline').style.display = 'none';
+    // also wire to vidStream for recording
+    vidStream = cameraStream;
+  } catch(e) {
+    document.getElementById('cameraOffline').style.display = 'flex';
+    document.getElementById('cameraFeed').style.display = 'none';
+  }
+}
+function switchCamera() {
+  const v = document.getElementById('cameraSelect').value;
+  if (v) startCamera(v);
+}
+function showCameraOffline(offId, vidId) {
+  document.getElementById(offId).style.display = 'flex';
+  document.getElementById(vidId).style.display = 'none';
+}
+
+function takePhoto() {
+  const video = document.getElementById('cameraFeed');
+  if (!cameraStream || video.readyState < 2) { showToast('Câmera não está ativa.', false); return; }
+  const canvas = document.getElementById('capturedCanvas');
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const id = Date.now();
+  camPhotos.push({ id, dataUrl: canvas.toDataURL('image/png') });
+  renderCamPhotos();
+}
+function renderCamPhotos() {
+  const grid = document.getElementById('camPhotosGrid');
+  document.getElementById('camPhotoCount').textContent = camPhotos.length ? `${camPhotos.length} foto(s) tirada(s)` : '';
+  grid.innerHTML = '';
+  const galleryUrls = camPhotos.map(x => x.dataUrl);
+  camPhotos.forEach((p, idx) => {
+    const d = document.createElement('div');
+    d.className = 'cam-photo-thumb';
+    const img = document.createElement('img');
+    img.src = p.dataUrl;
+    img.className = 'clickable-img';
+    img.dataset.idx = idx;
+    img.dataset.gallery = JSON.stringify(galleryUrls);
+    img.addEventListener('click', function() {
+      openLightboxIdx(this.dataset.idx, this.dataset.gallery);
+    });
+    const btn = document.createElement('button');
+    btn.className = 'del';
+    btn.textContent = '✕';
+    btn.onclick = () => deleteCamPhoto(p.id);
+    d.appendChild(img);
+    d.appendChild(btn);
+    grid.appendChild(d);
+  });
+}
+function deleteCamPhoto(id) { camPhotos = camPhotos.filter(p => p.id !== id); renderCamPhotos(); }
+function clearCamPhotos() { camPhotos = []; renderCamPhotos(); }
+
+
+
+function startRecording() {
+  if (!cameraStream) { showToast('Câmera não está ativa.', false); return; }
+  vidStream = cameraStream;
+  recordedChunks = [];
+  const mimeType = ['video/webm;codecs=vp9','video/webm','video/mp4'].find(m => MediaRecorder.isTypeSupported(m)) || '';
+  mediaRecorder = new MediaRecorder(vidStream, mimeType ? { mimeType } : {});
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+  mediaRecorder.onstop = finalizeRecording;
+  mediaRecorder.start(100);
+  document.getElementById('btnStartRec').disabled = true;
+  document.getElementById('btnStopRec').disabled = false;
+  document.getElementById('recIndicator').classList.add('show');
+  document.getElementById('recTimer').style.display = 'block';
+  recSeconds = 0;
+  recTimerInterval = setInterval(() => {
+    recSeconds++;
+    const m = String(Math.floor(recSeconds / 60)).padStart(2, '0');
+    const s = String(recSeconds % 60).padStart(2, '0');
+    document.getElementById('recTimerVal').textContent = `${m}:${s}`;
+  }, 1000);
+}
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  clearInterval(recTimerInterval);
+  document.getElementById('btnStartRec').disabled = false;
+  document.getElementById('btnStopRec').disabled = true;
+  document.getElementById('recIndicator').classList.remove('show');
+  document.getElementById('recTimer').style.display = 'none';
+}
+function finalizeRecording() {
+  recordedBlob = new Blob(recordedChunks, { type: recordedChunks[0]?.type || 'video/webm' });
+  if (recordedVideoURL) URL.revokeObjectURL(recordedVideoURL);
+  recordedVideoURL = URL.createObjectURL(recordedBlob);
+  document.getElementById('recordedVideoPreview').src = recordedVideoURL;
+  document.getElementById('videoPreviewWrap').style.display = 'block';
+}
+function clearVideo() {
+  recordedVideoURL = null; recordedChunks = []; recordedBlob = null;
+  document.getElementById('recordedVideoPreview').src = '';
+  document.getElementById('videoPreviewWrap').style.display = 'none';
+}
+
+// IMAGE UPLOAD — múltiplas imagens
+function handleImageUpload(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  let loaded = 0;
+  files.forEach(file => {
+    const id = Date.now() + Math.random();
+    const reader = new FileReader();
+    reader.onload = e => {
+      imageFiles.push({ id, url: e.target.result, name: file.name });
+      loaded++;
+      if (loaded === files.length) renderImageGallery();
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('f_imagem').value = '';
+}
+function removeImageFile(id) {
+  imageFiles = imageFiles.filter(f => f.id !== id);
+  renderImageGallery();
+}
+function renderImageGallery() {
+  const grid  = document.getElementById('imageGallery');
+  const count = document.getElementById('imageCount');
+  grid.innerHTML = '';
+  const allU = JSON.stringify(imageFiles.map(x => x.url));
+  imageFiles.forEach((f, idx) => {
+    const div = document.createElement('div');
+    div.className = 'gallery-item';
+    const img = document.createElement('img');
+    img.src = f.url;
+    img.title = f.name;
+    img.className = 'clickable-img';
+    img.dataset.idx = idx;
+    img.dataset.gallery = allU;
+    img.addEventListener('click', function() {
+      openLightboxIdx(this.dataset.idx, this.dataset.gallery);
+    });
+    const btn = document.createElement('button');
+    btn.className = 'remove';
+    btn.textContent = '✕';
+    btn.onclick = () => removeImageFile(f.id);
+    div.appendChild(img);
+    div.appendChild(btn);
+    grid.appendChild(div);
+  });
+  count.textContent = imageFiles.length > 0 ? `${imageFiles.length} imagem(ns) selecionada(s)` : '';
+}
+function clearImage() {
+  imageFiles = [];
+  document.getElementById('f_imagem').value = '';
+  renderImageGallery();
+}
+
+const CARACT_ITEMS = ["Amassado", "Pintura/Cor", "Adesivo/Impressão", "Conjunto Peça/Gabarito", "Risco", "Conjunto Montado/Articulação", "Vazão de Luz", "Instalação Elétrica", "Router", "Rebarba", "Solda"];
+
+// CARACTERÍSTICAS
+function getCaracteristicas() {
+  const res = {};
+  CARACT_ITEMS.forEach(item => {
+    const key = item.replace(/[\/\s]/g, '_').toLowerCase();
+    const sel = document.querySelector(`input[name="caract_${key}"]:checked`);
+    res[item] = sel ? sel.value : null;
+  });
+  return res;
+}
+function validateCaracteristicas() {
+  const c = getCaracteristicas();
+  const hasOne = Object.values(c).some(v => v !== null);
+  document.getElementById('caract_err').classList.toggle('show', !hasOne);
+  return hasOne;
+}
+function clearCaracteristicas() {
+  CARACT_ITEMS.forEach(item => {
+    const key = item.replace(/[\/\s]/g, '_').toLowerCase();
+    document.querySelectorAll(`input[name="caract_${key}"]`).forEach(r => r.checked = false);
+  });
+  document.getElementById('caract_err').classList.remove('show');
+}
+
+// VALIDATION
+function validateForm() {
+  let valid = true;
+  ['item','op','quantidade','bandeira','setor','colaborador'].forEach(f => {
+    const el = document.getElementById(`f_${f}`);
+    const isEmpty = !el.value.trim();
+    el.classList.toggle('error', isEmpty);
+    document.getElementById(`err_${f}`).classList.toggle('show', isEmpty);
+    if (isEmpty) valid = false;
+  });
+  return valid;
+}
+
+// SAVE
+async function saveRecord() {
+  if (!validateForm()) { showToast('Preencha todos os campos obrigatórios.', false); return; }
+  if (!validateCaracteristicas()) { showToast('Preencha pelo menos uma característica do produto.', false); return; }
+  let mediaSrc = null, mediaType = null;
+  if (imageFiles.length > 0) { mediaSrc = imageFiles[0].url; mediaType = 'image'; }
+  if (recordedVideoURL)      { mediaSrc = recordedVideoURL;   mediaType = 'video'; }
+
+  const now = new Date();
+  const rec = {
+    id:          nextId,
+    item:        document.getElementById('f_item').value,
+    op:          document.getElementById('f_op').value,
+    quantidade:  document.getElementById('f_quantidade').value,
+    bandeira:    document.getElementById('f_bandeira').value,
+    setor:       document.getElementById('f_setor').value,
+    colaborador: document.getElementById('f_colaborador').value,
+    mediaSrc, mediaType,
+    imageFiles:   imageFiles.map(f => ({ url: f.url, name: f.name })),
+    camPhotos:    [...camPhotos],
+    observacoes:  document.getElementById('f_observacoes').value.trim(),
+    caracteristicas: getCaracteristicas(),
+    date:        now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR')
+  };
+  records.unshift(rec);
+  nextId++;
+  renderTable();
+  document.getElementById('btnSalvar').disabled = true;
+  await saveToSupabase(rec, imageFiles, recordedBlob);
+  document.getElementById('btnSalvar').disabled = false;
+  clearForm();
+  clearCamPhotos();
+}
+
+// CLEAR
+function clearForm() {
+  ['item','op','quantidade','bandeira','setor','colaborador'].forEach(f => {
+    const el = document.getElementById(`f_${f}`);
+    el.value = ''; el.classList.remove('error');
+    document.getElementById(`err_${f}`).classList.remove('show');
+  });
+  clearImage(); clearVideo(); updateIdField();
+  document.getElementById('f_observacoes').value = '';
+  clearCaracteristicas();
+}
+
+// TABLE
+function buildRow(r) {
+  // COLUNA VÍDEO — só vídeo gravado
+  const videoCell = r.mediaType === 'video'
+    ? '<span class="video-badge">🎥 Vídeo</span>'
+    : '<span style="color:var(--muted);font-size:12px;">—</span>';
+
+  // COLUNA FOTOS — imagens anexadas + fotos de câmera juntas
+  const allImgs = [
+    ...(r.imageFiles || []).map(f => f.url),
+    ...(r.camPhotos  || []).map(p => p.dataUrl)
+  ];
+  let photosCell = '<span style="color:var(--muted);font-size:12px;">—</span>';
+  if (allImgs.length > 0) {
+    const galleryJson = JSON.stringify(allImgs).replace(/"/g, '&quot;');
+    const thumbs = allImgs.slice(0, 3).map((src, i) =>
+      `<img src="${src}" data-idx="${i}" data-gallery="${galleryJson}"
+        class="clickable-img td-thumb-img"
+        style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--border);cursor:zoom-in;"
+        onclick="openLightboxIdx(this.dataset.idx, this.dataset.gallery.replace(/&quot;/g, '\"')">`
+    ).join('');
+    const extra = allImgs.length > 3 ? `<span class="count-badge">+${allImgs.length - 3}</span>` : '';
+    photosCell = `<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">${thumbs}${extra}</div>`;
+  }
+
+  const _c_amassado = (r.caracteristicas||{})['Amassado'];
+  const _badge_amassado = _c_amassado === 'C' ? '<span class="badge-c">✓</span>' : _c_amassado === 'NC' ? '<span class="badge-nc">✗</span>' : _c_amassado === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
+  const _c_pintura_cor = (r.caracteristicas||{})['Pintura/Cor'];
+  const _badge_pintura_cor = _c_pintura_cor === 'C' ? '<span class="badge-c">✓</span>' : _c_pintura_cor === 'NC' ? '<span class="badge-nc">✗</span>' : _c_pintura_cor === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
+  const _c_adesivo_impressão = (r.caracteristicas||{})['Adesivo/Impressão'];
+  const _badge_adesivo_impressão = _c_adesivo_impressão === 'C' ? '<span class="badge-c">✓</span>' : _c_adesivo_impressão === 'NC' ? '<span class="badge-nc">✗</span>' : _c_adesivo_impressão === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
+  const _c_conjunto_peça_gabarito = (r.caracteristicas||{})['Conjunto Peça/Gabarito'];
+  const _badge_conjunto_peça_gabarito = _c_conjunto_peça_gabarito === 'C' ? '<span class="badge-c">✓</span>' : _c_conjunto_peça_gabarito === 'NC' ? '<span class="badge-nc">✗</span>' : _c_conjunto_peça_gabarito === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
+  const _c_risco = (r.caracteristicas||{})['Risco'];
+  const _badge_risco = _c_risco === 'C' ? '<span class="badge-c">✓</span>' : _c_risco === 'NC' ? '<span class="badge-nc">✗</span>' : _c_risco === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
+  const _c_conjunto_montado_articulação = (r.caracteristicas||{})['Conjunto Montado/Articulação'];
+  const _badge_conjunto_montado_articulação = _c_conjunto_montado_articulação === 'C' ? '<span class="badge-c">✓</span>' : _c_conjunto_montado_articulação === 'NC' ? '<span class="badge-nc">✗</span>' : _c_conjunto_montado_articulação === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
+  const _c_vazão_de_luz = (r.caracteristicas||{})['Vazão de Luz'];
+  const _badge_vazão_de_luz = _c_vazão_de_luz === 'C' ? '<span class="badge-c">✓</span>' : _c_vazão_de_luz === 'NC' ? '<span class="badge-nc">✗</span>' : _c_vazão_de_luz === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
+  const _c_instalação_elétrica = (r.caracteristicas||{})['Instalação Elétrica'];
+  const _badge_instalação_elétrica = _c_instalação_elétrica === 'C' ? '<span class="badge-c">✓</span>' : _c_instalação_elétrica === 'NC' ? '<span class="badge-nc">✗</span>' : _c_instalação_elétrica === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
+  const _c_router = (r.caracteristicas||{})['Router'];
+  const _badge_router = _c_router === 'C' ? '<span class="badge-c">✓</span>' : _c_router === 'NC' ? '<span class="badge-nc">✗</span>' : _c_router === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
+  const _c_rebarba = (r.caracteristicas||{})['Rebarba'];
+  const _badge_rebarba = _c_rebarba === 'C' ? '<span class="badge-c">✓</span>' : _c_rebarba === 'NC' ? '<span class="badge-nc">✗</span>' : _c_rebarba === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
+  const _c_solda = (r.caracteristicas||{})['Solda'];
+  const _badge_solda = _c_solda === 'C' ? '<span class="badge-c">✓</span>' : _c_solda === 'NC' ? '<span class="badge-nc">✗</span>' : _c_solda === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
+  const obs = r.observacoes || '';
+  const obsCell = obs
+    ? `<span title="${obs.replace(/"/g,'&quot;')}">${obs.substring(0,40)}${obs.length>40?'…':''}</span>`
+    : '<span style="color:var(--muted)">—</span>';
+
+  return `<tr>
+    <td><strong style="color:var(--blue);">#${r.id}</strong></td>
+    <td><button onclick="downloadZip(${r.id})" title="Baixar fotos/vídeo ID ${r.id}" style="background:var(--blue-light);color:var(--blue);border:1px solid rgba(16,56,193,0.25);border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ ZIP</button></td>
+    <td>${r.op || '—'}</td><td>${r.item}</td><td>${r.quantidade}</td>
+    <td>${r.bandeira}</td><td>${r.setor}</td><td>${r.colaborador}</td>
+    <td>${videoCell}</td><td>${photosCell}</td>
+    <td style="text-align:center;">${_badge_amassado}</td>
+    <td style="text-align:center;">${_badge_pintura_cor}</td>
+    <td style="text-align:center;">${_badge_adesivo_impressão}</td>
+    <td style="text-align:center;">${_badge_conjunto_peça_gabarito}</td>
+    <td style="text-align:center;">${_badge_risco}</td>
+    <td style="text-align:center;">${_badge_conjunto_montado_articulação}</td>
+    <td style="text-align:center;">${_badge_vazão_de_luz}</td>
+    <td style="text-align:center;">${_badge_instalação_elétrica}</td>
+    <td style="text-align:center;">${_badge_router}</td>
+    <td style="text-align:center;">${_badge_rebarba}</td>
+    <td style="text-align:center;">${_badge_solda}</td>
+    <td style="color:var(--muted);font-size:12px;">${obsCell}</td>
+    <td style="color:var(--muted);font-size:12px;">${r.date}</td>
+  </tr>`;
+}
+function renderTableData(data) {
+  const tbody = document.getElementById('recordsBody');
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="22"><div class="empty-state">Nenhum registro encontrado.</div></td></tr>'; return; }
+  tbody.innerHTML = data.map(buildRow).join('');
+}
+function renderTable() {
+  document.getElementById('recordCount').textContent = `${records.length} registro(s)`;
+  if (!records.length) { document.getElementById('recordsBody').innerHTML = '<tr><td colspan="22"><div class="empty-state">Nenhum registro ainda. Preencha o formulário e clique em Salvar.</div></td></tr>'; return; }
+  renderTableData(records);
+}
+
+// FILTROS
+function applyFilters() {
+  const fid    = document.getElementById('f_fid').value.toLowerCase();
+  const fop    = document.getElementById('f_fop').value.toLowerCase();
+  const fbanda = document.getElementById('f_fbandeira').value;
+  const fsetor = document.getElementById('f_fsetor').value;
+  const fcolab = document.getElementById('f_fcolab').value;
+  const fdate  = document.getElementById('f_fdate').value.toLowerCase();
+
+  const filtered = records.filter(r => (
+    (!fid    || String(r.id).toLowerCase().includes(fid))  &&
+    (!fop    || (r.op||'').toLowerCase().includes(fop))    &&
+    (!fbanda || r.bandeira === fbanda)                      &&
+    (!fsetor || r.setor === fsetor)                         &&
+    (!fcolab || r.colaborador === fcolab)                   &&
+    (!fdate  || r.date.toLowerCase().includes(fdate))
+  ));
+  renderTableData(filtered);
+}
+
+function clearFilters() {
+  ['f_fid','f_fop','f_fdate'].forEach(id => document.getElementById(id).value = '');
+  ['f_fbandeira','f_fsetor','f_fcolab'].forEach(id => document.getElementById(id).value = '');
+  renderTable();
+}
+
+// DOWNLOAD ZIP (usa JSZip via CDN)
+async function downloadZip(recId) {
+  const rec = records.find(r => r.id === recId);
+  if (!rec) return;
+  const imgs = [...(rec.imageFiles||[]), ...(rec.camPhotos||[]).map(p=>({ url: p.dataUrl, name: 'foto_camera.png' }))];
+  if (!imgs.length && !rec.mediaType==='video') {
+    showToast('Nenhuma imagem ou vídeo neste registro.', false);
+    return;
+  }
+  showToast('Preparando download...', true);
+  const JSZip = window.JSZip;
+  if (!JSZip) { showToast('Biblioteca ZIP não carregada.', false); return; }
+  const zip = new JSZip();
+  const folder = zip.folder(`ID_${recId}`);
+  let idx = 1;
+  for (const img of imgs) {
+    try {
+      const resp = await fetch(img.url);
+      const blob = await resp.blob();
+      const ext  = blob.type.includes('png') ? 'png' : blob.type.includes('webm') ? 'webm' : blob.type.includes('mp4') ? 'mp4' : 'jpg';
+      folder.file(`${String(idx).padStart(3,'0')}_${img.name || 'imagem'}.${ext}`, blob);
+      idx++;
+    } catch(e) { console.warn('Erro ao buscar imagem:', e); }
+  }
+  if (rec.observacoes) {
+    folder.file('observacoes.txt', rec.observacoes);
+  }
+  const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ID_${recId}.zip`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// EXPORTAR EXCEL (SheetJS)
+function exportExcel() {
+  if (!records.length) { showToast('Nenhum registro para exportar.', false); return; }
+  if (typeof XLSX === 'undefined') { showToast('Biblioteca Excel não carregada.', false); return; }
+  const rows = records.map(r => ({
+    'ID':           r.id,
+    'OP':           r.op || '',
+    'Item':         r.item,
+    'Quantidade':   r.quantidade,
+    'Bandeira':     r.bandeira,
+    'Setor':        r.setor,
+    'Colaborador':  r.colaborador,
+    'Amassado':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Amassado']] || '',
+    'Pintura/Cor':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Pintura/Cor']] || '',
+    'Adesivo/Impressão':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Adesivo/Impressão']] || '',
+    'Conjunto Peça/Gabarito':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Conjunto Peça/Gabarito']] || '',
+    'Risco':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Risco']] || '',
+    'Conjunto Montado/Articulação':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Conjunto Montado/Articulação']] || '',
+    'Vazão de Luz':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Vazão de Luz']] || '',
+    'Instalação Elétrica':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Instalação Elétrica']] || '',
+    'Router':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Router']] || '',
+    'Rebarba':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Rebarba']] || '',
+    'Solda':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Solda']] || '',
+    'Observações':  r.observacoes || '',
+    'Data/Hora':    r.date
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  // Largura das colunas
+  ws['!cols'] = [
+    {wch:6},{wch:14},{wch:8},{wch:10},{wch:16},{wch:22},{wch:18},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:30},{wch:20}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Inspeções');
+  const now = new Date();
+  const fname = `Inspecoes_${now.toLocaleDateString('pt-BR').replace(/\//g,'-')}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  showToast('✅ Excel exportado com sucesso!', true);
+}
+
+// TOAST
+function showToast(msg, success = true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + (success ? 'success' : 'error-toast');
+  setTimeout(() => { t.className = ''; }, 3500);
+}
+</script>
+</body>
+</html>
