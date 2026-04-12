@@ -266,6 +266,21 @@
   .badge-c  { display:inline-block;padding:1px 6px;border-radius:10px;font-size:11px;font-weight:700;background:#e6f4ea;color:#2e7d32;border:1px solid #a5d6a7; }
   .badge-nc { display:inline-block;padding:1px 6px;border-radius:10px;font-size:11px;font-weight:700;background:#fce8e8;color:#a80000;border:1px solid #ef9a9a; }
   .badge-na { display:inline-block;padding:1px 6px;border-radius:10px;font-size:11px;font-weight:700;background:#f0f0f0;color:#555;border:1px solid #bbb; }
+
+  /* NÃO CONFORMIDADE */
+  .nc-alert { background:#fff3f3;border:1px solid #f5c6c6;border-radius:6px;padding:10px 14px;font-size:13px;color:#a80000;font-weight:600;display:none;margin-top:10px; }
+  .nc-alert.show { display:flex;align-items:center;gap:8px; }
+  .nc-section { margin-top:14px;display:none; }
+  .nc-section.show { display:block; }
+  .btn-nc { background:#a80000;color:white;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;padding:10px 16px;border:none;border-radius:4px;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;transition:background 0.15s; }
+  .btn-nc:hover { background:#8b0000; }
+  .nc-photos { display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;max-height:200px;overflow-y:auto; }
+  .nc-photo-thumb { position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;border:2px solid #f5c6c6; }
+  .nc-photo-thumb img { width:100%;height:100%;object-fit:cover;display:block; }
+  .nc-photo-thumb .del { position:absolute;top:3px;right:3px;width:18px;height:18px;background:rgba(168,0,0,0.85);color:white;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center; }
+  .nc-err { font-size:11px;color:var(--danger);font-weight:600;display:none;margin-top:4px; }
+  .nc-err.show { display:block; }
+  .nc-badge { display:inline-flex;align-items:center;gap:3px;background:#fce8e8;color:#a80000;border:1px solid #ef9a9a;border-radius:4px;padding:2px 7px;font-size:12px;font-weight:700;cursor:zoom-in; }
 </style>
 </head>
 <body>
@@ -615,7 +630,8 @@
               </tbody>
             </table>
           </div>
-          <div class="caract-err" id="caract_err">Preencha pelo menos uma característica antes de salvar.</div>
+          <div class="caract-err" id="caract_err">Preencha <strong>todas</strong> as características do produto antes de salvar.</div>
+          <div class="nc-alert" id="nc_alert">🚫 Há itens "Não Conforme" — tire fotos na câmera usando o botão vermelho "Registrar Não Conformidade".</div>
 
         </div>
         <div class="action-bar">
@@ -666,6 +682,14 @@
           </div>
           <div id="camPhotoCount" style="font-size:12px;color:var(--muted);margin-bottom:8px;"></div>
           <div class="cam-photos" id="camPhotosGrid"></div>
+
+          <!-- BOTÃO NÃO CONFORMIDADE -->
+          <button class="btn-nc" onclick="takeNcPhoto()" style="margin-top:10px;">
+            🚫 Registrar Não Conformidade
+          </button>
+          <div class="nc-err" id="nc_photo_err">Tire ao menos 1 foto de não conformidade antes de salvar.</div>
+          <div id="ncPhotoCount" style="font-size:12px;color:#a80000;font-weight:600;margin-top:6px;display:none;"></div>
+          <div class="nc-photos" id="ncPhotosGrid"></div>
 
           <!-- CONTROLES VÍDEO -->
           <div id="videoControls" style="display:none;">
@@ -738,6 +762,7 @@
               <th>Colaborador</th>
               <th>Vídeo</th>
               <th>Fotos</th>
+              <th style="color:#fce8e8;">Não Conformidade</th>
               <th style="font-size:10px;white-space:nowrap;">Amassado</th>
               <th style="font-size:10px;white-space:nowrap;">Pintura/Cor</th>
               <th style="font-size:10px;white-space:nowrap;">Adesivo/Impressão</th>
@@ -787,8 +812,9 @@ async function saveToSupabase(rec, imgs, videoBlob) {
       setor:       rec.setor,
       colaborador: rec.colaborador,
       media_type:    rec.mediaType || null,
-      observacoes:   rec.observacoes || null,
-      caracteristicas: rec.caracteristicas || null
+      observacoes:     rec.observacoes || null,
+      caracteristicas: rec.caracteristicas || null,
+      nc_fotos:        rec.ncPhotos && rec.ncPhotos.length > 0 ? rec.ncPhotos.map(p => p.dataUrl) : null
     }]).select().single();
     if (error) throw error;
     const inspecaoId = data.id;
@@ -848,6 +874,7 @@ async function loadFromSupabase() {
       mediaType:   r.media_type,
       observacoes:     r.observacoes || '',
       caracteristicas: r.caracteristicas || {},
+      ncPhotos:        (r.nc_fotos || []).map((url, i) => ({ id: i, dataUrl: url })),
       mediaSrc:        null,
       imageFiles:  (r.inspecoes_imagens || []).map(i => ({ url: i.url, name: i.nome })),
       camPhotos:   [],
@@ -859,7 +886,7 @@ async function loadFromSupabase() {
   } catch(e) { console.warn('Não foi possível carregar do Supabase:', e); }
 }
 
-let records = [], camPhotos = [], imageFiles = [];
+let records = [], camPhotos = [], imageFiles = [], ncPhotos = [];
 let cameraStream = null, vidStream = null;
 let mediaRecorder = null, recordedChunks = [], recordedVideoURL = null, recordedBlob = null;
 let recTimerInterval = null, recSeconds = 0;
@@ -1195,9 +1222,68 @@ function clearImage() {
   renderImageGallery();
 }
 
+// NÃO CONFORMIDADE — fotos
+function takeNcPhoto() {
+  const video = document.getElementById('cameraFeed');
+  if (!cameraStream || video.readyState < 2) {
+    showToast('Câmera não está ativa. Inicie a câmera na aba "Tirar Foto".', false);
+    return;
+  }
+  // Garantir modo foto
+  if (document.getElementById('photoControls').style.display === 'none') setCamMode('photo');
+  const canvas = document.getElementById('capturedCanvas');
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const id = Date.now();
+  ncPhotos.push({ id, dataUrl: canvas.toDataURL('image/png') });
+  renderNcPhotos();
+  document.getElementById('nc_photo_err').classList.remove('show');
+}
+function renderNcPhotos() {
+  const grid = document.getElementById('ncPhotosGrid');
+  const cnt  = document.getElementById('ncPhotoCount');
+  cnt.style.display = ncPhotos.length ? 'block' : 'none';
+  cnt.textContent   = ncPhotos.length ? `${ncPhotos.length} foto(s) de não conformidade` : '';
+  grid.innerHTML = '';
+  const galleryUrls = ncPhotos.map(x => x.dataUrl);
+  ncPhotos.forEach((p, idx) => {
+    const d = document.createElement('div');
+    d.className = 'nc-photo-thumb';
+    const img = document.createElement('img');
+    img.src = p.dataUrl;
+    img.className = 'clickable-img';
+    img.dataset.idx = idx;
+    img.dataset.gallery = JSON.stringify(galleryUrls);
+    img.addEventListener('click', function() {
+      openLightboxIdx(this.dataset.idx, this.dataset.gallery);
+    });
+    const btn = document.createElement('button');
+    btn.className = 'del';
+    btn.textContent = '✕';
+    btn.onclick = () => deleteNcPhoto(p.id);
+    d.appendChild(img); d.appendChild(btn);
+    grid.appendChild(d);
+  });
+}
+function deleteNcPhoto(id) { ncPhotos = ncPhotos.filter(p => p.id !== id); renderNcPhotos(); }
+function clearNcPhotos()    { ncPhotos = []; renderNcPhotos(); }
+
+// Verifica se há NC nas características e mostra/esconde alerta
+function checkNcAlert() {
+  const c = getCaracteristicas();
+  const hasNC = Object.values(c).some(v => v === 'NC');
+  document.getElementById('nc_alert').classList.toggle('show', hasNC);
+}
+
 const CARACT_ITEMS = ["Amassado", "Pintura/Cor", "Adesivo/Impressão", "Conjunto Peça/Gabarito", "Risco", "Conjunto Montado/Articulação", "Vazão de Luz", "Instalação Elétrica", "Router", "Rebarba", "Solda"];
 
 // CARACTERÍSTICAS
+// Aciona alerta NC ao mudar qualquer radio
+document.addEventListener('change', function(e) {
+  if (e.target && e.target.classList.contains('caract-radio')) checkNcAlert();
+});
+
 function getCaracteristicas() {
   const res = {};
   CARACT_ITEMS.forEach(item => {
@@ -1209,9 +1295,20 @@ function getCaracteristicas() {
 }
 function validateCaracteristicas() {
   const c = getCaracteristicas();
-  const hasOne = Object.values(c).some(v => v !== null);
-  document.getElementById('caract_err').classList.toggle('show', !hasOne);
-  return hasOne;
+  // TODAS as linhas devem ser preenchidas
+  const allFilled = Object.values(c).every(v => v !== null);
+  document.getElementById('caract_err').classList.toggle('show', !allFilled);
+  return allFilled;
+}
+function validateNcPhotos() {
+  const c = getCaracteristicas();
+  const hasNC = Object.values(c).some(v => v === 'NC');
+  if (hasNC && ncPhotos.length === 0) {
+    document.getElementById('nc_photo_err').classList.add('show');
+    return false;
+  }
+  document.getElementById('nc_photo_err').classList.remove('show');
+  return true;
 }
 function clearCaracteristicas() {
   CARACT_ITEMS.forEach(item => {
@@ -1219,6 +1316,8 @@ function clearCaracteristicas() {
     document.querySelectorAll(`input[name="caract_${key}"]`).forEach(r => r.checked = false);
   });
   document.getElementById('caract_err').classList.remove('show');
+  document.getElementById('nc_alert').classList.remove('show');
+  document.getElementById('nc_photo_err').classList.remove('show');
 }
 
 // VALIDATION
@@ -1237,7 +1336,8 @@ function validateForm() {
 // SAVE
 async function saveRecord() {
   if (!validateForm()) { showToast('Preencha todos os campos obrigatórios.', false); return; }
-  if (!validateCaracteristicas()) { showToast('Preencha pelo menos uma característica do produto.', false); return; }
+  if (!validateCaracteristicas()) { showToast('Preencha todas as características do produto.', false); return; }
+  if (!validateNcPhotos()) { showToast('Há itens Não Conforme — tire fotos de não conformidade.', false); return; }
   let mediaSrc = null, mediaType = null;
   if (imageFiles.length > 0) { mediaSrc = imageFiles[0].url; mediaType = 'image'; }
   if (recordedVideoURL)      { mediaSrc = recordedVideoURL;   mediaType = 'video'; }
@@ -1256,6 +1356,7 @@ async function saveRecord() {
     camPhotos:    [...camPhotos],
     observacoes:  document.getElementById('f_observacoes').value.trim(),
     caracteristicas: getCaracteristicas(),
+    ncPhotos:         [...ncPhotos],
     date:        now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR')
   };
   records.unshift(rec);
@@ -1276,12 +1377,27 @@ function clearForm() {
     document.getElementById(`err_${f}`).classList.remove('show');
   });
   clearImage(); clearVideo(); updateIdField();
+  clearNcPhotos();
   document.getElementById('f_observacoes').value = '';
   clearCaracteristicas();
 }
 
 // TABLE
 function buildRow(r) {
+  // COLUNA NÃO CONFORMIDADE — fotos NC
+  let ncCell = '<span style="color:var(--muted);font-size:12px;">—</span>';
+  if (r.ncPhotos && r.ncPhotos.length > 0) {
+    const ncUrls = r.ncPhotos.map(p => p.dataUrl || p);
+    const ncGallery = JSON.stringify(ncUrls).replace(/"/g, '&quot;');
+    const ncThumbs = ncUrls.slice(0,3).map((src, i) =>
+      `<img src="${src}" data-idx="${i}" data-gallery="${ncGallery}"
+        class="clickable-img" onclick="openLightboxIdx(this.dataset.idx, this.dataset.gallery.replace(/&quot;/g,'\"'))"
+        style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:2px solid #ef9a9a;cursor:zoom-in;">`
+    ).join('');
+    const ncExtra = ncUrls.length > 3 ? `<span class="count-badge" style="background:#fce8e8;color:#a80000;">+${ncUrls.length-3}</span>` : '';
+    ncCell = `<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">${ncThumbs}${ncExtra}</div>`;
+  }
+
   // COLUNA VÍDEO — só vídeo gravado
   const videoCell = r.mediaType === 'video'
     ? '<span class="video-badge">🎥 Vídeo</span>'
@@ -1338,6 +1454,7 @@ function buildRow(r) {
     <td>${r.op || '—'}</td><td>${r.item}</td><td>${r.quantidade}</td>
     <td>${r.bandeira}</td><td>${r.setor}</td><td>${r.colaborador}</td>
     <td>${videoCell}</td><td>${photosCell}</td>
+    <td>${ncCell}</td>
     <td style="text-align:center;">${_badge_amassado}</td>
     <td style="text-align:center;">${_badge_pintura_cor}</td>
     <td style="text-align:center;">${_badge_adesivo_impressão}</td>
@@ -1394,29 +1511,60 @@ function clearFilters() {
 async function downloadZip(recId) {
   const rec = records.find(r => r.id === recId);
   if (!rec) return;
-  const imgs = [...(rec.imageFiles||[]), ...(rec.camPhotos||[]).map(p=>({ url: p.dataUrl, name: 'foto_camera.png' }))];
-  if (!imgs.length && !rec.mediaType==='video') {
-    showToast('Nenhuma imagem ou vídeo neste registro.', false);
-    return;
-  }
+  const hasContent = (rec.imageFiles&&rec.imageFiles.length) ||
+                     (rec.camPhotos&&rec.camPhotos.length)   ||
+                     (rec.ncPhotos&&rec.ncPhotos.length)     ||
+                     rec.mediaType === 'video';
+  if (!hasContent) { showToast('Nenhuma imagem ou vídeo neste registro.', false); return; }
   showToast('Preparando download...', true);
   const JSZip = window.JSZip;
   if (!JSZip) { showToast('Biblioteca ZIP não carregada.', false); return; }
   const zip = new JSZip();
   const folder = zip.folder(`ID_${recId}`);
+
+  // Fotos normais (imagens anexadas + câmera)
+  const imgs = [
+    ...(rec.imageFiles||[]).map(f => ({ url: f.url, name: f.name })),
+    ...(rec.camPhotos ||[]).map(p => ({ url: p.dataUrl, name: 'foto_camera.png' }))
+  ];
   let idx = 1;
   for (const img of imgs) {
     try {
       const resp = await fetch(img.url);
       const blob = await resp.blob();
-      const ext  = blob.type.includes('png') ? 'png' : blob.type.includes('webm') ? 'webm' : blob.type.includes('mp4') ? 'mp4' : 'jpg';
-      folder.file(`${String(idx).padStart(3,'0')}_${img.name || 'imagem'}.${ext}`, blob);
+      const ext = blob.type.includes('png') ? 'png' : blob.type.includes('webm') ? 'webm' : blob.type.includes('mp4') ? 'mp4' : 'jpg';
+      folder.file(`fotos/${String(idx).padStart(3,'0')}_${img.name||'imagem'}.${ext}`, blob);
       idx++;
-    } catch(e) { console.warn('Erro ao buscar imagem:', e); }
+    } catch(e) { console.warn('Erro imagem:', e); }
   }
-  if (rec.observacoes) {
-    folder.file('observacoes.txt', rec.observacoes);
+
+  // Fotos de não conformidade (pasta separada)
+  if (rec.ncPhotos && rec.ncPhotos.length > 0) {
+    let nci = 1;
+    for (const p of rec.ncPhotos) {
+      try {
+        const url = p.dataUrl || p;
+        const resp = await fetch(url);
+        const blob = await resp.blob();
+        folder.file(`nao_conformidade/${String(nci).padStart(3,'0')}_nc.png`, blob);
+        nci++;
+      } catch(e) { console.warn('Erro foto NC:', e); }
+    }
   }
+
+  // Vídeo gravado
+  if (rec.mediaType === 'video' && rec.mediaSrc) {
+    try {
+      const resp = await fetch(rec.mediaSrc);
+      const blob = await resp.blob();
+      const ext  = blob.type.includes('mp4') ? 'mp4' : 'webm';
+      folder.file(`video/video_ID_${recId}.${ext}`, blob);
+    } catch(e) { console.warn('Erro vídeo:', e); }
+  }
+
+  // Observações em txt
+  if (rec.observacoes) folder.file('observacoes.txt', rec.observacoes);
+
   const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
