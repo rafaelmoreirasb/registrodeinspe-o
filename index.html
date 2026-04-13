@@ -223,6 +223,43 @@
   .lb-counter { position: absolute; bottom: 18px; color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; letter-spacing: 1px; }
   .clickable-img { cursor: zoom-in; }
 
+  /* NAV TABS */
+  .nav-tabs { display:flex; gap:0; border-bottom:2px solid rgba(255,255,255,0.3); padding:0 24px; }
+  .nav-tab { padding:8px 20px; font-family:'Barlow',sans-serif; font-size:13px; font-weight:700; color:rgba(255,255,255,0.7); background:none; border:none; cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px; transition:all 0.15s; letter-spacing:0.5px; }
+  .nav-tab.active { color:white; border-bottom-color:white; }
+  .nav-tab:hover:not(.active) { color:white; }
+
+  /* PÁGINAS */
+  .page { display:none; }
+  .page.active { display:block; }
+
+  /* MODAL EDIÇÃO */
+  #editModal { position:fixed;inset:0;background:rgba(0,0,0,0.55);display:none;align-items:flex-start;justify-content:center;z-index:6000;overflow-y:auto;padding:20px; }
+  #editModal.open { display:flex; }
+  .edit-box { background:white;border-radius:10px;padding:28px;width:100%;max-width:600px;box-shadow:0 8px 32px rgba(0,0,0,0.22);margin:auto; }
+  .edit-box h3 { font-size:16px;font-weight:700;color:var(--text);margin-bottom:18px;display:flex;align-items:center;gap:8px; }
+  .edit-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px; }
+  .edit-field { display:flex;flex-direction:column;gap:4px; }
+  .edit-field label { font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px; }
+  .edit-field input,.edit-field select,.edit-field textarea { font-family:'Barlow',sans-serif;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:4px;color:var(--text);background:#fafbfc;width:100%;outline:none; }
+  .edit-field input:focus,.edit-field select,.edit-field textarea:focus { border-color:var(--blue); }
+  .edit-actions { display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--border); }
+
+  /* MODAL CONFIRMAÇÃO EXCLUSÃO */
+  #delModal { position:fixed;inset:0;background:rgba(0,0,0,0.55);display:none;align-items:center;justify-content:center;z-index:6100; }
+  #delModal.open { display:flex; }
+  .del-box { background:white;border-radius:10px;padding:28px 32px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.22);text-align:center; }
+  .del-box .del-icon { font-size:40px;margin-bottom:12px; }
+  .del-box h3 { font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px; }
+  .del-box p { font-size:13px;color:var(--muted);margin-bottom:20px; }
+  .del-actions { display:flex;gap:10px;justify-content:center; }
+
+  /* PÁGINA NC */
+  .nc-page-form { max-width:700px;margin:0 auto;padding:20px 24px; }
+  .nc-page-form .panel-header { background:var(--danger); }
+  .btn-danger-solid { background:var(--danger);color:white;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;transition:background 0.15s; }
+  .btn-danger-solid:hover { background:#8b0000; }
+
   /* CARACTERÍSTICAS DO PRODUTO */
   .caract-table { width: 100%; border-collapse: collapse; margin-top: 0; font-size: 13px; }
   .caract-table th {
@@ -280,6 +317,33 @@
   .nc-photo-thumb .del { position:absolute;top:3px;right:3px;width:18px;height:18px;background:rgba(168,0,0,0.85);color:white;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center; }
   .nc-err { font-size:11px;color:var(--danger);font-weight:600;display:none;margin-top:4px; }
   .nc-err.show { display:block; }
+  /* MODAL RELATÓRIO */
+  #relModal { position:fixed;inset:0;background:rgba(0,0,0,0.55);display:none;align-items:center;justify-content:center;z-index:6000; }
+  #relModal.open { display:flex; }
+  .rel-box { background:white;border-radius:10px;padding:28px 28px 20px;width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.22); }
+  .rel-box h3 { font-size:16px;font-weight:700;color:var(--text);margin-bottom:14px; }
+  .rel-box input { font-family:'Barlow',sans-serif;font-size:14px;padding:9px 12px;border:1px solid var(--border);border-radius:4px;width:100%;outline:none;margin-bottom:12px; }
+  .rel-box input:focus { border-color:var(--blue);box-shadow:0 0 0 3px rgba(16,56,193,0.12); }
+  .rel-box .rel-actions { display:flex;gap:8px;justify-content:flex-end; }
+  /* RELATÓRIO IMPRIMÍVEL */
+  #relPrint { display:none; }
+  @media print {
+    body > *:not(#relPrint) { display:none !important; }
+    #relPrint { display:block !important; font-family:'Barlow',sans-serif; color:#000; padding:20px; }
+    #relPrint h1 { font-size:20px;margin-bottom:4px; }
+    #relPrint h2 { font-size:15px;margin:18px 0 8px;border-bottom:2px solid #1038c1;padding-bottom:4px;color:#1038c1; }
+    #relPrint table { width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px; }
+    #relPrint th { background:#1038c1;color:white;padding:6px 10px;text-align:left; }
+    #relPrint td { padding:5px 10px;border:1px solid #ddd; }
+    #relPrint tr:nth-child(even) td { background:#f5f5f5; }
+    #relPrint .rel-photos { display:flex;flex-wrap:wrap;gap:8px;margin-top:8px; }
+    #relPrint .rel-photos img { width:150px;height:120px;object-fit:cover;border:1px solid #ccc;border-radius:4px; }
+    #relPrint .badge-c  { color:#2e7d32;font-weight:700; }
+    #relPrint .badge-nc { color:#a80000;font-weight:700; }
+    #relPrint .badge-na { color:#555;font-weight:700; }
+    #relPrint .print-footer { margin-top:24px;font-size:11px;color:#888;text-align:right; }
+  }
+
   .nc-badge { display:inline-flex;align-items:center;gap:3px;background:#fce8e8;color:#a80000;border:1px solid #ef9a9a;border-radius:4px;padding:2px 7px;font-size:12px;font-weight:700;cursor:zoom-in; }
 </style>
 </head>
@@ -329,8 +393,11 @@
       <img src="data:image/png;base64,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" alt="Logo Polimetal" style="height:36px;width:36px;object-fit:contain;border-radius:4px;" />
       <div>
         <div class="brand">POLIMETAL</div>
-        <div class="subtitle">Registro de Inspeção</div>
       </div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="tab_inspecao" onclick="switchPage('inspecao')">📋 Registro de Inspeção</button>
+      <button class="nav-tab" id="tab_nc_page" onclick="switchPage('nc_page')">🚫 Não Conformidade</button>
     </div>
     <div id="userInfo">
       <span class="user-name" id="userNameDisplay"></span>
@@ -721,6 +788,7 @@
       <div class="panel-header" style="background:#1038c1;">
         📊 Registros Salvos
         <button onclick="exportExcel()" style="margin-left:12px;background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.35);padding:5px 12px;border-radius:4px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;" title="Exportar tabela para Excel">📥 Excel</button>
+        <button onclick="document.getElementById('relModal').classList.add('open')" style="margin-left:6px;background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.35);padding:5px 12px;border-radius:4px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;" title="Gerar relatório de inspeção">📄 Gerar Relatório</button>
         <span id="recordCount" style="margin-left:auto;font-size:12px;opacity:0.8;">0 registros</span>
       </div>
       <div class="filter-bar">
@@ -762,7 +830,7 @@
               <th>Colaborador</th>
               <th>Vídeo</th>
               <th>Fotos</th>
-              <th style="color:#fce8e8;">Não Conformidade</th>
+              <th>Não Conformidade</th>
               <th style="font-size:10px;white-space:nowrap;">Amassado</th>
               <th style="font-size:10px;white-space:nowrap;">Pintura/Cor</th>
               <th style="font-size:10px;white-space:nowrap;">Adesivo/Impressão</th>
@@ -785,8 +853,183 @@
       </div>
     </div>
   </div>
+  </div><!-- /page_inspecao -->
 
+  <!-- PÁGINA NÃO CONFORMIDADE -->
+  <div class="page" id="page_nc_page">
+    <div class="nc-page-form">
+      <div class="panel">
+        <div class="panel-header" style="background:#a80000;">🚫 Registrar Não Conformidade</div>
+        <div class="panel-body">
+
+          <div class="section-label">Dados da Ocorrência</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div class="field">
+              <label>OP <span class="req">*</span></label>
+              <input type="text" id="nc_op" placeholder="Ex: 001234" />
+              <span class="error-msg" id="nc_err_op">Campo obrigatório</span>
+            </div>
+            <div class="field">
+              <label>Quantidade <span class="req">*</span></label>
+              <input type="number" id="nc_quantidade" placeholder="0" min="0" />
+              <span class="error-msg" id="nc_err_quantidade">Campo obrigatório</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div class="field">
+              <label>Setor que Detectou <span class="req">*</span></label>
+              <select id="nc_setor_detectou">
+                <option value="">— Selecione —</option>
+                <option>ACM</option><option>Adesivagem</option><option>Almoxarifado</option>
+                <option>Caldeiraria Leve</option><option>Caldeiraria Pesada</option>
+                <option>Composto Plástico</option><option>Corte a Laser</option><option>Dobra</option>
+                <option>Embalagem</option><option>Estoque</option><option>Expedição</option>
+                <option>Montagem Leve/Elétrica</option>
+              </select>
+              <span class="error-msg" id="nc_err_setor_detectou">Campo obrigatório</span>
+            </div>
+            <div class="field">
+              <label>Setor Responsável <span class="req">*</span></label>
+              <select id="nc_setor_responsavel">
+                <option value="">— Selecione —</option>
+                <option>ACM</option><option>Adesivagem</option><option>Almoxarifado</option>
+                <option>Caldeiraria Leve</option><option>Caldeiraria Pesada</option>
+                <option>Composto Plástico</option><option>Corte a Laser</option><option>Dobra</option>
+                <option>Embalagem</option><option>Estoque</option><option>Expedição</option>
+                <option>Montagem Leve/Elétrica</option>
+              </select>
+              <span class="error-msg" id="nc_err_setor_responsavel">Campo obrigatório</span>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:16px;">
+            <label>Descrição da Não Conformidade <span class="req">*</span></label>
+            <textarea id="nc_descricao" placeholder="Descreva detalhadamente a não conformidade..." style="font-family:'Barlow',sans-serif;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:4px;color:var(--text);background:#fafbfc;width:100%;min-height:100px;resize:vertical;outline:none;"></textarea>
+            <span class="error-msg" id="nc_err_descricao">Campo obrigatório</span>
+          </div>
+
+          <div class="section-label">Câmera — Fotos da NC</div>
+          <div class="cam-select-bar">
+            <label>Câmera:</label>
+            <select id="ncCamSelect" onchange="switchNcCam()"><option value="">Nenhuma</option></select>
+          </div>
+          <div class="camera-container">
+            <video id="ncCamFeed" autoplay playsinline muted class="cam-video"></video>
+            <div class="camera-offline" id="ncCamOffline">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              <span>Câmera não disponível</span>
+              <button class="btn btn-secondary btn-sm" onclick="initNcCam()">↺ Tentar novamente</button>
+            </div>
+          </div>
+          <canvas id="ncCanvas" style="display:none;"></canvas>
+          <div class="cam-controls" style="margin-top:10px;">
+            <button class="btn btn-primary" onclick="takeNcPagePhoto()" style="flex:1;">📸 Tirar Foto</button>
+            <button class="btn btn-danger btn-sm" onclick="clearNcPagePhotos()">🗑 Limpar</button>
+          </div>
+          <div id="ncPagePhotoCount" style="font-size:12px;color:var(--muted);margin:6px 0;"></div>
+          <div class="cam-photos" id="ncPagePhotosGrid"></div>
+
+          <div class="section-label" style="margin-top:20px;">Notificação por E-mail</div>
+          <div class="field" style="margin-bottom:6px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--text);">
+              <input type="checkbox" id="nc_email_check" checked style="width:16px;height:16px;accent-color:var(--blue);" />
+              Enviar notificação para: <strong>rafael.barbosa@polimetal.ind.br</strong>
+            </label>
+          </div>
+
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-danger btn-sm" onclick="clearNcPage()">🗑 Limpar</button>
+          <button class="btn-danger-solid" onclick="saveNcPage()">🚫 Registrar Não Conformidade</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /page_nc_page -->
+
+  <!-- MODAL EDITAR REGISTRO -->
+  <div id="editModal">
+    <div class="edit-box">
+      <h3>✏️ Editar Registro <span id="editModalId" style="color:var(--blue);"></span></h3>
+      <input type="hidden" id="edit_id" />
+      <div class="edit-grid">
+        <div class="edit-field">
+          <label>OP</label>
+          <input type="text" id="edit_op" />
+        </div>
+        <div class="edit-field">
+          <label>Item</label>
+          <input type="number" id="edit_item" />
+        </div>
+        <div class="edit-field">
+          <label>Quantidade</label>
+          <input type="number" id="edit_quantidade" />
+        </div>
+        <div class="edit-field">
+          <label>Bandeira</label>
+          <select id="edit_bandeira">
+            <option>Bandeira Branca</option><option>BR</option><option>Honda</option>
+            <option>Incoleed</option><option>Ipiranga</option><option>Petronas</option>
+            <option>Shell</option><option>Texaco</option>
+          </select>
+        </div>
+        <div class="edit-field">
+          <label>Setor</label>
+          <select id="edit_setor">
+            <option>ACM</option><option>Adesivagem</option><option>Almoxarifado</option>
+            <option>Caldeiraria Leve</option><option>Caldeiraria Pesada</option>
+            <option>Composto Plástico</option><option>Corte a Laser</option><option>Dobra</option>
+            <option>Embalagem</option><option>Estoque</option><option>Expedição</option>
+            <option>Montagem Leve/Elétrica</option>
+          </select>
+        </div>
+        <div class="edit-field">
+          <label>Colaborador</label>
+          <select id="edit_colaborador">
+            <option>Bruna Garcia</option><option>Bruna Freitas</option>
+            <option>Júlio Caldeira</option><option>Julio Gomes</option>
+            <option>Keli Medici</option><option>Pedro Costa</option>
+            <option>Rafael Barbosa</option>
+          </select>
+        </div>
+      </div>
+      <div class="edit-field" style="margin-bottom:12px;">
+        <label>Observações</label>
+        <textarea id="edit_observacoes" style="font-family:'Barlow',sans-serif;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:4px;width:100%;min-height:70px;resize:vertical;outline:none;"></textarea>
+      </div>
+      <div class="edit-actions">
+        <button class="btn btn-danger btn-sm" onclick="document.getElementById('editModal').classList.remove('open')">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="saveEdit()">💾 Salvar Alterações</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIRMAR EXCLUSÃO -->
+  <div id="delModal">
+    <div class="del-box">
+      <div class="del-icon">🗑️</div>
+      <h3>Confirmar Exclusão</h3>
+      <p id="delModalMsg">Deseja excluir permanentemente este registro? Esta ação não pode ser desfeita.</p>
+      <div class="del-actions">
+        <button class="btn btn-secondary" onclick="document.getElementById('delModal').classList.remove('open')">Cancelar</button>
+        <button class="btn" style="background:var(--danger);color:white;" onclick="confirmDelete()">🗑 Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL GERAR RELATÓRIO -->
+  <div id="relModal">
+    <div class="rel-box">
+      <h3>📄 Gerar Relatório</h3>
+      <input type="number" id="relIdInput" placeholder="Digite o ID do registro" min="1" />
+      <div class="rel-actions">
+        <button class="btn btn-danger btn-sm" onclick="document.getElementById('relModal').classList.remove('open')">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="gerarRelatorio()">📄 Gerar</button>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- RELATÓRIO IMPRIMÍVEL -->
+<div id="relPrint"></div>
 
 <div id="toast"></div>
 
@@ -839,7 +1082,24 @@ async function saveToSupabase(rec, imgs, videoBlob) {
       await db.from('inspecoes_imagens').insert([{ inspecao_id: inspecaoId, url: pub.publicUrl, nome: 'foto_camera.png' }]);
     }
 
-    // 4. Upload de vídeo
+    // 4. Upload fotos de não conformidade
+    const ncUrls = [];
+    for (const p of (rec.ncPhotos || [])) {
+      try {
+        const resp = await fetch(p.dataUrl);
+        const blob = await resp.blob();
+        const path = `${inspecaoId}/nc_${Date.now()}_${Math.random().toString(36).slice(2)}.png`;
+        await db.storage.from(BUCKET).upload(path, blob, { contentType: 'image/png' });
+        const { data: pub } = db.storage.from(BUCKET).getPublicUrl(path);
+        ncUrls.push(pub.publicUrl);
+      } catch(e) { console.warn('Erro upload NC:', e); }
+    }
+    // Atualizar coluna nc_fotos com URLs públicas (não dataURLs)
+    if (ncUrls.length > 0) {
+      await db.from('inspecoes').update({ nc_fotos: ncUrls }).eq('id', inspecaoId);
+    }
+
+    // 5. Upload de vídeo
     if (videoBlob) {
       const path = `${inspecaoId}/video_${Date.now()}.webm`;
       await db.storage.from(BUCKET).upload(path, videoBlob, { contentType: videoBlob.type });
@@ -895,7 +1155,11 @@ let nextId = 1;
 // AUTH — usuários válidos (login local simples)
 const USERS = [
   { user: 'rafael.barbosa', pass: 'poliusu!@#456', name: 'Rafael Barbosa' },
-  { user: 'inspetor', pass: 'insp@2024', name: 'Inspetor' }
+  { user: 'pedro.costa',    pass: 'poliusu!@#456', name: 'Pedro Costa' },
+  { user: 'keli.medici',    pass: 'poliusu!@#456', name: 'Keli Medici' },
+  { user: 'bruna.freitas',  pass: 'poliusu!@#456', name: 'Bruna Freitas' },
+  { user: 'julio.gomes',    pass: 'poliusu!@#456', name: 'Julio Gomes' },
+  { user: 'inspetor',       pass: 'insp@2024',     name: 'Inspetor' }
 ];
 
 function doLogin() {
@@ -1388,20 +1652,24 @@ function buildRow(r) {
   let ncCell = '<span style="color:var(--muted);font-size:12px;">—</span>';
   if (r.ncPhotos && r.ncPhotos.length > 0) {
     const ncUrls = r.ncPhotos.map(p => p.dataUrl || p);
-    const ncGallery = JSON.stringify(ncUrls).replace(/"/g, '&quot;');
+    const ncGKey = 'g_nc_' + r.id;
+    window[ncGKey] = ncUrls;
     const ncThumbs = ncUrls.slice(0,3).map((src, i) =>
-      `<img src="${src}" data-idx="${i}" data-gallery="${ncGallery}"
-        class="clickable-img" onclick="openLightboxIdx(this.dataset.idx, this.dataset.gallery.replace(/&quot;/g,'\"'))"
+      `<img src="${src}" data-gkey="${ncGKey}" data-idx="${i}"
+        class="clickable-img"
         style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:2px solid #ef9a9a;cursor:zoom-in;">`
     ).join('');
     const ncExtra = ncUrls.length > 3 ? `<span class="count-badge" style="background:#fce8e8;color:#a80000;">+${ncUrls.length-3}</span>` : '';
     ncCell = `<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">${ncThumbs}${ncExtra}</div>`;
   }
 
-  // COLUNA VÍDEO — só vídeo gravado
-  const videoCell = r.mediaType === 'video'
-    ? '<span class="video-badge">🎥 Vídeo</span>'
-    : '<span style="color:var(--muted);font-size:12px;">—</span>';
+  // COLUNA VÍDEO — player inline ou badge
+  let videoCell = '<span style="color:var(--muted);font-size:12px;">—</span>';
+  if (r.mediaType === 'video' && r.mediaSrc) {
+    videoCell = `<video src="${r.mediaSrc}" controls style="width:80px;height:60px;border-radius:4px;border:1px solid var(--border);object-fit:cover;" preload="metadata"></video>`;
+  } else if (r.mediaType === 'video') {
+    videoCell = '<span class="video-badge" title="Vídeo salvo no servidor">🎥 Vídeo</span>';
+  }
 
   // COLUNA FOTOS — imagens anexadas + fotos de câmera juntas
   const allImgs = [
@@ -1410,12 +1678,12 @@ function buildRow(r) {
   ];
   let photosCell = '<span style="color:var(--muted);font-size:12px;">—</span>';
   if (allImgs.length > 0) {
-    const galleryJson = JSON.stringify(allImgs).replace(/"/g, '&quot;');
+    const pgKey = 'g_photos_' + r.id;
+    window[pgKey] = allImgs;
     const thumbs = allImgs.slice(0, 3).map((src, i) =>
-      `<img src="${src}" data-idx="${i}" data-gallery="${galleryJson}"
+      `<img src="${src}" data-gkey="${pgKey}" data-idx="${i}"
         class="clickable-img td-thumb-img"
-        style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--border);cursor:zoom-in;"
-        onclick="openLightboxIdx(this.dataset.idx, this.dataset.gallery.replace(/&quot;/g, '\"')">`
+        style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--border);cursor:zoom-in;">`
     ).join('');
     const extra = allImgs.length > 3 ? `<span class="count-badge">+${allImgs.length - 3}</span>` : '';
     photosCell = `<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">${thumbs}${extra}</div>`;
@@ -1450,7 +1718,14 @@ function buildRow(r) {
 
   return `<tr>
     <td><strong style="color:var(--blue);">#${r.id}</strong></td>
-    <td><button onclick="downloadZip(${r.id})" title="Baixar fotos/vídeo ID ${r.id}" style="background:var(--blue-light);color:var(--blue);border:1px solid rgba(16,56,193,0.25);border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ ZIP</button></td>
+    <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;">
+      <button onclick="downloadZip(${r.id})" title="Baixar" style="background:var(--blue-light);color:var(--blue);border:1px solid rgba(16,56,193,0.25);border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">⬇</button>
+      <button onclick="openEdit(${r.id})" title="Editar registro" style="background:#fff8e1;color:#b45309;border:1px solid #fcd34d;border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">✏️</button>
+      <button onclick="openDelete(${r.id})" title="Excluir registro" style="background:#fce8e8;color:var(--danger);border:1px solid rgba(168,0,0,0.25);border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">🗑</button>
+      <button onclick="shareWhatsApp(${r.id})" title="Compartilhar no WhatsApp" style="background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;border-radius:4px;padding:4px 7px;font-size:14px;font-weight:700;cursor:pointer;" aria-label="Compartilhar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+      </button>
+    </td>
     <td>${r.op || '—'}</td><td>${r.item}</td><td>${r.quantidade}</td>
     <td>${r.bandeira}</td><td>${r.setor}</td><td>${r.colaborador}</td>
     <td>${videoCell}</td><td>${photosCell}</td>
@@ -1470,6 +1745,16 @@ function buildRow(r) {
     <td style="color:var(--muted);font-size:12px;">${r.date}</td>
   </tr>`;
 }
+// Delegação de clique para thumbnails da tabela (usa window[gkey])
+document.addEventListener('click', function(e) {
+  const img = e.target.closest('img.clickable-img[data-gkey]');
+  if (!img) return;
+  const gkey = img.dataset.gkey;
+  const idx  = parseInt(img.dataset.idx) || 0;
+  const gallery = window[gkey];
+  if (gallery && gallery.length > 0) openLightbox(gallery[idx], gallery);
+});
+
 function renderTableData(data) {
   const tbody = document.getElementById('recordsBody');
   if (!data.length) { tbody.innerHTML = '<tr><td colspan="22"><div class="empty-state">Nenhum registro encontrado.</div></td></tr>'; return; }
@@ -1610,6 +1895,280 @@ function exportExcel() {
   const fname = `Inspecoes_${now.toLocaleDateString('pt-BR').replace(/\//g,'-')}.xlsx`;
   XLSX.writeFile(wb, fname);
   showToast('✅ Excel exportado com sucesso!', true);
+}
+
+// COMPARTILHAR — Web Share API (inclui fotos/vídeos) com fallback
+async function shareWhatsApp(recId) {
+  const rec = records.find(r => r.id === recId);
+  if (!rec) return;
+
+  const ch = rec.caracteristicas || {};
+  const ncItems = CARACT_ITEMS.filter(i => ch[i] === 'NC');
+  let text = `Registro de Inspeção Polimetal\n`;
+  text += `ID: #${rec.id} | OP: ${rec.op||'—'}\n`;
+  text += `Item: ${rec.item} | Qtd: ${rec.quantidade}\n`;
+  text += `Bandeira: ${rec.bandeira} | Setor: ${rec.setor}\n`;
+  text += `Colaborador: ${rec.colaborador}\n`;
+  if (ncItems.length > 0) text += `\n⚠️ Não Conformidades: ${ncItems.join(', ')}\n`;
+  if (rec.observacoes) text += `Obs: ${rec.observacoes}\n`;
+  text += `\n📅 ${rec.date}`;
+
+  const allMediaUrls = [
+    ...(rec.imageFiles || []).map(f => f.url),
+    ...(rec.camPhotos  || []).map(p => p.dataUrl),
+    ...(rec.ncPhotos   || []).map(p => p.dataUrl || p)
+  ];
+
+  if (navigator.share) {
+    try {
+      const files = [];
+      let fi = 1;
+      for (const url of allMediaUrls) {
+        try {
+          const resp = await fetch(url);
+          const blob = await resp.blob();
+          const ext = blob.type.includes('png') ? 'png' : 'jpg';
+          files.push(new File([blob], `foto_ID${recId}_${fi++}.${ext}`, { type: blob.type }));
+        } catch(e) { /* pular imagem indisponível */ }
+      }
+      // Incluir vídeo se disponível localmente
+      if (rec.mediaType === 'video' && rec.mediaSrc) {
+        try {
+          const resp = await fetch(rec.mediaSrc);
+          const blob = await resp.blob();
+          files.push(new File([blob], `video_ID${recId}.webm`, { type: blob.type }));
+        } catch(e) { /* pular */ }
+      }
+      const shareData = { text };
+      if (files.length > 0 && navigator.canShare && navigator.canShare({ files })) {
+        shareData.files = files;
+      }
+      await navigator.share(shareData);
+      return;
+    } catch(e) {
+      if (e.name === 'AbortError') return;
+      console.warn('Share error:', e);
+    }
+  }
+  // Fallback: abre WhatsApp com texto
+  const url = `https://wa.me/?text=${encodeURIComponent(text + '\n\n(Baixe as fotos usando o botão ⬇ no app)')}`;
+  window.open(url, '_blank');
+}
+
+// GERAR RELATÓRIO PDF/IMPRESSÃO
+function gerarRelatorio() {
+  const idVal = parseInt(document.getElementById('relIdInput').value);
+  if (!idVal) { showToast('Digite um ID válido.', false); return; }
+  const rec = records.find(r => r.id === idVal);
+  if (!rec) { showToast(`Registro #${idVal} não encontrado.`, false); return; }
+
+  const c = rec.caracteristicas || {};
+  const labelMap = { C: '<span class="badge-c">✓ Conforme</span>', NC: '<span class="badge-nc">✗ Não Conforme</span>', NA: '<span class="badge-na">— N/A</span>' };
+
+  const caractRows = CARACT_ITEMS.map(item =>
+    `<tr><td>${item}</td><td>${labelMap[c[item]] || '—'}</td></tr>`
+  ).join('');
+
+  const allInspPhotos = [
+    ...(rec.imageFiles || []).map(f => f.url),
+    ...(rec.camPhotos  || []).map(p => p.dataUrl)
+  ];
+  const ncImgs = (rec.ncPhotos || []).map(p => p.dataUrl || p);
+
+  const inspPhotosHtml = allInspPhotos.length > 0
+    ? `<div class="rel-photos">${allInspPhotos.map(s => `<img src="${s}">`).join('')}</div>`
+    : '<p style="color:#888;font-size:12px;">Nenhuma foto de inspeção.</p>';
+
+  const ncPhotosHtml = ncImgs.length > 0
+    ? `<div class="rel-photos">${ncImgs.map(s => `<img src="${s}">`).join('')}</div>`
+    : '<p style="color:#888;font-size:12px;">Nenhuma foto de não conformidade.</p>';
+
+  document.getElementById('relPrint').innerHTML = `
+    <h1>Relatório de Inspeção — Polimetal</h1>
+    <p style="color:#888;font-size:13px;margin-bottom:16px;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+
+    <h2>Identificação</h2>
+    <table>
+      <tr><th>ID</th><td>#${rec.id}</td><th>OP</th><td>${rec.op||'—'}</td></tr>
+      <tr><th>Item</th><td>${rec.item}</td><th>Quantidade</th><td>${rec.quantidade}</td></tr>
+      <tr><th>Bandeira</th><td>${rec.bandeira}</td><th>Setor</th><td>${rec.setor}</td></tr>
+      <tr><th>Colaborador</th><td colspan="3">${rec.colaborador}</td></tr>
+      <tr><th>Data/Hora</th><td colspan="3">${rec.date}</td></tr>
+      ${rec.observacoes ? `<tr><th>Observações</th><td colspan="3">${rec.observacoes}</td></tr>` : ''}
+    </table>
+
+    <h2>Características do Produto</h2>
+    <table>
+      <thead><tr><th>Característica</th><th>Resultado</th></tr></thead>
+      <tbody>${caractRows}</tbody>
+    </table>
+
+    <h2>Fotos de Inspeção</h2>
+    ${inspPhotosHtml}
+
+    <h2>Fotos de Não Conformidade</h2>
+    ${ncPhotosHtml}
+
+    <div class="print-footer">APP Polimetal — Registro #${rec.id} — ${rec.date}</div>
+  `;
+
+  document.getElementById('relModal').classList.remove('open');
+  document.getElementById('relIdInput').value = '';
+  setTimeout(() => window.print(), 300);
+}
+
+// EDITAR REGISTRO
+let editingId = null;
+function openEdit(recId) {
+  const rec = records.find(r => r.id === recId);
+  if (!rec) return;
+  editingId = recId;
+  document.getElementById('editModalId').textContent = '#' + recId;
+  document.getElementById('edit_id').value = recId;
+  document.getElementById('edit_op').value = rec.op || '';
+  document.getElementById('edit_item').value = rec.item || '';
+  document.getElementById('edit_quantidade').value = rec.quantidade || '';
+  document.getElementById('edit_bandeira').value = rec.bandeira || '';
+  document.getElementById('edit_setor').value = rec.setor || '';
+  document.getElementById('edit_colaborador').value = rec.colaborador || '';
+  document.getElementById('edit_observacoes').value = rec.observacoes || '';
+  document.getElementById('editModal').classList.add('open');
+}
+async function saveEdit() {
+  const recId = editingId;
+  const rec = records.find(r => r.id === recId);
+  if (!rec) return;
+  rec.op          = document.getElementById('edit_op').value.trim();
+  rec.item        = document.getElementById('edit_item').value;
+  rec.quantidade  = document.getElementById('edit_quantidade').value;
+  rec.bandeira    = document.getElementById('edit_bandeira').value;
+  rec.setor       = document.getElementById('edit_setor').value;
+  rec.colaborador = document.getElementById('edit_colaborador').value;
+  rec.observacoes = document.getElementById('edit_observacoes').value.trim();
+  renderTable();
+  // Atualizar no Supabase
+  try {
+    await db.from('inspecoes').update({
+      op: rec.op, item: parseInt(rec.item), quantidade: parseInt(rec.quantidade),
+      bandeira: rec.bandeira, setor: rec.setor, colaborador: rec.colaborador,
+      observacoes: rec.observacoes
+    }).eq('id', recId);
+    showToast('✅ Registro atualizado com sucesso!', true);
+  } catch(e) { showToast('⚠️ Erro ao atualizar no banco.', false); }
+  document.getElementById('editModal').classList.remove('open');
+}
+
+// EXCLUIR REGISTRO
+let deletingId = null;
+function openDelete(recId) {
+  deletingId = recId;
+  document.getElementById('delModalMsg').textContent =
+    `Deseja excluir permanentemente o Registro #${recId}? Esta ação não pode ser desfeita.`;
+  document.getElementById('delModal').classList.add('open');
+}
+async function confirmDelete() {
+  if (!deletingId) return;
+  records = records.filter(r => r.id !== deletingId);
+  renderTable();
+  try {
+    await db.from('inspecoes').delete().eq('id', deletingId);
+    showToast(`🗑 Registro #${deletingId} excluído.`, true);
+  } catch(e) { showToast('⚠️ Erro ao excluir no banco.', false); }
+  deletingId = null;
+  document.getElementById('delModal').classList.remove('open');
+}
+
+// NAVEGAÇÃO ENTRE PÁGINAS
+function switchPage(page) {
+  ['inspecao','nc_page'].forEach(p => {
+    document.getElementById('page_' + p).classList.toggle('active', p === page);
+    document.getElementById('tab_' + p).classList.toggle('active', p === page);
+  });
+  if (page === 'nc_page') initNcCam();
+}
+
+// CÂMERA DA PÁGINA NC
+let ncCamStream = null, ncPagePhotos = [];
+async function initNcCam() {
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    s.getTracks().forEach(t => t.stop());
+    const devs = await getCameraDevices();
+    await populateSelect('ncCamSelect', devs);
+    if (devs.length) startNcCam(devs[0].deviceId);
+  } catch(e) {
+    document.getElementById('ncCamOffline').style.display = 'flex';
+    document.getElementById('ncCamFeed').style.display = 'none';
+  }
+}
+async function startNcCam(deviceId) {
+  if (ncCamStream) ncCamStream.getTracks().forEach(t => t.stop());
+  try {
+    ncCamStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } });
+    const v = document.getElementById('ncCamFeed');
+    v.srcObject = ncCamStream; v.style.display = 'block';
+    document.getElementById('ncCamOffline').style.display = 'none';
+  } catch(e) {
+    document.getElementById('ncCamOffline').style.display = 'flex';
+    document.getElementById('ncCamFeed').style.display = 'none';
+  }
+}
+function switchNcCam() { const v = document.getElementById('ncCamSelect').value; if (v) startNcCam(v); }
+function takeNcPagePhoto() {
+  const video = document.getElementById('ncCamFeed');
+  if (!ncCamStream || video.readyState < 2) { showToast('Câmera não ativa.', false); return; }
+  const canvas = document.getElementById('ncCanvas');
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  ncPagePhotos.push({ id: Date.now(), dataUrl: canvas.toDataURL('image/png') });
+  renderNcPagePhotos();
+}
+function renderNcPagePhotos() {
+  const grid = document.getElementById('ncPagePhotosGrid');
+  const cnt  = document.getElementById('ncPagePhotoCount');
+  cnt.textContent = ncPagePhotos.length ? `${ncPagePhotos.length} foto(s)` : '';
+  grid.innerHTML = '';
+  ncPagePhotos.forEach((p, idx) => {
+    const d = document.createElement('div');
+    d.className = 'cam-photo-thumb';
+    const img = document.createElement('img');
+    img.src = p.dataUrl; img.className = 'clickable-img';
+    img.dataset.idx = idx; img.dataset.gallery = JSON.stringify(ncPagePhotos.map(x=>x.dataUrl));
+    img.addEventListener('click', function() { openLightboxIdx(this.dataset.idx, this.dataset.gallery); });
+    const btn = document.createElement('button');
+    btn.className = 'del'; btn.textContent = '✕';
+    btn.onclick = () => { ncPagePhotos = ncPagePhotos.filter(x=>x.id!==p.id); renderNcPagePhotos(); };
+    d.appendChild(img); d.appendChild(btn); grid.appendChild(d);
+  });
+}
+function clearNcPagePhotos() { ncPagePhotos = []; renderNcPagePhotos(); }
+function clearNcPage() {
+  ['nc_op','nc_quantidade','nc_descricao'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  ['nc_setor_detectou','nc_setor_responsavel'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  clearNcPagePhotos();
+}
+async function saveNcPage() {
+  const op = document.getElementById('nc_op').value.trim();
+  const qtd = document.getElementById('nc_quantidade').value;
+  const setor_det = document.getElementById('nc_setor_detectou').value;
+  const setor_res = document.getElementById('nc_setor_responsavel').value;
+  const desc = document.getElementById('nc_descricao').value.trim();
+  let valid = true;
+  if (!op)       { document.getElementById('nc_err_op').classList.add('show'); valid=false; } else document.getElementById('nc_err_op').classList.remove('show');
+  if (!qtd)      { document.getElementById('nc_err_quantidade').classList.add('show'); valid=false; } else document.getElementById('nc_err_quantidade').classList.remove('show');
+  if (!setor_det){ document.getElementById('nc_err_setor_detectou').classList.add('show'); valid=false; } else document.getElementById('nc_err_setor_detectou').classList.remove('show');
+  if (!setor_res){ document.getElementById('nc_err_setor_responsavel').classList.add('show'); valid=false; } else document.getElementById('nc_err_setor_responsavel').classList.remove('show');
+  if (!desc)     { document.getElementById('nc_err_descricao').classList.add('show'); valid=false; } else document.getElementById('nc_err_descricao').classList.remove('show');
+  if (!valid) { showToast('Preencha todos os campos obrigatórios.', false); return; }
+  const notificar = document.getElementById('nc_email_check').checked ? 'rafael.barbosa@polimetal.ind.br' : null;
+  try {
+    await db.from('nao_conformidades').insert([{
+      op, quantidade: parseInt(qtd), setor_detectou: setor_det,
+      setor_responsavel: setor_res, descricao: desc, notificar_email: notificar
+    }]);
+    showToast('✅ Não conformidade registrada!', true);
+    clearNcPage();
+  } catch(e) { showToast('⚠️ Erro ao salvar. Verifique a conexão.', false); }
 }
 
 // TOAST
