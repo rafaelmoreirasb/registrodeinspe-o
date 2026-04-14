@@ -114,7 +114,13 @@
   .photo-thumb .remove:hover { background: rgba(168,0,0,0.85); }
 
   /* CAMERA */
-  .camera-container { background: #000; border-radius: var(--radius); overflow: hidden; position: relative; aspect-ratio: 4/3; margin-bottom: 10px; border: 1px solid var(--border); }
+  .camera-container { background: #000; border-radius: var(--radius); overflow: hidden; position: relative; aspect-ratio: 4/3; margin-bottom: 10px; border: 1px solid var(--border); transition: all 0.3s; }
+  .camera-container.expanded { position:fixed; inset:0; z-index:4500; border-radius:0; aspect-ratio:unset; margin:0; }
+  .camera-container.expanded .cam-video { width:100%; height:100%; }
+  .cam-toolbar { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .cam-toolbar-btn { background:var(--blue-light); color:var(--blue); border:1px solid rgba(16,56,193,0.25); border-radius:4px; padding:5px 10px; font-family:'Barlow',sans-serif; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px; transition:background 0.15s; }
+  .cam-toolbar-btn:hover { background:#cce4f8; }
+  .cam-expand-close { position:absolute; top:10px; right:10px; z-index:10; background:rgba(0,0,0,0.6); color:white; border:none; border-radius:4px; padding:6px 12px; font-size:13px; font-weight:700; cursor:pointer; }
   .cam-video { width: 100%; height: 100%; object-fit: cover; display: block; }
   .camera-offline { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.6); font-size: 13px; gap: 10px; }
   .camera-offline svg { opacity: 0.4; }
@@ -736,7 +742,12 @@
           </div>
 
           <!-- CÂMERA (única, compartilhada) -->
-          <div class="camera-container">
+          <div class="cam-toolbar">
+            <button class="cam-toolbar-btn" onclick="toggleExpandCam('main')">⛶ Ampliar câmera</button>
+            <button class="cam-toolbar-btn" onclick="flipCamera('main')" id="flipMainBtn">🔄 Câmera traseira</button>
+          </div>
+          <div class="camera-container" id="mainCamContainer">
+            <button class="cam-expand-close" id="mainExpandClose" onclick="toggleExpandCam('main')" style="display:none;">✕ Fechar</button>
             <video id="cameraFeed" autoplay playsinline muted class="cam-video"></video>
             <div class="rec-indicator" id="recIndicator"><div class="rec-dot"></div>REC</div>
             <div class="camera-offline" id="cameraOffline">
@@ -917,7 +928,12 @@
             <label>Câmera:</label>
             <select id="ncCamSelect" onchange="switchNcCam()"><option value="">Nenhuma</option></select>
           </div>
-          <div class="camera-container">
+          <div class="cam-toolbar">
+            <button class="cam-toolbar-btn" onclick="toggleExpandCam('nc')">⛶ Ampliar câmera</button>
+            <button class="cam-toolbar-btn" onclick="flipCamera('nc')" id="flipNcBtn">🔄 Câmera traseira</button>
+          </div>
+          <div class="camera-container" id="ncCamContainer">
+            <button class="cam-expand-close" id="ncExpandClose" onclick="toggleExpandCam('nc')" style="display:none;">✕ Fechar</button>
             <video id="ncCamFeed" autoplay playsinline muted class="cam-video"></video>
             <div class="camera-offline" id="ncCamOffline">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -934,12 +950,16 @@
           <div class="cam-photos" id="ncPagePhotosGrid"></div>
 
           <div class="section-label" style="margin-top:20px;">Notificação por E-mail</div>
-          <div class="field" style="margin-bottom:6px;">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--text);">
-              <input type="checkbox" id="nc_email_check" checked style="width:16px;height:16px;accent-color:var(--blue);" />
-              Enviar notificação para: <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f4869592959198da969586969b8795b4849b989d9991809598da9d9a90da9686">[email&#160;protected]</a></strong>
-            </label>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Selecione os destinatários que receberão esta notificação:</p>
+          <div style="border:1px solid var(--border);border-radius:6px;padding:10px 14px;background:#fafbfc;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);padding:4px 0;"><input type="checkbox" name="nc_email" value="rafael.barbosa@polimetal.ind.br" style="width:15px;height:15px;accent-color:var(--blue);" />Rafael Barbosa <span style="color:var(--muted);font-size:11px;">(rafael.barbosa@polimetal.ind.br)</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);padding:4px 0;"><input type="checkbox" name="nc_email" value="keli.medici@polimetal.ind.br" style="width:15px;height:15px;accent-color:var(--blue);" />Keli Medici <span style="color:var(--muted);font-size:11px;">(keli.medici@polimetal.ind.br)</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);padding:4px 0;"><input type="checkbox" name="nc_email" value="pedro.costa@polimetal.ind.br" style="width:15px;height:15px;accent-color:var(--blue);" />Pedro Costa <span style="color:var(--muted);font-size:11px;">(pedro.costa@polimetal.ind.br)</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);padding:4px 0;"><input type="checkbox" name="nc_email" value="julio.gomes@polimetal.ind.br" style="width:15px;height:15px;accent-color:var(--blue);" />Julio Gomes <span style="color:var(--muted);font-size:11px;">(julio.gomes@polimetal.ind.br)</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);padding:4px 0;"><input type="checkbox" name="nc_email" value="bruna.freitas@polimetal.ind.br" style="width:15px;height:15px;accent-color:var(--blue);" />Bruna Freitas <span style="color:var(--muted);font-size:11px;">(bruna.freitas@polimetal.ind.br)</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);padding:4px 0;"><input type="checkbox" name="nc_email" value="cqentrada@polimetal.ind.br" style="width:15px;height:15px;accent-color:var(--blue);" />CQ Entrada <span style="color:var(--muted);font-size:11px;">(cqentrada@polimetal.ind.br)</span></label>
           </div>
+          <div class="nc-err" id="nc_err_email" style="display:none;margin-top:4px;">Selecione ao menos um destinatário.</div>
 
         </div>
         <div class="action-bar">
@@ -1605,6 +1625,9 @@ function validateForm() {
 // SAVE
 async function saveRecord() {
   if (!validateForm()) { showToast('Preencha todos os campos obrigatórios.', false); return; }
+  // Obrigatório ao menos 1 foto (câmera ou anexo)
+  const totalPhotos = camPhotos.length + imageFiles.length;
+  if (totalPhotos === 0) { showToast('📸 Obrigatório tirar ou anexar pelo menos 1 foto.', false); return; }
   if (!validateCaracteristicas()) { showToast('Preencha todas as características do produto.', false); return; }
   if (!validateNcPhotos()) { showToast('Há itens Não Conforme — tire fotos de não conformidade.', false); return; }
   let mediaSrc = null, mediaType = null;
@@ -2092,6 +2115,57 @@ function switchPage(page) {
   if (page === 'nc_page') initNcCam();
 }
 
+// AMPLIAR CÂMERA E CÂMERA TRASEIRA
+let mainCamFacing = 'environment'; // começa com traseira
+let ncCamFacing   = 'environment';
+let mainExpanded  = false;
+let ncExpanded    = false;
+
+function toggleExpandCam(which) {
+  const containerId = which === 'main' ? 'mainCamContainer' : 'ncCamContainer';
+  const closeBtn    = document.getElementById(which === 'main' ? 'mainExpandClose' : 'ncExpandClose');
+  const container   = document.getElementById(containerId);
+  const expanded    = which === 'main' ? mainExpanded : ncExpanded;
+  if (!expanded) {
+    container.classList.add('expanded');
+    closeBtn.style.display = 'block';
+    if (which === 'main') mainExpanded = true; else ncExpanded = true;
+  } else {
+    container.classList.remove('expanded');
+    closeBtn.style.display = 'none';
+    if (which === 'main') mainExpanded = false; else ncExpanded = false;
+  }
+}
+
+async function flipCamera(which) {
+  if (which === 'main') {
+    mainCamFacing = mainCamFacing === 'environment' ? 'user' : 'environment';
+    document.getElementById('flipMainBtn').textContent = mainCamFacing === 'environment' ? '🔄 Câmera traseira' : '🔄 Câmera frontal';
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mainCamFacing }, audio: true });
+        const v = document.getElementById('cameraFeed');
+        v.srcObject = cameraStream; v.style.display = 'block';
+        vidStream = cameraStream;
+        document.getElementById('cameraOffline').style.display = 'none';
+      } catch(e) { showToast('Não foi possível trocar de câmera.', false); }
+    }
+  } else {
+    ncCamFacing = ncCamFacing === 'environment' ? 'user' : 'environment';
+    document.getElementById('flipNcBtn').textContent = ncCamFacing === 'environment' ? '🔄 Câmera traseira' : '🔄 Câmera frontal';
+    if (ncCamStream) {
+      ncCamStream.getTracks().forEach(t => t.stop());
+      try {
+        ncCamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: ncCamFacing } });
+        const v = document.getElementById('ncCamFeed');
+        v.srcObject = ncCamStream; v.style.display = 'block';
+        document.getElementById('ncCamOffline').style.display = 'none';
+      } catch(e) { showToast('Não foi possível trocar de câmera.', false); }
+    }
+  }
+}
+
 // CÂMERA DA PÁGINA NC
 let ncCamStream = null, ncPagePhotos = [];
 async function initNcCam() {
@@ -2109,7 +2183,7 @@ async function initNcCam() {
 async function startNcCam(deviceId) {
   if (ncCamStream) ncCamStream.getTracks().forEach(t => t.stop());
   try {
-    ncCamStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } });
+    ncCamStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId }, facingMode: ncCamFacing } });
     const v = document.getElementById('ncCamFeed');
     v.srcObject = ncCamStream; v.style.display = 'block';
     document.getElementById('ncCamOffline').style.display = 'none';
@@ -2153,27 +2227,67 @@ function clearNcPage() {
   clearNcPagePhotos();
 }
 async function saveNcPage() {
-  const op = document.getElementById('nc_op').value.trim();
-  const qtd = document.getElementById('nc_quantidade').value;
+  const op        = document.getElementById('nc_op').value.trim();
+  const qtd       = document.getElementById('nc_quantidade').value;
   const setor_det = document.getElementById('nc_setor_detectou').value;
   const setor_res = document.getElementById('nc_setor_responsavel').value;
-  const desc = document.getElementById('nc_descricao').value.trim();
+  const desc      = document.getElementById('nc_descricao').value.trim();
+
+  // Coletar destinatários marcados
+  const checkedEmails = Array.from(document.querySelectorAll('input[name="nc_email"]:checked')).map(el => el.value);
+
   let valid = true;
-  if (!op)       { document.getElementById('nc_err_op').classList.add('show'); valid=false; } else document.getElementById('nc_err_op').classList.remove('show');
-  if (!qtd)      { document.getElementById('nc_err_quantidade').classList.add('show'); valid=false; } else document.getElementById('nc_err_quantidade').classList.remove('show');
-  if (!setor_det){ document.getElementById('nc_err_setor_detectou').classList.add('show'); valid=false; } else document.getElementById('nc_err_setor_detectou').classList.remove('show');
-  if (!setor_res){ document.getElementById('nc_err_setor_responsavel').classList.add('show'); valid=false; } else document.getElementById('nc_err_setor_responsavel').classList.remove('show');
-  if (!desc)     { document.getElementById('nc_err_descricao').classList.add('show'); valid=false; } else document.getElementById('nc_err_descricao').classList.remove('show');
-  if (!valid) { showToast('Preencha todos os campos obrigatórios.', false); return; }
-  const notificar = document.getElementById('nc_email_check').checked ? 'rafael.barbosa@polimetal.ind.br' : null;
+  if (!op)         { document.getElementById('nc_err_op').classList.add('show'); valid=false; }               else document.getElementById('nc_err_op').classList.remove('show');
+  if (!qtd)        { document.getElementById('nc_err_quantidade').classList.add('show'); valid=false; }        else document.getElementById('nc_err_quantidade').classList.remove('show');
+  if (!setor_det)  { document.getElementById('nc_err_setor_detectou').classList.add('show'); valid=false; }    else document.getElementById('nc_err_setor_detectou').classList.remove('show');
+  if (!setor_res)  { document.getElementById('nc_err_setor_responsavel').classList.add('show'); valid=false; } else document.getElementById('nc_err_setor_responsavel').classList.remove('show');
+  if (!desc)       { document.getElementById('nc_err_descricao').classList.add('show'); valid=false; }         else document.getElementById('nc_err_descricao').classList.remove('show');
+  const errEmail = document.getElementById('nc_err_email');
+  if (checkedEmails.length === 0) { errEmail.style.display = 'block'; valid = false; } else errEmail.style.display = 'none';
+
+  if (!valid) { showToast('Preencha todos os campos obrigatórios e selecione ao menos um destinatário.', false); return; }
+
   try {
-    await db.from('nao_conformidades').insert([{
+    // 1. Salvar no banco
+    const { data: ncData, error } = await db.from('nao_conformidades').insert([{
       op, quantidade: parseInt(qtd), setor_detectou: setor_det,
-      setor_responsavel: setor_res, descricao: desc, notificar_email: notificar
-    }]);
-    showToast('✅ Não conformidade registrada!', true);
+      setor_responsavel: setor_res, descricao: desc,
+      notificar_email: checkedEmails[0] || null,
+      destinatarios: checkedEmails
+    }]).select().single();
+    if (error) throw error;
+
+    // 2. Upload fotos NC da página e coletar URLs
+    const fotoUrls = [];
+    for (const p of ncPagePhotos) {
+      try {
+        const resp = await fetch(p.dataUrl);
+        const blob = await resp.blob();
+        const path = `nc_page/${ncData.id}/foto_${Date.now()}.png`;
+        await db.storage.from('imagens-inspecao').upload(path, blob, { contentType: 'image/png' });
+        const { data: pub } = db.storage.from('imagens-inspecao').getPublicUrl(path);
+        fotoUrls.push(pub.publicUrl);
+      } catch(e) { console.warn('Erro upload foto NC:', e); }
+    }
+
+    // 3. Enviar e-mails via Edge Function
+    try {
+      const efUrl = `${SUPA_URL}/functions/v1/enviar-nc-email`;
+      await fetch(efUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY },
+        body: JSON.stringify({ destinatarios: checkedEmails, op, quantidade: qtd, setor_detectou: setor_det, setor_responsavel: setor_res, descricao: desc, fotos: fotoUrls })
+      });
+      showToast(`✅ Não conformidade registrada! E-mail enviado para ${checkedEmails.length} destinatário(s).`, true);
+    } catch(eEmail) {
+      console.warn('Erro ao enviar e-mail:', eEmail);
+      showToast('✅ NC registrada! (Falha no envio de e-mail)', true);
+    }
     clearNcPage();
-  } catch(e) { showToast('⚠️ Erro ao salvar. Verifique a conexão.', false); }
+  } catch(e) {
+    console.error('Erro saveNcPage:', e);
+    showToast('⚠️ Erro ao salvar. Verifique a conexão.', false);
+  }
 }
 
 // TOAST
