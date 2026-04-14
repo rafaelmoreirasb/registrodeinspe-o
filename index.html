@@ -2169,13 +2169,33 @@ async function flipCamera(which) {
 // CÂMERA DA PÁGINA NC
 let ncCamStream = null, ncPagePhotos = [];
 async function initNcCam() {
+  // Esconder offline enquanto tenta
+  document.getElementById('ncCamOffline').style.display = 'none';
+  document.getElementById('ncCamFeed').style.display = 'block';
   try {
-    const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-    s.getTracks().forEach(t => t.stop());
-    const devs = await getCameraDevices();
-    await populateSelect('ncCamSelect', devs);
-    if (devs.length) startNcCam(devs[0].deviceId);
+    // Tentar câmera traseira primeiro (mobile)
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+      ncCamFacing = 'environment';
+    } catch {
+      // Fallback: qualquer câmera
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    }
+    if (ncCamStream) ncCamStream.getTracks().forEach(t => t.stop());
+    ncCamStream = stream;
+    const v = document.getElementById('ncCamFeed');
+    v.srcObject = ncCamStream;
+    v.style.display = 'block';
+    document.getElementById('ncCamOffline').style.display = 'none';
+
+    // Também popular dropdown com dispositivos disponíveis
+    try {
+      const devs = await getCameraDevices();
+      await populateSelect('ncCamSelect', devs);
+    } catch { /* silencioso */ }
   } catch(e) {
+    console.warn('NC cam error:', e);
     document.getElementById('ncCamOffline').style.display = 'flex';
     document.getElementById('ncCamFeed').style.display = 'none';
   }
@@ -2183,11 +2203,16 @@ async function initNcCam() {
 async function startNcCam(deviceId) {
   if (ncCamStream) ncCamStream.getTracks().forEach(t => t.stop());
   try {
-    ncCamStream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId }, facingMode: ncCamFacing } });
+    // Usar só deviceId OU facingMode — nunca os dois juntos
+    const constraint = deviceId
+      ? { video: { deviceId: { exact: deviceId } } }
+      : { video: { facingMode: { ideal: ncCamFacing } } };
+    ncCamStream = await navigator.mediaDevices.getUserMedia(constraint);
     const v = document.getElementById('ncCamFeed');
     v.srcObject = ncCamStream; v.style.display = 'block';
     document.getElementById('ncCamOffline').style.display = 'none';
   } catch(e) {
+    console.warn('startNcCam error:', e);
     document.getElementById('ncCamOffline').style.display = 'flex';
     document.getElementById('ncCamFeed').style.display = 'none';
   }
@@ -2247,6 +2272,10 @@ async function saveNcPage() {
 
   if (!valid) { showToast('Preencha todos os campos obrigatórios e selecione ao menos um destinatário.', false); return; }
 
+  // Mostrar loading
+  const btnSave = document.querySelector('[onclick="saveNcPage()"]');
+  if (btnSave) btnSave.disabled = true;
+
   try {
     // 1. Salvar no banco
     const { data: ncData, error } = await db.from('nao_conformidades').insert([{
@@ -2257,36 +2286,57 @@ async function saveNcPage() {
     }]).select().single();
     if (error) throw error;
 
-    // 2. Upload fotos NC da página e coletar URLs
+    // 2. Coletar fotos como dataURLs (enviadas direto no corpo do e-mail)
+    const fotoDataUrls = ncPagePhotos.map(p => p.dataUrl);
+
+    // 3. Também fazer upload para o Storage (armazenamento permanente)
     const fotoUrls = [];
     for (const p of ncPagePhotos) {
       try {
         const resp = await fetch(p.dataUrl);
         const blob = await resp.blob();
-        const path = `nc_page/${ncData.id}/foto_${Date.now()}.png`;
-        await db.storage.from('imagens-inspecao').upload(path, blob, { contentType: 'image/png' });
-        const { data: pub } = db.storage.from('imagens-inspecao').getPublicUrl(path);
-        fotoUrls.push(pub.publicUrl);
+        const path = `nc_page/${ncData.id}/foto_${Date.now()}_${Math.random().toString(36).slice(2)}.png`;
+        const { error: upErr } = await db.storage.from('imagens-inspecao').upload(path, blob, { contentType: 'image/png' });
+        if (!upErr) {
+          const { data: pub } = db.storage.from('imagens-inspecao').getPublicUrl(path);
+          fotoUrls.push(pub.publicUrl);
+        }
       } catch(e) { console.warn('Erro upload foto NC:', e); }
     }
 
-    // 3. Enviar e-mails via Edge Function
+    // 4. Enviar e-mails via Edge Function
+    //    Passa URLs públicas (se upload OK) OU dataURLs como fallback
+    const fotosParaEmail = fotoUrls.length > 0 ? fotoUrls : fotoDataUrls;
     try {
       const efUrl = `${SUPA_URL}/functions/v1/enviar-nc-email`;
-      await fetch(efUrl, {
+      const efResp = await fetch(efUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY },
-        body: JSON.stringify({ destinatarios: checkedEmails, op, quantidade: qtd, setor_detectou: setor_det, setor_responsavel: setor_res, descricao: desc, fotos: fotoUrls })
+        body: JSON.stringify({
+          destinatarios: checkedEmails,
+          op, quantidade: qtd,
+          setor_detectou: setor_det,
+          setor_responsavel: setor_res,
+          descricao: desc,
+          fotos: fotosParaEmail
+        })
       });
-      showToast(`✅ Não conformidade registrada! E-mail enviado para ${checkedEmails.length} destinatário(s).`, true);
+      const efData = await efResp.json().catch(() => ({}));
+      if (efData.simulated) {
+        showToast('✅ NC registrada! (Configure RESEND_API_KEY para enviar e-mails reais)', true);
+      } else {
+        showToast(`✅ NC registrada e e-mail enviado para ${checkedEmails.length} destinatário(s)!`, true);
+      }
     } catch(eEmail) {
       console.warn('Erro ao enviar e-mail:', eEmail);
-      showToast('✅ NC registrada! (Falha no envio de e-mail)', true);
+      showToast('✅ NC registrada! Falha no envio de e-mail — verifique a conexão.', true);
     }
     clearNcPage();
   } catch(e) {
     console.error('Erro saveNcPage:', e);
     showToast('⚠️ Erro ao salvar. Verifique a conexão.', false);
+  } finally {
+    if (btnSave) btnSave.disabled = false;
   }
 }
 
