@@ -2097,42 +2097,56 @@ function openDelete(recId) {
 async function confirmDelete() {
   if (!deletingId) return;
   const id = deletingId;
-
-  // 1. Remover do array local e atualizar tabela imediatamente
-  records = records.filter(r => r.id !== id);
   deletingId = null;
   document.getElementById('delModal').classList.remove('open');
-  renderTable();
+
+  showToast(`⏳ Excluindo registro #${id}...`, true);
 
   try {
-    // 2. Buscar lista de arquivos do Storage para este ID (pasta id/)
-    const { data: storageFiles } = await db.storage
-      .from(BUCKET)
-      .list(String(id), { limit: 200 });
+    // 1. Primeiro excluir do banco (RLS agora permite DELETE)
+    //    inspecoes_imagens é deletado em cascata pela FK ON DELETE CASCADE
+    const { error: dbError } = await db
+      .from('inspecoes')
+      .delete()
+      .eq('id', id);
 
-    // 3. Deletar todos os arquivos do Storage da pasta deste ID
-    if (storageFiles && storageFiles.length > 0) {
-      const paths = storageFiles.map(f => `${id}/${f.name}`);
-      await db.storage.from(BUCKET).remove(paths);
+    if (dbError) {
+      console.error('Erro DB delete:', dbError);
+      // Recarregar tabela do banco para manter sincronia
+      await loadFromSupabase();
+      showToast(`⚠️ Erro ao excluir do banco: ${dbError.message}`, false);
+      return;
     }
 
-    // 4. Também deletar pasta nc_page/{id} se existir
-    const { data: ncFiles } = await db.storage
-      .from(BUCKET)
-      .list(`nc_page/${id}`, { limit: 200 });
-    if (ncFiles && ncFiles.length > 0) {
-      const ncPaths = ncFiles.map(f => `nc_page/${id}/${f.name}`);
-      await db.storage.from(BUCKET).remove(ncPaths);
-    }
+    // 2. Excluir arquivos do Storage — pasta principal do ID
+    try {
+      const { data: storageFiles } = await db.storage
+        .from(BUCKET).list(String(id), { limit: 500 });
+      if (storageFiles && storageFiles.length > 0) {
+        const paths = storageFiles.map(f => `${id}/${f.name}`);
+        await db.storage.from(BUCKET).remove(paths);
+      }
+    } catch(e) { console.warn('Storage pasta ID:', e); }
 
-    // 5. Deletar registro principal (inspecoes_imagens deletado em cascata pela FK)
-    const { error } = await db.from('inspecoes').delete().eq('id', id);
-    if (error) throw error;
+    // 3. Excluir arquivos do Storage — pasta NC
+    try {
+      const { data: ncFiles } = await db.storage
+        .from(BUCKET).list(`nc_page/${id}`, { limit: 500 });
+      if (ncFiles && ncFiles.length > 0) {
+        const ncPaths = ncFiles.map(f => `nc_page/${id}/${f.name}`);
+        await db.storage.from(BUCKET).remove(ncPaths);
+      }
+    } catch(e) { console.warn('Storage pasta NC:', e); }
 
-    showToast(`🗑 Registro #${id} e todos os arquivos excluídos.`, true);
+    // 4. Remover do array local e re-renderizar
+    records = records.filter(r => r.id !== id);
+    renderTable();
+    showToast(`✅ Registro #${id} excluído permanentemente.`, true);
+
   } catch(e) {
-    console.error('Erro ao excluir:', e);
-    showToast(`⚠️ Erro ao excluir registro #${id} do banco.`, false);
+    console.error('Erro geral ao excluir:', e);
+    await loadFromSupabase();
+    showToast(`⚠️ Erro inesperado ao excluir. Tente novamente.`, false);
   }
 }
 
