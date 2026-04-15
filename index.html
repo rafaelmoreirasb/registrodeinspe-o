@@ -2096,14 +2096,44 @@ function openDelete(recId) {
 }
 async function confirmDelete() {
   if (!deletingId) return;
-  records = records.filter(r => r.id !== deletingId);
-  renderTable();
-  try {
-    await db.from('inspecoes').delete().eq('id', deletingId);
-    showToast(`🗑 Registro #${deletingId} excluído.`, true);
-  } catch(e) { showToast('⚠️ Erro ao excluir no banco.', false); }
+  const id = deletingId;
+
+  // 1. Remover do array local e atualizar tabela imediatamente
+  records = records.filter(r => r.id !== id);
   deletingId = null;
   document.getElementById('delModal').classList.remove('open');
+  renderTable();
+
+  try {
+    // 2. Buscar lista de arquivos do Storage para este ID (pasta id/)
+    const { data: storageFiles } = await db.storage
+      .from(BUCKET)
+      .list(String(id), { limit: 200 });
+
+    // 3. Deletar todos os arquivos do Storage da pasta deste ID
+    if (storageFiles && storageFiles.length > 0) {
+      const paths = storageFiles.map(f => `${id}/${f.name}`);
+      await db.storage.from(BUCKET).remove(paths);
+    }
+
+    // 4. Também deletar pasta nc_page/{id} se existir
+    const { data: ncFiles } = await db.storage
+      .from(BUCKET)
+      .list(`nc_page/${id}`, { limit: 200 });
+    if (ncFiles && ncFiles.length > 0) {
+      const ncPaths = ncFiles.map(f => `nc_page/${id}/${f.name}`);
+      await db.storage.from(BUCKET).remove(ncPaths);
+    }
+
+    // 5. Deletar registro principal (inspecoes_imagens deletado em cascata pela FK)
+    const { error } = await db.from('inspecoes').delete().eq('id', id);
+    if (error) throw error;
+
+    showToast(`🗑 Registro #${id} e todos os arquivos excluídos.`, true);
+  } catch(e) {
+    console.error('Erro ao excluir:', e);
+    showToast(`⚠️ Erro ao excluir registro #${id} do banco.`, false);
+  }
 }
 
 // NAVEGAÇÃO ENTRE PÁGINAS
