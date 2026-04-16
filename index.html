@@ -316,7 +316,7 @@
   .nc-alert.show { display:flex;align-items:center;gap:8px; }
   .nc-section { margin-top:14px;display:none; }
   .nc-section.show { display:block; }
-  .btn-nc { background:#a80000;color:white;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;padding:10px 16px;border:none;border-radius:4px;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;transition:background 0.15s; }
+  .btn-nc { background:#a80000;color:white;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;padding:10px 16px;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:background 0.15s; }
   .btn-nc:hover { background:#8b0000; }
   .nc-photos { display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;max-height:200px;overflow-y:auto; }
   .nc-photo-thumb { position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;border:2px solid #f5c6c6; }
@@ -466,10 +466,12 @@
                 <option value="">— Selecione —</option>
                 <option>Bandeira Branca</option>
                 <option>BR</option>
+                <option>Citroën</option>
                 <option>Honda</option>
                 <option>Incoleed</option>
                 <option>Ipiranga</option>
                 <option>Petronas</option>
+                <option>Peugeot</option>
                 <option>Shell</option>
                 <option>Texaco</option>
               </select>
@@ -713,7 +715,6 @@
 
         </div>
         <div class="action-bar">
-          <button class="btn btn-danger btn-sm" onclick="clearForm()">🗑 Limpar</button>
           <button class="btn btn-primary" id="btnSalvar" onclick="saveRecord()">💾 Salvar Registro de Inspeção</button>
         </div>
       </div>
@@ -761,15 +762,10 @@
           <!-- CONTROLES FOTO -->
           <div id="photoControls" class="cam-controls">
             <button class="btn btn-primary" onclick="takePhoto()" style="flex:1;">📸 Tirar Foto</button>
-            <button class="btn btn-danger btn-sm" onclick="clearCamPhotos()">🗑 Limpar</button>
+            <button class="btn-nc" onclick="takeNcPhoto()" style="flex:1;margin:0;">🚫 Não Conformidade</button>
           </div>
           <div id="camPhotoCount" style="font-size:12px;color:var(--muted);margin-bottom:8px;"></div>
           <div class="cam-photos" id="camPhotosGrid"></div>
-
-          <!-- BOTÃO NÃO CONFORMIDADE -->
-          <button class="btn-nc" onclick="takeNcPhoto()" style="margin-top:10px;">
-            🚫 Registrar Não Conformidade
-          </button>
           <div class="nc-err" id="nc_photo_err">Tire ao menos 1 foto de não conformidade antes de salvar.</div>
           <div id="ncPhotoCount" style="font-size:12px;color:#a80000;font-weight:600;margin-top:6px;display:none;"></div>
           <div class="nc-photos" id="ncPhotosGrid"></div>
@@ -812,9 +808,8 @@
         <input type="text"   id="f_fop"      placeholder="🔍 OP"          oninput="applyFilters()" />
         <select              id="f_fbandeira"                              onchange="applyFilters()">
           <option value="">Bandeira</option>
-          <option>Bandeira Branca</option><option>BR</option><option>Honda</option>
-          <option>Incoleed</option><option>Ipiranga</option><option>Petronas</option>
-          <option>Shell</option><option>Texaco</option>
+          <option>Bandeira Branca</option><option>BR</option><option>Citroën</option><option>Honda</option><option>Incoleed</option><option>Ipiranga</option>
+          <option>Petronas</option><option>Peugeot</option><option>Shell</option><option>Texaco</option>
         </select>
         <select              id="f_fsetor"                                 onchange="applyFilters()">
           <option value="">Setor</option>
@@ -991,9 +986,8 @@
         <div class="edit-field">
           <label>Bandeira</label>
           <select id="edit_bandeira">
-            <option>Bandeira Branca</option><option>BR</option><option>Honda</option>
-            <option>Incoleed</option><option>Ipiranga</option><option>Petronas</option>
-            <option>Shell</option><option>Texaco</option>
+            <option>Bandeira Branca</option><option>BR</option><option>Citroën</option><option>Honda</option><option>Incoleed</option><option>Ipiranga</option>
+            <option>Petronas</option><option>Peugeot</option><option>Shell</option><option>Texaco</option>
           </select>
         </div>
         <div class="edit-field">
