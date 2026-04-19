@@ -50,7 +50,7 @@
   .badge { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; letter-spacing: 1px; }
 
   /* LAYOUT */
-  .layout { display: grid; grid-template-columns: 1fr 420px; gap: 20px; padding: 20px 24px; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; }
+  .layout { display: block; padding: 20px 24px; flex: 1; max-width: 900px; margin: 0 auto; width: 100%; }
 
   /* PANEL */
   .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
@@ -229,6 +229,66 @@
   .lb-next { right: 0; }
   .lb-counter { position: absolute; bottom: 18px; color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; letter-spacing: 1px; }
   .clickable-img { cursor: zoom-in; }
+  /* ── DASHBOARD ─────────────────────────────── */
+  .dash-page { padding: 20px 24px; max-width: 1200px; margin: 0 auto; }
+  .dash-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .dash-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .dash-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .kpi-blue::before  { background: var(--blue); }
+  .kpi-green::before { background: #107C10; }
+  .kpi-red::before   { background: var(--danger); }
+  .kpi-amber::before { background: #C17F24; }
+  .kpi-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+  .kpi-value { font-size: 30px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+  .kpi-blue  .kpi-value { color: var(--blue); }
+  .kpi-green .kpi-value { color: #107C10; }
+  .kpi-red   .kpi-value { color: var(--danger); }
+  .kpi-amber .kpi-value { color: #C17F24; }
+  .kpi-sub { font-size: 12px; color: var(--muted); }
+  .dash-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .dash-card-header { background: var(--blue); color: white; padding: 10px 16px; font-size: 13px; font-weight: 700; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; }
+  .dash-card-body { padding: 16px; }
+  /* Barras horizontais */
+  .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .bar-row:last-child { margin-bottom: 0; }
+  .bar-name { font-size: 12px; color: var(--text); min-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { flex: 1; background: #eef1f5; border-radius: 4px; height: 10px; overflow: hidden; }
+  .bar-fill  { height: 10px; border-radius: 4px; transition: width 0.6s ease; }
+  .bar-val   { font-size: 12px; font-weight: 700; color: var(--text); min-width: 22px; text-align: right; }
+  /* Donut */
+  .donut-wrap { display: flex; align-items: center; justify-content: center; gap: 20px; }
+  .donut-svg  { flex-shrink: 0; }
+  .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text); }
+  .legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  /* Tabela recentes */
+  .rec-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .rec-table th { background: #f0f3f8; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+  .rec-table td { padding: 8px 10px; border-bottom: 1px solid #eef1f5; vertical-align: middle; }
+  .rec-table tr:last-child td { border-bottom: none; }
+  .rec-table tr:hover td { background: #f8fafc; }
+  .dot-ok  { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #107C10; margin-right: 4px; }
+  .dot-nc  { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); margin-right: 4px; }
+  /* Timeline mini */
+  .timeline-bars { display: flex; align-items: flex-end; gap: 6px; height: 60px; padding-top: 4px; }
+  .tbar-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+  .tbar { width: 100%; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.5s ease; }
+  .tbar-label { font-size: 9px; color: var(--muted); white-space: nowrap; }
+  /* Taxa circular */
+  .rate-circle { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .rate-circle svg { margin-bottom: 6px; }
+  .rate-pct { font-size: 22px; font-weight: 700; color: #107C10; }
+  .rate-desc { font-size: 11px; color: var(--muted); text-align: center; }
+  /* Refresh btn */
+  .dash-refresh { background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Barlow', sans-serif; }
+  .dash-refresh:hover { background: rgba(255,255,255,0.28); }
+  @media (max-width: 768px) {
+    .dash-grid-4 { grid-template-columns: 1fr 1fr; }
+    .dash-grid-2, .dash-grid-3 { grid-template-columns: 1fr; }
+    .bar-name { min-width: 90px; }
+  }
 
   /* NAV TABS */
   .nav-tabs { display:flex; gap:0; border-bottom:2px solid rgba(255,255,255,0.3); padding:0 24px; }
@@ -407,6 +467,7 @@
     <div class="nav-tabs">
       <button class="nav-tab active" id="tab_inspecao" onclick="switchPage('inspecao')">📋 Registro de Inspeção</button>
       <button class="nav-tab" id="tab_nc_page" onclick="switchPage('nc_page')">🚫 Não Conformidade</button>
+      <button class="nav-tab" id="tab_dashboard" onclick="switchPage('dashboard')">📊 Dashboard</button>
     </div>
     <div id="userInfo">
       <span class="user-name" id="userNameDisplay"></span>
@@ -514,14 +575,38 @@
 
           <!-- Imagem -->
           <div class="section-label">Imagem em Anexo</div>
-          <div class="photo-upload-area">
-            <input type="file" id="f_imagem" accept="image/*" multiple onchange="handleImageUpload(event)" />
-            <div class="uicon">🖼</div>
-            <p>Clique ou arraste para selecionar <strong>várias imagens</strong><br><strong>JPG, PNG</strong> — múltipla seleção permitida</p>
+          <!-- Botões de câmera -->
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <button type="button" onclick="openCamModal('photo')" style="flex:1;background:var(--blue);color:white;border:none;border-radius:4px;padding:11px 10px;font-family:Barlow,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📷 Abrir Câmera</button>
+            <button type="button" onclick="openCamModal('nc')" style="flex:1;background:#a80000;color:white;border:none;border-radius:4px;padding:11px 10px;font-family:Barlow,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">🚫 Não Conformidade</button>
           </div>
-          <div id="imageGalleryWrap">
+          <!-- Upload de arquivo -->
+          <div class="photo-upload-area">
+            <input type="file" id="f_imagem" accept="image/*,video/*" multiple onchange="handleImageUpload(event)" />
+            <div class="uicon">🖼</div>
+            <p>Clique ou arraste para selecionar <strong>imagens ou vídeo</strong><br><strong>JPG, PNG, MP4</strong></p>
+          </div>
+          <!-- Galeria de fotos (câmera + anexo) -->
+          <div id="imageGalleryWrap" style="margin-top:8px;">
             <div class="gallery-grid" id="imageGallery"></div>
             <div class="gallery-count" id="imageCount"></div>
+          </div>
+          <!-- Fotos de câmera -->
+          <div id="camPhotosWrap" style="margin-top:6px;">
+            <div id="camPhotoCountVis" style="font-size:12px;color:var(--muted);margin-bottom:6px;"></div>
+            <div class="gallery-grid" id="camPhotosGridVis"></div>
+          </div>
+          <!-- NC fotos -->
+          <div class="nc-err" id="nc_photo_err" style="margin-top:6px;">Tire ao menos 1 foto de não conformidade antes de salvar.</div>
+          <div id="ncPhotoCountVis" style="font-size:12px;color:#a80000;font-weight:600;margin-top:4px;display:none;"></div>
+          <div class="nc-photos" id="ncPhotosGridVis" style="margin-top:6px;"></div>
+          <!-- Preview de vídeo gravado -->
+          <div id="videoPreviewWrapVis" style="display:none;margin-top:10px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;">
+              <span>📹 Vídeo gravado</span>
+              <button class="btn btn-danger btn-sm" onclick="clearVideo()">🗑 Remover</button>
+            </div>
+            <video id="recordedVideoPreviewVis" controls style="width:100%;border-radius:6px;border:1px solid var(--border);"></video>
           </div>
 
           <!-- Observações -->
@@ -720,79 +805,80 @@
       </div>
     </div>
 
-    <!-- CÂMERA UNIFICADA -->
-    <div>
-      <div class="panel">
-        <div class="panel-header" id="camPanelHeader">📷 Câmera</div>
-        <div class="panel-body">
 
-          <!-- SELETOR DE CÂMERA -->
-          <div class="cam-select-bar">
-            <label>Câmera:</label>
-            <select id="cameraSelect" onchange="switchCamera()"><option value="">Nenhuma</option></select>
-          </div>
+  </div>
 
-          <!-- TOGGLE FOTO / VÍDEO -->
-          <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:12px;">
-            <button id="togglePhoto" onclick="setCamMode('photo')" style="flex:1;padding:9px 10px;font-family:Barlow,sans-serif;font-size:13px;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;border-right:1px solid var(--border);background:var(--blue);color:white;transition:all 0.15s;">
-              📸 Tirar Foto
-            </button>
-            <button id="toggleVideo" onclick="setCamMode('video')" style="flex:1;padding:9px 10px;font-family:Barlow,sans-serif;font-size:13px;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;background:#f4f6f9;color:var(--muted);transition:all 0.15s;">
-              🎥 Gravar Vídeo
-            </button>
-          </div>
+<!-- MODAL CÂMERA FULLSCREEN -->
+<div id="camModal" style="display:none;position:fixed;inset:0;background:#000;z-index:7000;flex-direction:column;">
+  <!-- Vídeo ocupa tudo -->
+  <video id="cameraFeed" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block;"></video>
 
-          <!-- CÂMERA (única, compartilhada) -->
-          <div class="cam-toolbar">
-            <button class="cam-toolbar-btn" onclick="toggleExpandCam('main')">⛶ Ampliar câmera</button>
-            <button class="cam-toolbar-btn" onclick="flipCamera('main')" id="flipMainBtn">🔄 Câmera traseira</button>
-          </div>
-          <div class="camera-container" id="mainCamContainer">
-            <button class="cam-expand-close" id="mainExpandClose" onclick="toggleExpandCam('main')" style="display:none;">✕ Fechar</button>
-            <video id="cameraFeed" autoplay playsinline muted class="cam-video"></video>
-            <div class="rec-indicator" id="recIndicator"><div class="rec-dot"></div>REC</div>
-            <div class="camera-offline" id="cameraOffline">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-              <span>Câmera não disponível<br>ou sem permissão</span>
-              <button class="btn btn-secondary btn-sm" onclick="initCamera()">↺ Tentar novamente</button>
-            </div>
-          </div>
-          <canvas id="capturedCanvas" style="display:none;"></canvas>
+  <!-- Barra superior: fechar + modo -->
+  <div style="position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:linear-gradient(to bottom,rgba(0,0,0,0.65),transparent);">
+    <button onclick="closeCamModal()" style="background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.35);border-radius:8px;padding:8px 14px;font-family:Barlow,sans-serif;font-size:14px;font-weight:600;cursor:pointer;">✕ Fechar</button>
+    <!-- Toggle Foto / Vídeo -->
+    <div style="display:flex;border:1px solid rgba(255,255,255,0.3);border-radius:8px;overflow:hidden;">
+      <button id="camModePhoto" onclick="setCamMode('photo')" style="padding:8px 16px;font-family:Barlow,sans-serif;font-size:13px;font-weight:600;border:none;cursor:pointer;background:white;color:#1038c1;transition:all 0.15s;">📸 Foto</button>
+      <button id="camModeVideo" onclick="setCamMode('video')" style="padding:8px 16px;font-family:Barlow,sans-serif;font-size:13px;font-weight:600;border:none;cursor:pointer;background:transparent;color:white;transition:all 0.15s;">🎥 Vídeo</button>
+    </div>
+    <!-- Flip câmera -->
+    <button id="flipMainBtn" onclick="flipCamera('main')" style="background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.35);border-radius:8px;padding:8px 14px;font-family:Barlow,sans-serif;font-size:13px;font-weight:600;cursor:pointer;">🔄 Virar</button>
+  </div>
 
-          <!-- CONTROLES FOTO -->
-          <div id="photoControls" class="cam-controls">
-            <button class="btn btn-primary" onclick="takePhoto()" style="flex:1;">📸 Tirar Foto</button>
-            <button class="btn-nc" onclick="takeNcPhoto()" style="flex:1;margin:0;">🚫 Não Conformidade</button>
-          </div>
-          <div id="camPhotoCount" style="font-size:12px;color:var(--muted);margin-bottom:8px;"></div>
-          <div class="cam-photos" id="camPhotosGrid"></div>
-          <div class="nc-err" id="nc_photo_err">Tire ao menos 1 foto de não conformidade antes de salvar.</div>
-          <div id="ncPhotoCount" style="font-size:12px;color:#a80000;font-weight:600;margin-top:6px;display:none;"></div>
-          <div class="nc-photos" id="ncPhotosGrid"></div>
+  <!-- Barra inferior: controles -->
+  <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 24px 36px;background:linear-gradient(to top,rgba(0,0,0,0.75),transparent);display:flex;flex-direction:column;align-items:center;gap:14px;">
 
-          <!-- CONTROLES VÍDEO -->
-          <div id="videoControls" style="display:none;">
-            <div class="cam-controls">
-              <button class="btn btn-rec"    id="btnStartRec" onclick="startRecording()" style="flex:1;">⏺ Iniciar Gravação</button>
-              <button class="btn btn-danger" id="btnStopRec"  onclick="stopRecording()"  style="flex:1;" disabled>⏹ Parar</button>
-            </div>
-            <div id="recTimer" style="font-size:12px;color:var(--red-rec);font-weight:600;margin-bottom:8px;display:none;">
-              ⏱ Gravando: <span id="recTimerVal">00:00</span>
-            </div>
-            <div class="video-preview-wrap" id="videoPreviewWrap">
-              <div class="video-preview-label">
-                <span>📹 Vídeo gravado</span>
-                <button class="btn btn-danger btn-sm" onclick="clearVideo()">🗑 Remover</button>
-              </div>
-              <video id="recordedVideoPreview" controls></video>
-            </div>
-          </div>
+    <!-- Contadores -->
+    <div id="camModalCount" style="font-size:13px;color:rgba(255,255,255,0.85);font-weight:600;min-height:20px;"></div>
 
-        </div>
+    <!-- Controles foto -->
+    <div id="camPhotoCtrl" style="display:flex;gap:16px;align-items:center;">
+      <!-- Botão NC (vermelho, menor) -->
+      <button onclick="takeNcPhoto()" style="background:#a80000;color:white;border:none;border-radius:50%;width:56px;height:56px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.2;">🚫<br>NC</button>
+      <!-- Botão principal tirar foto (grande) -->
+      <button onclick="takePhoto()" style="background:white;border:4px solid rgba(255,255,255,0.5);border-radius:50%;width:72px;height:72px;cursor:pointer;box-shadow:0 0 0 3px rgba(255,255,255,0.3);transition:transform 0.1s;" onmousedown="this.style.transform='scale(0.93)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(0.93)'" ontouchend="this.style.transform='scale(1)'"></button>
+      <!-- Espaço espelho -->
+      <div style="width:56px;"></div>
+    </div>
+
+    <!-- Controles vídeo -->
+    <div id="camVideoCtrl" style="display:none;flex-direction:column;align-items:center;gap:10px;width:100%;">
+      <div id="recTimer" style="font-size:14px;color:#ff4444;font-weight:700;display:none;">⏱ <span id="recTimerVal">00:00</span></div>
+      <div style="display:flex;gap:14px;">
+        <button id="btnStartRec" onclick="startRecording()" style="background:#cc0000;color:white;border:none;border-radius:50%;width:72px;height:72px;font-size:13px;font-weight:700;cursor:pointer;">⏺ Gravar</button>
+        <button id="btnStopRec"  onclick="stopRecording()"  style="background:#444;color:white;border:none;border-radius:50%;width:72px;height:72px;font-size:13px;font-weight:700;cursor:pointer;" disabled>⏹ Parar</button>
       </div>
     </div>
 
+    <!-- Indicador REC -->
+    <div class="rec-indicator" id="recIndicator"><div class="rec-dot"></div>REC</div>
+
   </div>
+
+  <!-- Câmera offline dentro do modal -->
+  <div id="cameraOffline" style="display:none;position:absolute;inset:0;background:#111;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:white;">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    <span style="font-size:14px;text-align:center;">Câmera não disponível<br>ou sem permissão</span>
+    <button class="btn btn-secondary btn-sm" onclick="initCamera()">↺ Tentar novamente</button>
+  </div>
+</div>
+
+<!-- Elementos hidden necessários para lógica JS -->
+<canvas id="capturedCanvas" style="display:none;"></canvas>
+<div class="video-preview-wrap" id="videoPreviewWrap" style="display:none;margin:10px 0;">
+  <div class="video-preview-label">
+    <span>📹 Vídeo gravado</span>
+    <button class="btn btn-danger btn-sm" onclick="clearVideo()">🗑 Remover</button>
+  </div>
+  <video id="recordedVideoPreview" controls style="width:100%;border-radius:6px;"></video>
+</div>
+<div id="camPhotoCount" style="display:none;"></div>
+<div id="camPhotosGrid" style="display:none;"></div>
+<div id="videoControls" style="display:none;"></div>
+<div id="camPanelHeader" style="display:none;"></div>
+<input type="hidden" id="cameraSelect" />
+<input type="hidden" id="togglePhoto" />
+<input type="hidden" id="toggleVideo" />
 
   <!-- TABELA DE REGISTROS -->
   <div class="records-section">
@@ -964,6 +1050,98 @@
       </div>
     </div>
   </div><!-- /page_nc_page -->
+  <!-- PÁGINA DASHBOARD -->
+  <div class="page" id="page_dashboard">
+    <div class="dash-page">
+
+      <!-- KPIs -->
+      <div class="dash-grid-4">
+        <div class="kpi-card kpi-blue">
+          <div class="kpi-label">Total de Inspeções</div>
+          <div class="kpi-value" id="kpi_total">—</div>
+          <div class="kpi-sub" id="kpi_periodo">carregando...</div>
+        </div>
+        <div class="kpi-card kpi-green">
+          <div class="kpi-label">Conformes</div>
+          <div class="kpi-value" id="kpi_conf">—</div>
+          <div class="kpi-sub" id="kpi_conf_pct">sem NC registrada</div>
+        </div>
+        <div class="kpi-card kpi-red">
+          <div class="kpi-label">Com Não Conformidade</div>
+          <div class="kpi-value" id="kpi_nc">—</div>
+          <div class="kpi-sub" id="kpi_nc_pct">registros com NC</div>
+        </div>
+        <div class="kpi-card kpi-amber">
+          <div class="kpi-label">Taxa de Conformidade</div>
+          <div class="kpi-value" id="kpi_taxa">—</div>
+          <div class="kpi-sub">dos registros OK</div>
+        </div>
+      </div>
+
+      <!-- Linha 2: Bandeiras + Colaboradores -->
+      <div class="dash-grid-2">
+        <div class="dash-card">
+          <div class="dash-card-header">🏁 Inspeções por Bandeira</div>
+          <div class="dash-card-body" id="chart_bandeira">
+            <div style="color:var(--muted);font-size:12px;">Carregando...</div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-header">👤 Inspeções por Colaborador</div>
+          <div class="dash-card-body" id="chart_colab">
+            <div style="color:var(--muted);font-size:12px;">Carregando...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Linha 3: Setores + Características + Taxa visual -->
+      <div class="dash-grid-3">
+        <div class="dash-card">
+          <div class="dash-card-header">🏭 Inspeções por Setor</div>
+          <div class="dash-card-body" id="chart_setor">
+            <div style="color:var(--muted);font-size:12px;">Carregando...</div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-header">✅ Características — NCs</div>
+          <div class="dash-card-body" id="chart_caract">
+            <div style="color:var(--muted);font-size:12px;">Carregando...</div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-header">📈 Evolução Diária</div>
+          <div class="dash-card-body" id="chart_evolucao" style="display:flex;align-items:center;justify-content:center;min-height:120px;">
+            <div style="color:var(--muted);font-size:12px;">Carregando...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Linha 4: Últimos registros -->
+      <div class="dash-card">
+        <div class="dash-card-header" style="justify-content:space-between;">
+          <span>🕐 Últimos 5 Registros</span>
+          <button class="dash-refresh" onclick="loadDashboard()">↺ Atualizar</button>
+        </div>
+        <div class="dash-card-body" style="padding:0;">
+          <div class="table-wrap">
+            <table class="rec-table">
+              <thead>
+                <tr>
+                  <th>ID</th><th>OP</th><th>Bandeira</th><th>Setor</th>
+                  <th>Colaborador</th><th>Qtd.</th><th>Status</th><th>Data</th>
+                </tr>
+              </thead>
+              <tbody id="dash_recentes">
+                <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:16px;">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /page_dashboard -->
+
 
   <!-- MODAL EDITAR REGISTRO -->
   <div id="editModal">
@@ -1215,7 +1393,7 @@ function showApp(name) {
     document.getElementById('app').style.display = 'flex';
     document.getElementById('app').classList.add('visible');
     updateIdField();
-    initCamera();
+    // câmera agora é aberta via modal
     loadFromSupabase();
   }, 3000);
 }
@@ -1318,52 +1496,140 @@ let camMode = 'photo';
 function setCamMode(mode) {
   camMode = mode;
   const isPhoto = mode === 'photo';
-  document.getElementById('togglePhoto').style.background = isPhoto ? 'var(--blue)' : '#f4f6f9';
-  document.getElementById('togglePhoto').style.color     = isPhoto ? 'white' : 'var(--muted)';
-  document.getElementById('toggleVideo').style.background = !isPhoto ? 'var(--blue)' : '#f4f6f9';
-  document.getElementById('toggleVideo').style.color     = !isPhoto ? 'white' : 'var(--muted)';
-  document.getElementById('photoControls').style.display = isPhoto ? 'flex' : 'none';
-  document.getElementById('videoControls').style.display = isPhoto ? 'none' : 'block';
-  document.getElementById('camPanelHeader').textContent  = isPhoto ? '📷 Câmera — Tirar Foto' : '🎥 Câmera — Gravar Vídeo';
+  const btnP = document.getElementById('camModePhoto');
+  const btnV = document.getElementById('camModeVideo');
+  if (btnP) { btnP.style.background = isPhoto ? 'white' : 'transparent'; btnP.style.color = isPhoto ? '#1038c1' : 'white'; }
+  if (btnV) { btnV.style.background = !isPhoto ? 'white' : 'transparent'; btnV.style.color = !isPhoto ? '#1038c1' : 'white'; }
+  const pc = document.getElementById('camPhotoCtrl');
+  const vc = document.getElementById('camVideoCtrl');
+  if (pc) pc.style.display = isPhoto ? 'flex' : 'none';
+  if (vc) vc.style.display = isPhoto ? 'none'  : 'flex';
   // restart stream with audio if switching to video
-  const sel = document.getElementById('cameraSelect').value;
-  if (sel) startCamera(sel);
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    const constraint = { video: { facingMode: { ideal: mainCamFacing } }, audio: !isPhoto };
+    navigator.mediaDevices.getUserMedia(constraint).then(s => {
+      cameraStream = s; vidStream = s;
+      const v = document.getElementById('cameraFeed');
+      if (v) { v.srcObject = s; }
+    }).catch(() => {});
+  }
+}
+
+// CÂMERA MODAL
+let _camModalMode = 'photo'; // 'photo' | 'nc'
+
+async function openCamModal(mode) {
+  _camModalMode = mode || 'photo';
+  camMode = 'photo';
+  const modal = document.getElementById('camModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  await initCamera();
+  updateCamModalCount();
+}
+function closeCamModal() {
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  document.getElementById('camModal').style.display = 'none';
+  document.body.style.overflow = '';
+  // Sincronizar galerias visíveis
+  syncCamGalleries();
+}
+function updateCamModalCount() {
+  const el = document.getElementById('camModalCount');
+  if (!el) return;
+  const parts = [];
+  if (camPhotos.length)  parts.push(`📷 ${camPhotos.length} foto(s)`);
+  if (ncPhotos.length)   parts.push(`🚫 ${ncPhotos.length} NC`);
+  if (recordedVideoURL)  parts.push('🎥 Vídeo gravado');
+  el.textContent = parts.join('  ·  ');
+}
+function syncCamGalleries() {
+  // Atualizar galeria de fotos câmera no formulário
+  const gridVis = document.getElementById('camPhotosGridVis');
+  const cntVis  = document.getElementById('camPhotoCountVis');
+  if (!gridVis) return;
+  cntVis.textContent = camPhotos.length ? `${camPhotos.length} foto(s) tirada(s) com a câmera` : '';
+  gridVis.innerHTML = '';
+  const allU = JSON.stringify(camPhotos.map(x => x.dataUrl));
+  camPhotos.forEach((p, idx) => {
+    const div = document.createElement('div');
+    div.className = 'gallery-item';
+    const img = document.createElement('img');
+    img.src = p.dataUrl; img.className = 'clickable-img';
+    img.dataset.idx = idx; img.dataset.gallery = allU;
+    img.addEventListener('click', function() { openLightboxIdx(this.dataset.idx, this.dataset.gallery); });
+    const btn = document.createElement('button');
+    btn.className = 'remove'; btn.textContent = '✕';
+    btn.onclick = () => { camPhotos = camPhotos.filter(x => x.id !== p.id); syncCamGalleries(); };
+    div.appendChild(img); div.appendChild(btn);
+    gridVis.appendChild(div);
+  });
+  // Atualizar galeria NC
+  const ncGridVis = document.getElementById('ncPhotosGridVis');
+  const ncCntVis  = document.getElementById('ncPhotoCountVis');
+  if (ncGridVis) {
+    ncCntVis.style.display = ncPhotos.length ? 'block' : 'none';
+    ncCntVis.textContent   = ncPhotos.length ? `${ncPhotos.length} foto(s) de não conformidade` : '';
+    ncGridVis.innerHTML    = '';
+    const ncU = JSON.stringify(ncPhotos.map(x => x.dataUrl));
+    ncPhotos.forEach((p, idx) => {
+      const div = document.createElement('div');
+      div.className = 'nc-photo-thumb';
+      const img = document.createElement('img');
+      img.src = p.dataUrl; img.className = 'clickable-img';
+      img.dataset.idx = idx; img.dataset.gallery = ncU;
+      img.addEventListener('click', function() { openLightboxIdx(this.dataset.idx, this.dataset.gallery); });
+      const btn = document.createElement('button');
+      btn.className = 'del'; btn.textContent = '✕';
+      btn.onclick = () => { ncPhotos = ncPhotos.filter(x => x.id !== p.id); syncCamGalleries(); };
+      div.appendChild(img); div.appendChild(btn);
+      ncGridVis.appendChild(div);
+    });
+  }
+  // Vídeo
+  const vpVis  = document.getElementById('videoPreviewWrapVis');
+  const vidVis = document.getElementById('recordedVideoPreviewVis');
+  if (vpVis && vidVis) {
+    vpVis.style.display  = recordedVideoURL ? 'block' : 'none';
+    if (recordedVideoURL) vidVis.src = recordedVideoURL;
+  }
 }
 
 // UNIFIED CAMERA
 async function initCamera() {
   try {
-    const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    s.getTracks().forEach(t => t.stop());
-    const devs = await getCameraDevices();
-    await populateSelect('cameraSelect', devs);
-    if (devs.length) startCamera(devs[0].deviceId);
+    const constraint = { video: { facingMode: { ideal: mainCamFacing } }, audio: (camMode !== 'photo') };
+    if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = await navigator.mediaDevices.getUserMedia(constraint);
+    vidStream = cameraStream;
+    const v = document.getElementById('cameraFeed');
+    if (v) { v.srcObject = cameraStream; v.style.display = 'block'; }
+    const off = document.getElementById('cameraOffline');
+    if (off) off.style.display = 'none';
   } catch(e) {
-    document.getElementById('cameraOffline').style.display = 'flex';
-    document.getElementById('cameraFeed').style.display = 'none';
+    const off = document.getElementById('cameraOffline');
+    const v   = document.getElementById('cameraFeed');
+    if (off) off.style.display = 'flex';
+    if (v)   v.style.display   = 'none';
+    console.warn('initCamera error:', e);
   }
 }
 async function startCamera(deviceId) {
   if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
   try {
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: deviceId ? { deviceId: { exact: deviceId } } : true,
-      audio: true
-    });
-    const v = document.getElementById('cameraFeed');
-    v.srcObject = cameraStream; v.style.display = 'block';
-    document.getElementById('cameraOffline').style.display = 'none';
-    // also wire to vidStream for recording
+    const constraint = { video: { facingMode: { ideal: mainCamFacing } }, audio: true };
+    cameraStream = await navigator.mediaDevices.getUserMedia(constraint);
     vidStream = cameraStream;
+    const v = document.getElementById('cameraFeed');
+    if (v) { v.srcObject = cameraStream; v.style.display = 'block'; }
+    const off = document.getElementById('cameraOffline');
+    if (off) off.style.display = 'none';
   } catch(e) {
-    document.getElementById('cameraOffline').style.display = 'flex';
-    document.getElementById('cameraFeed').style.display = 'none';
+    console.warn('startCamera error:', e);
   }
 }
-function switchCamera() {
-  const v = document.getElementById('cameraSelect').value;
-  if (v) startCamera(v);
-}
+function switchCamera() { /* legado — não usado */ }
 function showCameraOffline(offId, vidId) {
   document.getElementById(offId).style.display = 'flex';
   document.getElementById(vidId).style.display = 'none';
@@ -1375,9 +1641,19 @@ function takePhoto() {
   const canvas = document.getElementById('capturedCanvas');
   canvas.width = video.videoWidth; canvas.height = video.videoHeight;
   canvas.getContext('2d').drawImage(video, 0, 0);
+  const dataUrl = canvas.toDataURL('image/png');
   const id = Date.now();
-  camPhotos.push({ id, dataUrl: canvas.toDataURL('image/png') });
-  renderCamPhotos();
+  if (_camModalMode === 'nc') {
+    ncPhotos.push({ id, dataUrl });
+  } else {
+    camPhotos.push({ id, dataUrl });
+  }
+  // Flash feedback
+  const fl = document.createElement('div');
+  fl.style.cssText = 'position:absolute;inset:0;background:white;opacity:0.7;pointer-events:none;z-index:1;';
+  document.getElementById('camModal').appendChild(fl);
+  setTimeout(() => fl.remove(), 120);
+  updateCamModalCount();
 }
 function renderCamPhotos() {
   const grid = document.getElementById('camPhotosGrid');
@@ -1405,7 +1681,7 @@ function renderCamPhotos() {
   });
 }
 function deleteCamPhoto(id) { camPhotos = camPhotos.filter(p => p.id !== id); renderCamPhotos(); }
-function clearCamPhotos() { camPhotos = []; renderCamPhotos(); }
+function clearCamPhotos() { camPhotos = []; renderCamPhotos(); syncCamGalleries(); }
 
 
 
@@ -1442,8 +1718,8 @@ function finalizeRecording() {
   recordedBlob = new Blob(recordedChunks, { type: recordedChunks[0]?.type || 'video/webm' });
   if (recordedVideoURL) URL.revokeObjectURL(recordedVideoURL);
   recordedVideoURL = URL.createObjectURL(recordedBlob);
-  document.getElementById('recordedVideoPreview').src = recordedVideoURL;
-  document.getElementById('videoPreviewWrap').style.display = 'block';
+  // Fechar modal e mostrar preview no formulário
+  closeCamModal();
 }
 function clearVideo() {
   recordedVideoURL = null; recordedChunks = []; recordedBlob = null;
@@ -1507,21 +1783,8 @@ function clearImage() {
 
 // NÃO CONFORMIDADE — fotos
 function takeNcPhoto() {
-  const video = document.getElementById('cameraFeed');
-  if (!cameraStream || video.readyState < 2) {
-    showToast('Câmera não está ativa. Inicie a câmera na aba "Tirar Foto".', false);
-    return;
-  }
-  // Garantir modo foto
-  if (document.getElementById('photoControls').style.display === 'none') setCamMode('photo');
-  const canvas = document.getElementById('capturedCanvas');
-  canvas.width  = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-  const id = Date.now();
-  ncPhotos.push({ id, dataUrl: canvas.toDataURL('image/png') });
-  renderNcPhotos();
-  document.getElementById('nc_photo_err').classList.remove('show');
+  // Abre o modal no modo NC
+  openCamModal('nc');
 }
 function renderNcPhotos() {
   const grid = document.getElementById('ncPhotosGrid');
@@ -1550,7 +1813,7 @@ function renderNcPhotos() {
   });
 }
 function deleteNcPhoto(id) { ncPhotos = ncPhotos.filter(p => p.id !== id); renderNcPhotos(); }
-function clearNcPhotos()    { ncPhotos = []; renderNcPhotos(); }
+function clearNcPhotos()    { ncPhotos = []; renderNcPhotos(); syncCamGalleries(); }
 
 // Verifica se há NC nas características e mostra/esconde alerta
 function checkNcAlert() {
@@ -2146,11 +2409,134 @@ async function confirmDelete() {
 
 // NAVEGAÇÃO ENTRE PÁGINAS
 function switchPage(page) {
-  ['inspecao','nc_page'].forEach(p => {
+  ['inspecao','nc_page','dashboard'].forEach(p => {
     document.getElementById('page_' + p).classList.toggle('active', p === page);
     document.getElementById('tab_' + p).classList.toggle('active', p === page);
   });
-  if (page === 'nc_page') initNcCam();
+  if (page === 'nc_page')  initNcCam();
+  if (page === 'dashboard') loadDashboard();
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const { data: rows, error } = await db
+      .from('inspecoes')
+      .select('id, op, item, quantidade, bandeira, setor, colaborador, criado_em, caracteristicas')
+      .order('criado_em', { ascending: false });
+    if (error || !rows) return;
+
+    const total   = rows.length;
+    const comNC   = rows.filter(r => {
+      if (!r.caracteristicas) return false;
+      return Object.values(r.caracteristicas).some(v => v === 'NC');
+    }).length;
+    const conf    = total - comNC;
+    const taxa    = total > 0 ? Math.round((conf / total) * 100) : 0;
+
+    // KPIs
+    document.getElementById('kpi_total').textContent = total;
+    document.getElementById('kpi_conf').textContent  = conf;
+    document.getElementById('kpi_nc').textContent    = comNC;
+    document.getElementById('kpi_taxa').textContent  = taxa + '%';
+    if (rows.length > 0) {
+      const datas = rows.map(r => new Date(r.criado_em));
+      const min = new Date(Math.min(...datas)).toLocaleDateString('pt-BR');
+      const max = new Date(Math.max(...datas)).toLocaleDateString('pt-BR');
+      document.getElementById('kpi_periodo').textContent = min === max ? min : min + ' – ' + max;
+    }
+    document.getElementById('kpi_conf_pct').textContent  = total > 0 ? Math.round((conf/total)*100) + '% dos registros' : '—';
+    document.getElementById('kpi_nc_pct').textContent    = total > 0 ? Math.round((comNC/total)*100) + '% dos registros' : '—';
+
+    // Agrupa por campo
+    function agrupar(campo) {
+      const m = {};
+      rows.forEach(r => { m[r[campo]] = (m[r[campo]] || 0) + 1; });
+      return Object.entries(m).sort((a,b) => b[1]-a[1]);
+    }
+    const COLORS = ['#1038c1','#107C10','#C17F24','#0078D4','#8764B8','#038387','#CA5010'];
+    function renderBarras(elId, dados, cor) {
+      const el = document.getElementById(elId);
+      const max = dados[0]?.[1] || 1;
+      el.innerHTML = dados.map(([nome, val], i) =>
+        `<div class="bar-row">
+          <div class="bar-name" title="${nome}">${nome}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/max*100)}%;background:${cor||COLORS[i%COLORS.length]};"></div></div>
+          <div class="bar-val">${val}</div>
+        </div>`).join('');
+    }
+
+    renderBarras('chart_bandeira', agrupar('bandeira'));
+    renderBarras('chart_colab',    agrupar('colaborador'), '#107C10');
+    renderBarras('chart_setor',    agrupar('setor'), '#C17F24');
+
+    // Características — NCs
+    const ncMap = {};
+    rows.forEach(r => {
+      if (!r.caracteristicas) return;
+      Object.entries(r.caracteristicas).forEach(([k, v]) => {
+        if (v === 'NC') ncMap[k] = (ncMap[k] || 0) + 1;
+      });
+    });
+    const ncEntries = Object.entries(ncMap).sort((a,b) => b[1]-a[1]);
+    const caractEl = document.getElementById('chart_caract');
+    if (ncEntries.length === 0) {
+      caractEl.innerHTML = '<div style="text-align:center;padding:20px;color:#107C10;font-size:13px;font-weight:600;">✅ Nenhuma NC registrada</div>';
+    } else {
+      const maxNC = ncEntries[0][1];
+      caractEl.innerHTML = ncEntries.map(([nome, val]) =>
+        `<div class="bar-row">
+          <div class="bar-name" title="${nome}">${nome}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/maxNC*100)}%;background:#A80000;"></div></div>
+          <div class="bar-val">${val}</div>
+        </div>`).join('');
+    }
+
+    // Evolução diária
+    const diasMap = {};
+    rows.forEach(r => {
+      const d = new Date(r.criado_em).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+      diasMap[d] = (diasMap[d] || 0) + 1;
+    });
+    const diasEntries = Object.entries(diasMap).sort((a,b) => {
+      const [da, ma] = a[0].split('/'); const [db, mb] = b[0].split('/');
+      return new Date(2026, ma-1, da) - new Date(2026, mb-1, db);
+    });
+    const maxDia = Math.max(...diasEntries.map(e => e[1]), 1);
+    const evoEl = document.getElementById('chart_evolucao');
+    evoEl.innerHTML = `<div style="width:100%;">
+      <div class="timeline-bars">
+        ${diasEntries.map(([d, v]) =>
+          `<div class="tbar-wrap">
+            <div style="font-size:10px;color:var(--blue);font-weight:700;">${v}</div>
+            <div class="tbar" style="height:${Math.max(8, Math.round(v/maxDia*48))}px;background:var(--blue);"></div>
+            <div class="tbar-label">${d}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+    // Últimos registros
+    const recent = rows.slice(0, 5);
+    document.getElementById('dash_recentes').innerHTML = recent.map(r => {
+      const temNC = r.caracteristicas && Object.values(r.caracteristicas).some(v => v === 'NC');
+      const data  = new Date(r.criado_em).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+      return `<tr>
+        <td><strong style="color:var(--blue);">#${r.id}</strong></td>
+        <td>${r.op || '—'}</td>
+        <td>${r.bandeira}</td>
+        <td>${r.setor}</td>
+        <td>${r.colaborador}</td>
+        <td>${r.quantidade}</td>
+        <td>${temNC
+          ? '<span class="dot-nc"></span><span style="color:var(--danger);font-weight:600;font-size:11px;">NC</span>'
+          : '<span class="dot-ok"></span><span style="color:#107C10;font-weight:600;font-size:11px;">Conforme</span>'}</td>
+        <td style="color:var(--muted);">${data}</td>
+      </tr>`;
+    }).join('');
+
+  } catch(e) {
+    console.error('Dashboard error:', e);
+  }
 }
 
 // AMPLIAR CÂMERA E CÂMERA TRASEIRA
