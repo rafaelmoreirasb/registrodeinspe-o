@@ -7,9 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --blue: #1038c1;
-    --blue-dark: #0d2fa8;
-    --blue-deeper: #0a2590;
+    --blue: #0a2590;
+    --blue-dark: #071e7a;
+    --blue-deeper: #050f4a;
     --blue-light: #e8eefb;
     --bg: #f4f6f9;
     --surface: #ffffff;
@@ -22,8 +22,89 @@
     --radius: 8px;
     --shadow: 0 2px 8px rgba(0,0,0,0.08);
   }
+  [data-theme="dark"] {
+    --blue: #4d7bff;
+    --blue-dark: #3a65e8;
+    --blue-deeper: #2a50d0;
+    --blue-light: #1a2a5e;
+    --bg: #0d1117;
+    --surface: #161b27;
+    --border: #2a3352;
+    --text: #e2e8f4;
+    --muted: #7a8ab0;
+    --danger: #ff5555;
+    --success: #4caf50;
+    --red-rec: #cc0000;
+    --shadow: 0 2px 12px rgba(0,0,0,0.4);
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  body { font-family: 'Barlow', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
+
+  /* ── Dark mode overrides ───────────────────────────────────── */
+  [data-theme="dark"] .panel,
+  [data-theme="dark"] .panel-body       { background: var(--surface); }
+  [data-theme="dark"] .panel-header     { background: #071d6b; }
+  [data-theme="dark"] .records-section,
+  [data-theme="dark"] .layout           { background: transparent; }
+  [data-theme="dark"] .records-section .panel,
+  [data-theme="dark"] .records-section .panel-body { background: var(--surface); }
+  [data-theme="dark"] .records-section .panel-header { background: #071d6b; }
+  [data-theme="dark"] .dash-card-header { background: #071d6b; }
+  [data-theme="dark"] table             { background: var(--surface); }
+  [data-theme="dark"] table tr          { background: var(--surface); }
+  [data-theme="dark"] table tr:nth-child(even) td { background: #1a2238; }
+  [data-theme="dark"] .field input,
+  [data-theme="dark"] .field select,
+  [data-theme="dark"] .field textarea   { background: #1e2540; color: var(--text); border-color: var(--border); }
+  [data-theme="dark"] .field input:focus,
+  [data-theme="dark"] .field select:focus { background: #242d52; }
+  [data-theme="dark"] .filter-bar       { background: #111828; border-color: var(--border); }
+  [data-theme="dark"] .filter-bar input,
+  [data-theme="dark"] .filter-bar select { background: #1e2540; color: var(--text); border-color: var(--border); }
+  [data-theme="dark"] table th          { background: #111828; color: var(--muted); border-color: var(--border); }
+  [data-theme="dark"] table td          { border-color: var(--border); }
+  [data-theme="dark"] tr:hover td       { background: #1a2238 !important; }
+  [data-theme="dark"] .action-bar       { background: #111828; border-color: var(--border); }
+  [data-theme="dark"] .caract-item      { background: #1e2540; border-color: var(--border); }
+  [data-theme="dark"] .caract-label     { background: #242d52; border-color: var(--border); color: var(--text); }
+  [data-theme="dark"] .photo-upload-area { background: #1e2540; border-color: var(--border); }
+  [data-theme="dark"] .section-label    { border-color: var(--border); color: var(--muted); }
+  [data-theme="dark"] .edit-box,
+  [data-theme="dark"] .del-box,
+  [data-theme="dark"] .rel-box          { background: #161b27; color: var(--text); }
+  [data-theme="dark"] .edit-field input,
+  [data-theme="dark"] .edit-field select,
+  [data-theme="dark"] .edit-field textarea { background: #1e2540; color: var(--text); border-color: var(--border); }
+  [data-theme="dark"] .kpi-card         { background: var(--surface); border-color: var(--border); }
+  [data-theme="dark"] .dash-card        { background: var(--surface); border-color: var(--border); }
+  [data-theme="dark"] .dash-card-header { background: #060d3a; }
+  [data-theme="dark"] .bar-track        { background: #2a3352; }
+  [data-theme="dark"] .rec-table th     { background: #111828; }
+  [data-theme="dark"] .rec-table tr:hover td { background: #1a2238; }
+  [data-theme="dark"] .btn-secondary    { background: #1a2a5e; color: #4d7bff; border-color: #2a3a7e; }
+  [data-theme="dark"] .btn-danger       { background: #3a0a0a; color: #ff5555; border-color: #6b1a1a; }
+  [data-theme="dark"] button[onclick*="openCamModal('photo')"] { background: #0a2590 !important; }
+  [data-theme="dark"] #btnSalvar        { background: #0a2590 !important; }
+  [data-theme="dark"] .nc-alert         { background: #3a0a0a; border-color: #6b1a1a; color: #ff9999; }
+  [data-theme="dark"] .login-box        { background: #161b27; }
+  [data-theme="dark"] .login-field input { background: #1e2540; color: var(--text); border-color: var(--border); }
+  [data-theme="dark"] .sidebar          { background: #060d3a; }
+  [data-theme="dark"] #app > header     { background: #060d3a; }
+  [data-theme="dark"] textarea          { background: #1e2540 !important; color: var(--text) !important; border-color: var(--border); }
+  [data-theme="dark"] #f_observacoes    { background: #1e2540 !important; color: var(--text) !important; }
+  [data-theme="dark"] .gallery-item,
+  [data-theme="dark"] .nc-photo-thumb   { background: #1e2540; border-color: var(--border); }
+
+  /* ── Botão toggle tema ─────────────────────────────────────── */
+  .btn-theme {
+    background: rgba(255,255,255,0.13);
+    color: white; border: 1px solid rgba(255,255,255,0.25);
+    padding: 5px 12px; border-radius: 20px;
+    font-family: 'Barlow', sans-serif; font-size: 12px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 5px;
+    transition: background 0.15s; white-space: nowrap;
+  }
+  .btn-theme:hover { background: rgba(255,255,255,0.22); }
 
   /* SPLASH */
   #splash {
@@ -50,17 +131,17 @@
   .badge { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; letter-spacing: 1px; }
 
   /* LAYOUT */
-  .layout { display: block; padding: 20px 24px; flex: 1; max-width: 900px; margin: 0 auto; width: 100%; }
+  .layout { display: block; padding: 20px 24px; flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; }
 
   /* PANEL */
   .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-  .panel-header { background: var(--blue); color: white; padding: 12px 20px; font-weight: 600; font-size: 14px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+  .panel-header { background: #071d6b; color: white; padding: 12px 20px; font-weight: 600; font-size: 14px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
   .panel-body { padding: 20px; }
 
   /* FORM GRIDS */
   .form-grid   { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-  .form-grid-id { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+  .form-grid-id { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
 
   .field { display: flex; flex-direction: column; gap: 5px; }
   .field label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
@@ -84,6 +165,48 @@
 
   /* SECTION LABEL */
   .section-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); margin-top: 4px; }
+  /* ID BAR — caixa chamativa, paleta azul */
+  .id-bar {
+    margin: 20px 24px 0;
+    background: linear-gradient(135deg, #050f3d 0%, #071d6b 100%);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 4px 16px rgba(16,56,193,0.35);
+  }
+  .id-bar-left { display:flex; align-items:center; gap:16px; }
+  .id-bar .id-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 36px; font-weight: 700;
+    color: white;
+    letter-spacing: 2px;
+    line-height: 1;
+    background: rgba(255,255,255,0.18);
+    border-radius: 8px;
+    padding: 4px 16px;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .id-bar-info { display:flex; flex-direction:column; gap:3px; }
+  .id-bar-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px; font-weight: 700;
+    color: white;
+    letter-spacing: 1px;
+  }
+  .id-bar-sub {
+    font-family: 'Barlow', sans-serif;
+    font-size: 11px; font-weight: 400;
+    color: rgba(255,255,255,0.65);
+    letter-spacing: 0.3px;
+  }
+  .id-bar-date {
+    font-family: 'Barlow', sans-serif;
+    font-size: 12px; font-weight: 500;
+    color: rgba(255,255,255,0.75);
+    text-align: right; line-height: 1.7;
+  }
+  .id-bar-date span { font-size: 10px; color: rgba(255,255,255,0.5); display:block; text-transform:uppercase; letter-spacing:0.8px; }
 
   /* MEDIA TABS */
   .media-tabs { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 14px; }
@@ -290,11 +413,58 @@
     .bar-name { min-width: 90px; }
   }
 
-  /* NAV TABS */
-  .nav-tabs { display:flex; gap:0; border-bottom:2px solid rgba(255,255,255,0.3); padding:0 24px; }
-  .nav-tab { padding:8px 20px; font-family:'Barlow',sans-serif; font-size:13px; font-weight:700; color:rgba(255,255,255,0.7); background:none; border:none; cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px; transition:all 0.15s; letter-spacing:0.5px; }
-  .nav-tab.active { color:white; border-bottom-color:white; }
-  .nav-tab:hover:not(.active) { color:white; }
+  /* SIDEBAR */
+  .app-shell { display:flex; flex:1; min-height:0; overflow:hidden; }
+  .sidebar {
+    width: 220px; background: #0d2fa8; color: white;
+    display: flex; flex-direction: column;
+    transition: width 0.25s ease; flex-shrink: 0;
+    overflow: hidden; position: relative; z-index: 100;
+  }
+  .sidebar.collapsed { width: 52px; }
+  .sidebar-toggle {
+    display: flex; align-items: center; justify-content: flex-end;
+    padding: 10px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .sidebar-toggle svg { flex-shrink: 0; }
+  /* sidebar-logo removido */
+  .sidebar-nav { flex:1; padding: 8px 0; overflow-y:auto; }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; cursor: pointer; white-space: nowrap;
+    font-family:'Barlow',sans-serif; font-size:13px; font-weight:600;
+    color: rgba(255,255,255,0.75); border-left: 3px solid transparent;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    overflow: hidden;
+  }
+  .sidebar-item:hover { background: rgba(255,255,255,0.1); color: white; }
+  .sidebar-item.active { background: rgba(255,255,255,0.15); color: white; border-left-color: white; }
+  .sidebar-item .s-icon { font-size:18px; flex-shrink:0; width:20px; text-align:center; }
+  .sidebar-item .s-label { opacity:1; transition:opacity 0.2s; }
+  .sidebar.collapsed .sidebar-item .s-label { opacity:0; width:0; overflow:hidden; }
+  .sidebar-footer {
+    border-top: 1px solid rgba(255,255,255,0.12);
+    padding: 12px 14px; display:flex; flex-direction:column; gap:6px; overflow:hidden;
+  }
+  .sidebar-user {
+    display: flex; align-items: center; gap:8px;
+    white-space:nowrap; overflow:hidden;
+  }
+  .sidebar-user-icon { width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; }
+  .sidebar-user-name { font-size:12px; font-weight:600; color:rgba(255,255,255,0.9); opacity:1; transition:opacity 0.2s; overflow:hidden; text-overflow:ellipsis; }
+  .sidebar.collapsed .sidebar-user-name { opacity:0; width:0; }
+  .sidebar-logout {
+    display:flex; align-items:center; gap:8px; padding:7px 0;
+    cursor:pointer; font-family:'Barlow',sans-serif; font-size:12px;
+    font-weight:600; color:rgba(255,255,255,0.7); background:none; border:none;
+    white-space:nowrap; overflow:hidden; width:100%; text-align:left;
+    transition:color 0.15s;
+  }
+  .sidebar-logout:hover { color:white; }
+  .sidebar.collapsed .sidebar-logout span { opacity:0; width:0; overflow:hidden; }
+
+  /* MAIN CONTENT */
+  .main-content { flex:1; display:flex; flex-direction:column; overflow:auto; min-width:0; }
 
   /* PÁGINAS */
   .page { display:none; min-height:0; }
@@ -327,43 +497,19 @@
   .btn-danger-solid { background:var(--danger);color:white;font-family:'Barlow',sans-serif;font-size:14px;font-weight:700;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;transition:background 0.15s; }
   .btn-danger-solid:hover { background:#8b0000; }
 
-  /* CARACTERÍSTICAS DO PRODUTO */
-  .caract-table { width: 100%; border-collapse: collapse; margin-top: 0; font-size: 13px; }
-  .caract-table th {
-    background: var(--blue); color: white; font-size: 11px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 10px;
-    text-align: center; border: 1px solid var(--blue-dark);
-  }
-  .caract-table th:first-child { text-align: left; }
-  .caract-table td {
-    padding: 6px 10px; border: 1px solid var(--border);
-    vertical-align: middle; background: white;
-  }
-  .caract-table tr:nth-child(even) td { background: #f8fafc; }
-  .caract-table td:first-child { font-weight: 500; color: var(--text); font-size: 13px; }
-  .caract-table td.caract-cell { text-align: center; width: 110px; }
+  /* CARACTERÍSTICAS DO PRODUTO — grade compacta */
+  .caract-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 5px; }
+  .caract-item { display: flex; align-items: center; justify-content: space-between; background: #fafbfc; border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; gap: 6px; }
+  .caract-item-name { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .caract-btns { display: flex; gap: 2px; flex-shrink: 0; }
   .caract-radio { display: none; }
-  .caract-label {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px; border: 2px solid var(--border);
-    border-radius: 4px; cursor: pointer; font-size: 18px; font-weight: 700;
-    transition: all 0.15s; background: white; user-select: none;
-  }
+  .caract-label { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border: 1.5px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 700; transition: all 0.12s; background: white; user-select: none; }
   .caract-radio:checked + .caract-label { border-color: var(--blue); }
-  /* Conforme = verde */
-  .caract-radio.r-c:checked + .caract-label {
-    background: #e6f4ea; border-color: #2e7d32; color: #2e7d32;
-  }
-  /* Não Conforme = vermelho */
-  .caract-radio.r-nc:checked + .caract-label {
-    background: #fce8e8; border-color: var(--danger); color: var(--danger);
-  }
-  /* Não Aplicável = cinza */
-  .caract-radio.r-na:checked + .caract-label {
-    background: #f0f0f0; border-color: #888; color: #555;
-  }
+  .caract-radio.r-c:checked  + .caract-label { background:#e6f4ea; border-color:#2e7d32; color:#2e7d32; }
+  .caract-radio.r-nc:checked + .caract-label { background:#fce8e8; border-color:var(--danger); color:var(--danger); }
+  .caract-radio.r-na:checked + .caract-label { background:#f0f0f0; border-color:#888; color:#555; }
   .caract-label:hover { border-color: var(--blue); background: var(--blue-light); }
-  .caract-err { font-size: 11px; color: var(--danger); display: none; padding: 4px 10px; }
+  .caract-err { font-size: 11px; color: var(--danger); display: none; padding: 2px 0; }
   .caract-err.show { display: block; }
 
   /* Badges na tabela de registros */
@@ -456,27 +602,72 @@
 <!-- APP -->
 <div id="app">
   <header>
-    <div class="header-top">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <img src="data:image/png;base64,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" alt="Logo Polimetal" style="height:36px;width:36px;object-fit:contain;border-radius:4px;" />
-      <div>
-        <div class="brand">POLIMETAL</div>
+    <div class="header-top" style="padding:0 20px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="sidebar-toggle-btn" onclick="toggleSidebar()" style="background:rgba(255,255,255,0.15);border:none;color:white;cursor:pointer;border-radius:6px;padding:6px 8px;display:flex;align-items:center;" title="Menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <img src="data:image/png;base64,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" alt="Logo Polimetal" style="height:36px;width:36px;object-fit:contain;border-radius:4px;">
+        <span class="brand">POLIMETAL</span>
       </div>
-    </div>
-    </div>
-    <div class="nav-tabs">
-      <button class="nav-tab active" id="tab_inspecao" onclick="switchPage('inspecao')">📋 Registro de Inspeção</button>
-      <button class="nav-tab" id="tab_nc_page" onclick="switchPage('nc_page')">🚫 Não Conformidade</button>
-      <button class="nav-tab" id="tab_dashboard" onclick="switchPage('dashboard')">📊 Dashboard</button>
-    </div>
-    <div id="userInfo">
-      <span class="user-name" id="userNameDisplay"></span>
-      <button class="btn-logout" onclick="doLogout()">⏻ Sair</button>
+      <button class="btn-theme" id="themeToggle" onclick="toggleTheme()">🌙 Escuro</button>
     </div>
   </header>
 
+
+  <!-- SHELL: SIDEBAR + CONTEÚDO -->
+  <div class="app-shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <!-- Navegação -->
+      <nav class="sidebar-nav">
+        <div class="sidebar-item active" id="tab_inspecao" onclick="switchPage('inspecao')">
+          <span class="s-icon">📋</span>
+          <span class="s-label">Registro de Inspeção</span>
+        </div>
+        <div class="sidebar-item" id="tab_nc_page" onclick="switchPage('nc_page')">
+          <span class="s-icon">🚫</span>
+          <span class="s-label">Não Conformidade</span>
+        </div>
+        <div class="sidebar-item" id="tab_dashboard" onclick="switchPage('dashboard')">
+          <span class="s-icon">📊</span>
+          <span class="s-label">Dashboard</span>
+        </div>
+      </nav>
+
+      <!-- Footer: usuário + sair -->
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-icon" id="sidebarUserInitial">U</div>
+          <span class="sidebar-user-name" id="sidebarUserName">Usuário</span>
+        </div>
+        <button class="sidebar-logout" onclick="doLogout()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          <span>Sair</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="main-content">
+
   <!-- PÁGINA INSPEÇÃO -->
   <div class="page active" id="page_inspecao">
+  <!-- BARRA ID FIXA -->
+  <div class="id-bar">
+    <div class="id-bar-left">
+      <span class="id-val" id="f_id_display">#1</span>
+      <div class="id-bar-info">
+        <span class="id-bar-title">Registro de Inspeção</span>
+        <span class="id-bar-sub">ID gerado automaticamente — somente leitura</span>
+      </div>
+    </div>
+    <div class="id-bar-date" id="id_bar_datetime">
+      <span>Data / Hora</span>—
+    </div>
+    <input type="hidden" id="f_id" value="1" />
+  </div>
   <div class="layout">
 
     <!-- FORMULÁRIO -->
@@ -488,14 +679,6 @@
           <!-- ID + Item + Quantidade -->
           <div class="section-label">Identificação</div>
           <div class="form-grid-id">
-
-            <div class="field field-id">
-              <label>
-                ID
-                <span class="auto-badge">🔒 Auto</span>
-              </label>
-              <input type="text" id="f_id" readonly tabindex="-1" value="1" />
-            </div>
 
             <div class="field">
               <label>OP <span class="req">*</span></label>
@@ -518,7 +701,6 @@
           </div>
 
           <!-- Bandeira + Setor + Colaborador (dropdowns) -->
-          <div class="section-label">Classificação</div>
           <div class="form-grid" style="margin-bottom:20px;">
 
             <div class="field">
@@ -573,34 +755,155 @@
 
           </div>
 
-          <!-- Imagem -->
-          <div class="section-label">Imagem em Anexo</div>
-          <!-- Botões de câmera -->
-          <div style="display:flex;gap:8px;margin-bottom:10px;">
-            <button type="button" onclick="openCamModal('photo')" style="flex:1;background:var(--blue);color:white;border:none;border-radius:4px;padding:11px 10px;font-family:Barlow,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📷 Abrir Câmera</button>
-            <button type="button" onclick="openCamModal('nc')" style="flex:1;background:#a80000;color:white;border:none;border-radius:4px;padding:11px 10px;font-family:Barlow,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">🚫 Não Conformidade</button>
+          <!-- Características do Produto -->
+          <div class="section-label" style="margin-top:16px;">Características do Produto</div>
+          <div class="caract-grid">
+
+          <div class="caract-item">
+            <span class="caract-item-name" title="Amassado">Amassado</span>
+            <div class="caract-btns">
+              <input type="radio" class="caract-radio r-c" name="caract_amassado" id="c_amassado_c" value="C">
+              <label class="caract-label" for="c_amassado_c" title="Conforme">✓</label>
+              <input type="radio" class="caract-radio r-nc" name="caract_amassado" id="c_amassado_nc" value="NC">
+              <label class="caract-label" for="c_amassado_nc" title="Não Conforme">✗</label>
+              <input type="radio" class="caract-radio r-na" name="caract_amassado" id="c_amassado_na" value="NA">
+              <label class="caract-label" for="c_amassado_na" title="Não Aplicável">—</label>
+            </div>
           </div>
-          <!-- Upload de arquivo -->
+          <div class="caract-item">
+            <span class="caract-item-name" title="Pintura/Cor">Pintura/Cor</span>
+            <div class="caract-btns">
+              <input type="radio" class="caract-radio r-c" name="caract_pintura_cor" id="c_pintura_cor_c" value="C">
+              <label class="caract-label" for="c_pintura_cor_c" title="Conforme">✓</label>
+              <input type="radio" class="caract-radio r-nc" name="caract_pintura_cor" id="c_pintura_cor_nc" value="NC">
+              <label class="caract-label" for="c_pintura_cor_nc" title="Não Conforme">✗</label>
+              <input type="radio" class="caract-radio r-na" name="caract_pintura_cor" id="c_pintura_cor_na" value="NA">
+              <label class="caract-label" for="c_pintura_cor_na" title="Não Aplicável">—</label>
+            </div>
+          </div>
+          <div class="caract-item">
+            <span class="caract-item-name" title="Adesivo/Impressão">Adesivo/Impressão</span>
+            <div class="caract-btns">
+              <input type="radio" class="caract-radio r-c" name="caract_adesivo_impressão" id="c_adesivo_impressão_c" value="C">
+              <label class="caract-label" for="c_adesivo_impressão_c" title="Conforme">✓</label>
+              <input type="radio" class="caract-radio r-nc" name="caract_adesivo_impressão" id="c_adesivo_impressão_nc" value="NC">
+              <label class="caract-label" for="c_adesivo_impressão_nc" title="Não Conforme">✗</label>
+              <input type="radio" class="caract-radio r-na" name="caract_adesivo_impressão" id="c_adesivo_impressão_na" value="NA">
+              <label class="caract-label" for="c_adesivo_impressão_na" title="Não Aplicável">—</label>
+            </div>
+          </div>
+          <div class="caract-item">
+            <span class="caract-item-name" title="Conjunto Peça/Gabarito">Conjunto Peça/Gabarito</span>
+            <div class="caract-btns">
+              <input type="radio" class="caract-radio r-c" name="caract_conjunto_peça_gabarito" id="c_conjunto_peça_gabarito_c" value="C">
+              <label class="caract-label" for="c_conjunto_peça_gabarito_c" title="Conforme">✓</label>
+              <input type="radio" class="caract-radio r-nc" name="caract_conjunto_peça_gabarito" id="c_conjunto_peça_gabarito_nc" value="NC">
+              <label class="caract-label" for="c_conjunto_peça_gabarito_nc" title="Não Conforme">✗</label>
+              <input type="radio" class="caract-radio r-na" name="caract_conjunto_peça_gabarito" id="c_conjunto_peça_gabarito_na" value="NA">
+              <label class="caract-label" for="c_conjunto_peça_gabarito_na" title="Não Aplicável">—</label>
+            </div>
+          </div>
+          <div class="caract-item">
+            <span class="caract-item-name" title="Risco">Risco</span>
+            <div class="caract-btns">
+              <input type="radio" class="caract-radio r-c" name="caract_risco" id="c_risco_c" value="C">
+              <label class="caract-label" for="c_risco_c" title="Conforme">✓</label>
+              <input type="radio" class="caract-radio r-nc" name="caract_risco" id="c_risco_nc" value="NC">
+              <label class="caract-label" for="c_risco_nc" title="Não Conforme">✗</label>
+              <input type="radio" class="caract-radio r-na" name="caract_risco" id="c_risco_na" value="NA">
+              <label class="caract-label" for="c_risco_na" title="Não Aplicável">—</label>
+            </div>
+          </div>
+          <div class="caract-item">
+            <span class="caract-item-name" title="Conjunto Montado/Articulação">Conjunto Montado/Articulação</span>
+            <div class="caract-btns">
+              <input type="radio" class="caract-radio r-c" name="caract_conjunto_montado_articulação" id="c_conjunto_montado_articulação_c" value="C">
+              <label class="caract-label" for="c_conjunto_montado_articulação_c" title="Conforme">✓</label>
+              <input type="radio" class="caract-radio r-nc" name="caract_conjunto_montado_articulação" id="c_conjunto_montado_articulação_nc" value="NC">
+              <label class="caract-label" for="c_conjunto_montado_articulação_nc" title="Não Conforme">✗</label>
+              <input type="radio" class="caract-radio r-na" name="caract_conjunto_montado_articulação" id="c_conjunto_montado_articulação_na" value="NA">
+              <label class="caract-label" for="c_conjunto_montado_articulação_na" title="Não Aplicável">—</label>
+            </div>
+          </div>
+          <div class="caract-item">
+            <span class="caract-item-name" title="Vazão de Luz">Vazão de Luz</span>
+            <div class="caract-btns">
+              <input type="radio" class="caract-radio r-c" name="caract_vazão_de_luz" id="c_vazão_de_luz_c" value="C">
+              <label class="caract-label" for="c_vazão_de_luz_c" title="Conforme">✓</label>
+              <input type="radio" class="caract-radio r-nc" name="caract_vazão_de_luz" id="c_vazão_de_luz_nc" value="NC">
+              <label class="caract-label" for="c_vazão_de_luz_nc" title="Não Conforme">✗</label>
+              <input type="radio" class="caract-radio r-na" name="caract_vazão_de_luz" id="c_vazão_de_luz_na" value="NA">
+              <label class="caract-label" for="c_vazão_de_luz_na" title="Não Aplicável">—</label>
+            </div>
+          </div>
+          <div class="caract-item">
+            <span class="caract-item-name" title="Instalação Elétrica">Instalação Elétrica</span>
+            <div class="caract-btns">
+              <input type="radio" class="caract-radio r-c" name="caract_instalação_elétrica" id="c_instalação_elétrica_c" value="C">
+              <label class="caract-label" for="c_instalação_elétrica_c" title="Conforme">✓</label>
+              <input type="radio" class="caract-radio r-nc" name="caract_instalação_elétrica" id="c_instalação_elétrica_nc" value="NC">
+              <label class="caract-label" for="c_instalação_elétrica_nc" title="Não Conforme">✗</label>
+              <input type="radio" class="caract-radio r-na" name="caract_instalação_elétrica" id="c_instalação_elétrica_na" value="NA">
+              <label class="caract-label" for="c_instalação_elétrica_na" title="Não Aplicável">—</label>
+            </div>
+          </div>
+          <div class="caract-item">
+            <span class="caract-item-name" title="Router">Router</span>
+            <div class="caract-btns">
+              <input type="radio" class="caract-radio r-c" name="caract_router" id="c_router_c" value="C">
+              <label class="caract-label" for="c_router_c" title="Conforme">✓</label>
+              <input type="radio" class="caract-radio r-nc" name="caract_router" id="c_router_nc" value="NC">
+              <label class="caract-label" for="c_router_nc" title="Não Conforme">✗</label>
+              <input type="radio" class="caract-radio r-na" name="caract_router" id="c_router_na" value="NA">
+              <label class="caract-label" for="c_router_na" title="Não Aplicável">—</label>
+            </div>
+          </div>
+          <div class="caract-item">
+            <span class="caract-item-name" title="Rebarba">Rebarba</span>
+            <div class="caract-btns">
+              <input type="radio" class="caract-radio r-c" name="caract_rebarba" id="c_rebarba_c" value="C">
+              <label class="caract-label" for="c_rebarba_c" title="Conforme">✓</label>
+              <input type="radio" class="caract-radio r-nc" name="caract_rebarba" id="c_rebarba_nc" value="NC">
+              <label class="caract-label" for="c_rebarba_nc" title="Não Conforme">✗</label>
+              <input type="radio" class="caract-radio r-na" name="caract_rebarba" id="c_rebarba_na" value="NA">
+              <label class="caract-label" for="c_rebarba_na" title="Não Aplicável">—</label>
+            </div>
+          </div>
+          <div class="caract-item">
+            <span class="caract-item-name" title="Solda">Solda</span>
+            <div class="caract-btns">
+              <input type="radio" class="caract-radio r-c" name="caract_solda" id="c_solda_c" value="C">
+              <label class="caract-label" for="c_solda_c" title="Conforme">✓</label>
+              <input type="radio" class="caract-radio r-nc" name="caract_solda" id="c_solda_nc" value="NC">
+              <label class="caract-label" for="c_solda_nc" title="Não Conforme">✗</label>
+              <input type="radio" class="caract-radio r-na" name="caract_solda" id="c_solda_na" value="NA">
+              <label class="caract-label" for="c_solda_na" title="Não Aplicável">—</label>
+            </div>
+          </div>
+
+          </div>
+          <div class="caract-err" id="caract_err">Preencha <strong>todas</strong> as características antes de salvar.</div>
+          <div class="nc-alert" id="nc_alert">🚫 Há itens "Não Conforme" — tire fotos na câmera usando o botão vermelho "Registrar Não Conformidade".</div>
+
+          <!-- Imagem -->
+          <div class="section-label" style="margin-top:20px;">Imagem em Anexo</div>
+
           <div class="photo-upload-area">
             <input type="file" id="f_imagem" accept="image/*,video/*" multiple onchange="handleImageUpload(event)" />
             <div class="uicon">🖼</div>
             <p>Clique ou arraste para selecionar <strong>imagens ou vídeo</strong><br><strong>JPG, PNG, MP4</strong></p>
           </div>
-          <!-- Galeria de fotos (câmera + anexo) -->
           <div id="imageGalleryWrap" style="margin-top:8px;">
             <div class="gallery-grid" id="imageGallery"></div>
             <div class="gallery-count" id="imageCount"></div>
           </div>
-          <!-- Fotos de câmera -->
           <div id="camPhotosWrap" style="margin-top:6px;">
             <div id="camPhotoCountVis" style="font-size:12px;color:var(--muted);margin-bottom:6px;"></div>
             <div class="gallery-grid" id="camPhotosGridVis"></div>
           </div>
-          <!-- NC fotos -->
           <div class="nc-err" id="nc_photo_err" style="margin-top:6px;">Tire ao menos 1 foto de não conformidade antes de salvar.</div>
           <div id="ncPhotoCountVis" style="font-size:12px;color:#a80000;font-weight:600;margin-top:4px;display:none;"></div>
           <div class="nc-photos" id="ncPhotosGridVis" style="margin-top:6px;"></div>
-          <!-- Preview de vídeo gravado -->
           <div id="videoPreviewWrapVis" style="display:none;margin-top:10px;">
             <div style="font-size:12px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;">
               <span>📹 Vídeo gravado</span>
@@ -611,196 +914,15 @@
 
           <!-- Observações -->
           <div class="section-label" style="margin-top:20px;">Observações</div>
-          <textarea id="f_observacoes" placeholder="Digite aqui qualquer observação sobre a inspeção..." style="font-family:'Barlow',sans-serif;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:4px;color:var(--text);background:#fafbfc;width:100%;min-height:90px;resize:vertical;outline:none;transition:border-color 0.15s,box-shadow 0.15s;" onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(16,56,193,0.12)';this.style.background='white'" onblur="this.style.borderColor='';this.style.boxShadow='';this.style.background='#fafbfc'"></textarea>
-
-
-          <!-- Características do Produto -->
-          <div class="section-label" style="margin-top:20px;">Características do Produto</div>
-          <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
-            <table class="caract-table">
-              <thead>
-                <tr>
-                  <th>Característica</th>
-                  <th>✓ Conforme</th>
-                  <th>✗ Não Conforme</th>
-                  <th>— Não Aplicável</th>
-                </tr>
-              </thead>
-              <tbody>
-          <tr>
-            <td>Amassado</td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-c" name="caract_amassado" id="c_amassado_c" value="C">
-              <label class="caract-label" for="c_amassado_c" title="Conforme">✓</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-nc" name="caract_amassado" id="c_amassado_nc" value="NC">
-              <label class="caract-label" for="c_amassado_nc" title="Não Conforme">✗</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-na" name="caract_amassado" id="c_amassado_na" value="NA">
-              <label class="caract-label" for="c_amassado_na" title="Não Aplicável">—</label>
-            </td>
-          </tr>
-          <tr>
-            <td>Pintura/Cor</td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-c" name="caract_pintura_cor" id="c_pintura_cor_c" value="C">
-              <label class="caract-label" for="c_pintura_cor_c" title="Conforme">✓</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-nc" name="caract_pintura_cor" id="c_pintura_cor_nc" value="NC">
-              <label class="caract-label" for="c_pintura_cor_nc" title="Não Conforme">✗</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-na" name="caract_pintura_cor" id="c_pintura_cor_na" value="NA">
-              <label class="caract-label" for="c_pintura_cor_na" title="Não Aplicável">—</label>
-            </td>
-          </tr>
-          <tr>
-            <td>Adesivo/Impressão</td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-c" name="caract_adesivo_impressão" id="c_adesivo_impressão_c" value="C">
-              <label class="caract-label" for="c_adesivo_impressão_c" title="Conforme">✓</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-nc" name="caract_adesivo_impressão" id="c_adesivo_impressão_nc" value="NC">
-              <label class="caract-label" for="c_adesivo_impressão_nc" title="Não Conforme">✗</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-na" name="caract_adesivo_impressão" id="c_adesivo_impressão_na" value="NA">
-              <label class="caract-label" for="c_adesivo_impressão_na" title="Não Aplicável">—</label>
-            </td>
-          </tr>
-          <tr>
-            <td>Conjunto Peça/Gabarito</td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-c" name="caract_conjunto_peça_gabarito" id="c_conjunto_peça_gabarito_c" value="C">
-              <label class="caract-label" for="c_conjunto_peça_gabarito_c" title="Conforme">✓</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-nc" name="caract_conjunto_peça_gabarito" id="c_conjunto_peça_gabarito_nc" value="NC">
-              <label class="caract-label" for="c_conjunto_peça_gabarito_nc" title="Não Conforme">✗</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-na" name="caract_conjunto_peça_gabarito" id="c_conjunto_peça_gabarito_na" value="NA">
-              <label class="caract-label" for="c_conjunto_peça_gabarito_na" title="Não Aplicável">—</label>
-            </td>
-          </tr>
-          <tr>
-            <td>Risco</td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-c" name="caract_risco" id="c_risco_c" value="C">
-              <label class="caract-label" for="c_risco_c" title="Conforme">✓</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-nc" name="caract_risco" id="c_risco_nc" value="NC">
-              <label class="caract-label" for="c_risco_nc" title="Não Conforme">✗</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-na" name="caract_risco" id="c_risco_na" value="NA">
-              <label class="caract-label" for="c_risco_na" title="Não Aplicável">—</label>
-            </td>
-          </tr>
-          <tr>
-            <td>Conjunto Montado/Articulação</td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-c" name="caract_conjunto_montado_articulação" id="c_conjunto_montado_articulação_c" value="C">
-              <label class="caract-label" for="c_conjunto_montado_articulação_c" title="Conforme">✓</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-nc" name="caract_conjunto_montado_articulação" id="c_conjunto_montado_articulação_nc" value="NC">
-              <label class="caract-label" for="c_conjunto_montado_articulação_nc" title="Não Conforme">✗</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-na" name="caract_conjunto_montado_articulação" id="c_conjunto_montado_articulação_na" value="NA">
-              <label class="caract-label" for="c_conjunto_montado_articulação_na" title="Não Aplicável">—</label>
-            </td>
-          </tr>
-          <tr>
-            <td>Vazão de Luz</td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-c" name="caract_vazão_de_luz" id="c_vazão_de_luz_c" value="C">
-              <label class="caract-label" for="c_vazão_de_luz_c" title="Conforme">✓</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-nc" name="caract_vazão_de_luz" id="c_vazão_de_luz_nc" value="NC">
-              <label class="caract-label" for="c_vazão_de_luz_nc" title="Não Conforme">✗</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-na" name="caract_vazão_de_luz" id="c_vazão_de_luz_na" value="NA">
-              <label class="caract-label" for="c_vazão_de_luz_na" title="Não Aplicável">—</label>
-            </td>
-          </tr>
-          <tr>
-            <td>Instalação Elétrica</td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-c" name="caract_instalação_elétrica" id="c_instalação_elétrica_c" value="C">
-              <label class="caract-label" for="c_instalação_elétrica_c" title="Conforme">✓</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-nc" name="caract_instalação_elétrica" id="c_instalação_elétrica_nc" value="NC">
-              <label class="caract-label" for="c_instalação_elétrica_nc" title="Não Conforme">✗</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-na" name="caract_instalação_elétrica" id="c_instalação_elétrica_na" value="NA">
-              <label class="caract-label" for="c_instalação_elétrica_na" title="Não Aplicável">—</label>
-            </td>
-          </tr>
-          <tr>
-            <td>Router</td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-c" name="caract_router" id="c_router_c" value="C">
-              <label class="caract-label" for="c_router_c" title="Conforme">✓</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-nc" name="caract_router" id="c_router_nc" value="NC">
-              <label class="caract-label" for="c_router_nc" title="Não Conforme">✗</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-na" name="caract_router" id="c_router_na" value="NA">
-              <label class="caract-label" for="c_router_na" title="Não Aplicável">—</label>
-            </td>
-          </tr>
-          <tr>
-            <td>Rebarba</td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-c" name="caract_rebarba" id="c_rebarba_c" value="C">
-              <label class="caract-label" for="c_rebarba_c" title="Conforme">✓</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-nc" name="caract_rebarba" id="c_rebarba_nc" value="NC">
-              <label class="caract-label" for="c_rebarba_nc" title="Não Conforme">✗</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-na" name="caract_rebarba" id="c_rebarba_na" value="NA">
-              <label class="caract-label" for="c_rebarba_na" title="Não Aplicável">—</label>
-            </td>
-          </tr>
-          <tr>
-            <td>Solda</td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-c" name="caract_solda" id="c_solda_c" value="C">
-              <label class="caract-label" for="c_solda_c" title="Conforme">✓</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-nc" name="caract_solda" id="c_solda_nc" value="NC">
-              <label class="caract-label" for="c_solda_nc" title="Não Conforme">✗</label>
-            </td>
-            <td class="caract-cell">
-              <input type="radio" class="caract-radio r-na" name="caract_solda" id="c_solda_na" value="NA">
-              <label class="caract-label" for="c_solda_na" title="Não Aplicável">—</label>
-            </td>
-          </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="caract-err" id="caract_err">Preencha <strong>todas</strong> as características do produto antes de salvar.</div>
-          <div class="nc-alert" id="nc_alert">🚫 Há itens "Não Conforme" — tire fotos na câmera usando o botão vermelho "Registrar Não Conformidade".</div>
+          <textarea id="f_observacoes" placeholder="Digite aqui qualquer observação sobre a inspeção..." style="font-family:'Barlow',sans-serif;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:4px;color:var(--text);background:var(--surface);width:100%;min-height:90px;resize:vertical;outline:none;transition:border-color 0.15s,box-shadow 0.15s;" onfocus="this.style.borderColor='var(--blue)';this.style.boxShadow='0 0 0 3px rgba(16,56,193,0.12)'" onblur="this.style.borderColor='';this.style.boxShadow=''"></textarea>
 
         </div>
-        <div class="action-bar">
-          <button class="btn btn-primary" id="btnSalvar" onclick="saveRecord()">💾 Salvar Registro de Inspeção</button>
+        <div class="action-bar" style="flex-direction:column;gap:8px;align-items:stretch;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <button type="button" onclick="openCamModal('photo')" style="background:#0a2590;color:white;border:none;border-radius:4px;padding:12px 8px;font-family:Barlow,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;white-space:normal;text-align:center;line-height:1.3;">📷 Fazer Registro Fotográfico</button>
+            <button type="button" onclick="openCamModal('nc')" style="background:#7a1a1a;color:white;border:none;border-radius:4px;padding:12px 8px;font-family:Barlow,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;white-space:normal;text-align:center;line-height:1.3;">🚫 Registro Fotográfico da Não Conformidade</button>
+            <button class="btn" id="btnSalvar" onclick="saveRecord()" style="background:#0a2590;color:white;border:none;padding:12px 8px;font-size:13px;font-family:Barlow,sans-serif;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;white-space:normal;text-align:center;line-height:1.3;border-radius:4px;">💾 Salvar Registro de Inspeção</button>
+          </div>
         </div>
       </div>
     </div>
@@ -883,7 +1005,7 @@
   <!-- TABELA DE REGISTROS -->
   <div class="records-section">
     <div class="panel">
-      <div class="panel-header" style="background:#1038c1;">
+      <div class="panel-header" style="background:#071d6b;">
         📊 Registros Salvos
         <button onclick="exportExcel()" style="margin-left:12px;background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.35);padding:5px 12px;border-radius:4px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;" title="Exportar tabela para Excel">📥 Excel</button>
         <button onclick="document.getElementById('relModal').classList.add('open')" style="margin-left:6px;background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.35);padding:5px 12px;border-radius:4px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;" title="Gerar relatório de inspeção">📄 Gerar Relatório</button>
@@ -917,30 +1039,30 @@
         <table>
           <thead>
             <tr>
-              <th>ID</th>
-              <th style="width:40px;"></th>
-              <th>OP</th>
-              <th>Item</th>
-              <th>Qtd.</th>
-              <th>Bandeira</th>
-              <th>Setor</th>
-              <th>Colaborador</th>
-              <th>Vídeo</th>
-              <th>Fotos</th>
-              <th>Não Conformidade</th>
-              <th style="font-size:10px;white-space:nowrap;">Amassado</th>
-              <th style="font-size:10px;white-space:nowrap;">Pintura/Cor</th>
-              <th style="font-size:10px;white-space:nowrap;">Adesivo/Impressão</th>
-              <th style="font-size:10px;white-space:nowrap;">Conjunto Peça/Gabarito</th>
-              <th style="font-size:10px;white-space:nowrap;">Risco</th>
-              <th style="font-size:10px;white-space:nowrap;">Conjunto Montado/Articulação</th>
-              <th style="font-size:10px;white-space:nowrap;">Vazão de Luz</th>
-              <th style="font-size:10px;white-space:nowrap;">Instalação Elétrica</th>
-              <th style="font-size:10px;white-space:nowrap;">Router</th>
-              <th style="font-size:10px;white-space:nowrap;">Rebarba</th>
-              <th style="font-size:10px;white-space:nowrap;">Solda</th>
-              <th>Observações</th>
-              <th>Data/Hora</th>
+              <th style="min-width:42px;">ID</th>
+              <th style="min-width:70px;">OP</th>
+              <th style="min-width:46px;">Item</th>
+              <th style="min-width:46px;">Qtd.</th>
+              <th style="min-width:78px;">Bandeira</th>
+              <th style="min-width:100px;">Setor</th>
+              <th style="min-width:110px;">Colaborador</th>
+              <th style="min-width:58px;">Vídeo</th>
+              <th style="min-width:80px;">Fotos</th>
+              <th style="min-width:80px;font-size:10px;">NC Fotos</th>
+              <th style="font-size:10px;min-width:48px;">Amassado</th>
+              <th style="font-size:10px;min-width:54px;">Pintura/Cor</th>
+              <th style="font-size:10px;min-width:66px;">Adesivo/Imp.</th>
+              <th style="font-size:10px;min-width:66px;">Peça/Gab.</th>
+              <th style="font-size:10px;min-width:42px;">Risco</th>
+              <th style="font-size:10px;min-width:66px;">Mont./Art.</th>
+              <th style="font-size:10px;min-width:52px;">Vazão Luz</th>
+              <th style="font-size:10px;min-width:52px;">Inst.Elét.</th>
+              <th style="font-size:10px;min-width:42px;">Router</th>
+              <th style="font-size:10px;min-width:46px;">Rebarba</th>
+              <th style="font-size:10px;min-width:40px;">Solda</th>
+              <th style="min-width:100px;">Observações</th>
+              <th style="min-width:110px;">Data/Hora</th>
+              <th style="min-width:118px;">Ações</th>
             </tr>
           </thead>
           <tbody id="recordsBody">
@@ -1385,7 +1507,12 @@ function doLogout() {
 
 function showApp(name) {
   document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('userNameDisplay').textContent = name;
+  document.getElementById('userNameDisplay') && (document.getElementById('userNameDisplay').textContent = name);
+  // Sidebar
+  const snEl = document.getElementById('sidebarUserName');
+  const siEl = document.getElementById('sidebarUserInitial');
+  if (snEl) snEl.textContent = name;
+  if (siEl) siEl.textContent = name ? name.charAt(0).toUpperCase() : 'U';
   document.getElementById('splash').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   setTimeout(() => {
@@ -1472,6 +1599,13 @@ window.addEventListener('load', () => {
 
 function updateIdField() {
   document.getElementById('f_id').value = nextId;
+  const d = document.getElementById('f_id_display');
+  if (d) d.textContent = '#' + nextId;
+  const dt = document.getElementById('id_bar_datetime');
+  if (dt) {
+    const now = new Date();
+    dt.innerHTML = '<span>Data / Hora</span>' + now.toLocaleDateString('pt-BR') + '<br>' + now.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+  }
 }
 
 // CAMERA HELPERS
@@ -1815,19 +1949,19 @@ function renderNcPhotos() {
 function deleteNcPhoto(id) { ncPhotos = ncPhotos.filter(p => p.id !== id); renderNcPhotos(); }
 function clearNcPhotos()    { ncPhotos = []; renderNcPhotos(); syncCamGalleries(); }
 
-// Verifica se há NC nas características e mostra/esconde alerta
+// nc_alert só é exibido na validação do salvar (não automaticamente)
 function checkNcAlert() {
-  const c = getCaracteristicas();
-  const hasNC = Object.values(c).some(v => v === 'NC');
-  document.getElementById('nc_alert').classList.toggle('show', hasNC);
+  // mantido para compatibilidade — não exibe automaticamente
 }
 
 const CARACT_ITEMS = ["Amassado", "Pintura/Cor", "Adesivo/Impressão", "Conjunto Peça/Gabarito", "Risco", "Conjunto Montado/Articulação", "Vazão de Luz", "Instalação Elétrica", "Router", "Rebarba", "Solda"];
 
 // CARACTERÍSTICAS
-// Aciona alerta NC ao mudar qualquer radio
+// Listener de change — apenas atualiza visual, sem mostrar alerta NC
 document.addEventListener('change', function(e) {
-  if (e.target && e.target.classList.contains('caract-radio')) checkNcAlert();
+  if (e.target && e.target.classList.contains('caract-radio')) {
+    // Não exibe nc_alert automaticamente — só na validação do salvar
+  }
 });
 
 function getCaracteristicas() {
@@ -2002,18 +2136,15 @@ function buildRow(r) {
     : '<span style="color:var(--muted)">—</span>';
 
   return `<tr>
-    <td><strong style="color:var(--blue);">#${r.id}</strong></td>
-    <td style="white-space:nowrap;display:flex;gap:4px;align-items:center;">
-      <button onclick="downloadZip(${r.id})" title="Baixar" style="background:var(--blue-light);color:var(--blue);border:1px solid rgba(16,56,193,0.25);border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">⬇</button>
-      <button onclick="openEdit(${r.id})" title="Editar registro" style="background:#fff8e1;color:#b45309;border:1px solid #fcd34d;border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">✏️</button>
-      <button onclick="openDelete(${r.id})" title="Excluir registro" style="background:#fce8e8;color:var(--danger);border:1px solid rgba(168,0,0,0.25);border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">🗑</button>
-      <button onclick="shareWhatsApp(${r.id})" title="Compartilhar no WhatsApp" style="background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;border-radius:4px;padding:4px 7px;font-size:14px;font-weight:700;cursor:pointer;" aria-label="Compartilhar">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-      </button>
-    </td>
-    <td>${r.op || '—'}</td><td>${r.item}</td><td>${r.quantidade}</td>
-    <td>${r.bandeira}</td><td>${r.setor}</td><td>${r.colaborador}</td>
-    <td>${videoCell}</td><td>${photosCell}</td>
+    <td style="font-size:12px;"><strong style="color:var(--blue);">#${r.id}</strong></td>
+    <td style="font-size:12px;">${r.op || '—'}</td>
+    <td style="font-size:12px;">${r.item}</td>
+    <td style="font-size:12px;">${r.quantidade}</td>
+    <td style="font-size:12px;">${r.bandeira}</td>
+    <td style="font-size:12px;">${r.setor}</td>
+    <td style="font-size:12px;">${r.colaborador}</td>
+    <td>${videoCell}</td>
+    <td>${photosCell}</td>
     <td>${ncCell}</td>
     <td style="text-align:center;">${_badge_amassado}</td>
     <td style="text-align:center;">${_badge_pintura_cor}</td>
@@ -2026,8 +2157,16 @@ function buildRow(r) {
     <td style="text-align:center;">${_badge_router}</td>
     <td style="text-align:center;">${_badge_rebarba}</td>
     <td style="text-align:center;">${_badge_solda}</td>
-    <td style="color:var(--muted);font-size:12px;">${obsCell}</td>
-    <td style="color:var(--muted);font-size:12px;">${r.date}</td>
+    <td style="color:var(--muted);font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${obsCell}</td>
+    <td style="color:var(--muted);font-size:11px;white-space:nowrap;">${r.date}</td>
+    <td style="white-space:nowrap;">
+      <div style="display:flex;gap:3px;align-items:center;">
+        <button onclick="downloadZip(${r.id})" title="Baixar ZIP" style="background:var(--blue-light);color:var(--blue);border:1px solid rgba(16,56,193,0.25);border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">⬇</button>
+        <button onclick="openEdit(${r.id})" title="Editar" style="background:#fff8e1;color:#b45309;border:1px solid #fcd34d;border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">✏️</button>
+        <button onclick="openDelete(${r.id})" title="Excluir" style="background:#fce8e8;color:var(--danger);border:1px solid rgba(168,0,0,0.25);border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">🗑</button>
+        <button onclick="shareWhatsApp(${r.id})" title="Compartilhar" style="background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;border-radius:4px;padding:4px 7px;font-size:12px;cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></button>
+      </div>
+    </td>
   </tr>`;
 }
 // Delegação de clique para thumbnails da tabela (usa window[gkey])
@@ -2407,6 +2546,14 @@ async function confirmDelete() {
   }
 }
 
+// SIDEBAR TOGGLE
+let sidebarOpen = true;
+function toggleSidebar() {
+  sidebarOpen = !sidebarOpen;
+  const sb = document.getElementById('sidebar');
+  if (sb) sb.classList.toggle('collapsed', !sidebarOpen);
+}
+
 // NAVEGAÇÃO ENTRE PÁGINAS
 function switchPage(page) {
   ['inspecao','nc_page','dashboard'].forEach(p => {
@@ -2764,6 +2911,23 @@ async function saveNcPage() {
   }
 }
 
+// ── TEMA ESCURO / CLARO ─────────────────────────────────────────────
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const next   = isDark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('polimetal_theme', next);
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.innerHTML = next === 'dark' ? '☀️ Claro' : '🌙 Escuro';
+}
+function applyTheme() {
+  const saved = localStorage.getItem('polimetal_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.innerHTML = saved === 'dark' ? '☀️ Claro' : '🌙 Escuro';
+}
+document.addEventListener('DOMContentLoaded', applyTheme);
+
 // TOAST
 function showToast(msg, success = true) {
   const t = document.getElementById('toast');
@@ -2774,3 +2938,5 @@ function showToast(msg, success = true) {
 </script>
 </body>
 </html>
+    </div><!-- /main-content -->
+  </div><!-- /app-shell -->
