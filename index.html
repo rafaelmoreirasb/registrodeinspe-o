@@ -1155,7 +1155,6 @@
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);padding:4px 0;"><input type="checkbox" name="nc_email" value="keli.medici@polimetal.ind.br" style="width:15px;height:15px;accent-color:var(--blue);" />Keli Medici <span style="color:var(--muted);font-size:11px;">(keli.medici@polimetal.ind.br)</span></label>
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);padding:4px 0;"><input type="checkbox" name="nc_email" value="pedro.costa@polimetal.ind.br" style="width:15px;height:15px;accent-color:var(--blue);" />Pedro Costa <span style="color:var(--muted);font-size:11px;">(pedro.costa@polimetal.ind.br)</span></label>
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);padding:4px 0;"><input type="checkbox" name="nc_email" value="julio.gomes@polimetal.ind.br" style="width:15px;height:15px;accent-color:var(--blue);" />Julio Gomes <span style="color:var(--muted);font-size:11px;">(julio.gomes@polimetal.ind.br)</span></label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);padding:4px 0;"><input type="checkbox" name="nc_email" value="bruna.freitas@polimetal.ind.br" style="width:15px;height:15px;accent-color:var(--blue);" />Bruna Freitas <span style="color:var(--muted);font-size:11px;">(bruna.freitas@polimetal.ind.br)</span></label>
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);padding:4px 0;"><input type="checkbox" name="nc_email" value="cqentrada@polimetal.ind.br" style="width:15px;height:15px;accent-color:var(--blue);" />CQ Entrada <span style="color:var(--muted);font-size:11px;">(cqentrada@polimetal.ind.br)</span></label>
           </div>
           <div class="nc-err" id="nc_err_email" style="display:none;margin-top:4px;">Selecione ao menos um destinatário.</div>
@@ -1618,11 +1617,10 @@ let nextId = 1;
 
 // AUTH — usuários válidos (login local simples)
 const USERS = [
-  { user: 'rafael.barbosa', pass: 'qua123', name: 'Rafael Barbosa', role: 'admin' },
-  { user: 'pedro.costa',    pass: 'qua123', name: 'Pedro Costa' },
-  { user: 'keli.medici',    pass: 'qua123', name: 'Keli Medici' },
-  { user: 'bruna.freitas',  pass: 'qua123', name: 'Bruna Freitas' },
-  { user: 'julio.caldeira', pass: 'qua123', name: 'Julio Caldeira' },
+  { user: 'rafael.barbosa', pass: 'poli123', name: 'Rafael Barbosa', role: 'admin' },
+  { user: 'pedro.costa',    pass: 'poli123', name: 'Pedro Costa' },
+  { user: 'keli.medici',    pass: 'poli123', name: 'Keli Medici' },
+  { user: 'julio.caldeira', pass: 'poli123', name: 'Julio Caldeira' },
 ];
 
 function doLogin() {
