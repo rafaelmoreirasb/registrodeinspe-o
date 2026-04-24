@@ -559,6 +559,10 @@
 
   .nc-badge { display:inline-flex;align-items:center;gap:3px;background:#fce8e8;color:#a80000;border:1px solid #ef9a9a;border-radius:4px;padding:2px 7px;font-size:12px;font-weight:700;cursor:zoom-in; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 </head>
 <body>
 
@@ -633,6 +637,10 @@
         <div class="sidebar-item" id="tab_dashboard" onclick="switchPage('dashboard')">
           <span class="s-icon">📊</span>
           <span class="s-label">Dashboard</span>
+        </div>
+        <div class="sidebar-item" id="tab_recebimento" onclick="switchPage('recebimento')">
+          <span class="s-icon">📦</span>
+          <span class="s-label">Recebimento</span>
         </div>
       </nav>
 
@@ -709,14 +717,18 @@
                 <option value="">— Selecione —</option>
                 <option>Bandeira Branca</option>
                 <option>BR</option>
+                <option>Chiquinho</option>
                 <option>Citroën</option>
                 <option>Honda</option>
                 <option>Incoleed</option>
                 <option>Ipiranga</option>
+                <option>McDonald's</option>
                 <option>Petronas</option>
                 <option>Peugeot</option>
                 <option>Shell</option>
+                <option>Stihl</option>
                 <option>Texaco</option>
+                <option>Trix</option>
               </select>
               <span class="error-msg" id="err_bandeira">Campo obrigatório</span>
             </div>
@@ -1016,8 +1028,7 @@
         <input type="text"   id="f_fop"      placeholder="🔍 OP"          oninput="applyFilters()" />
         <select              id="f_fbandeira"                              onchange="applyFilters()">
           <option value="">Bandeira</option>
-          <option>Bandeira Branca</option><option>BR</option><option>Citroën</option><option>Honda</option><option>Incoleed</option><option>Ipiranga</option>
-          <option>Petronas</option><option>Peugeot</option><option>Shell</option><option>Texaco</option>
+          <option>Bandeira Branca</option><option>BR</option><option>Chiquinho</option><option>Citroën</option><option>Honda</option><option>Incoleed</option><option>Ipiranga</option><option>McDonald's</option><option>Petronas</option><option>Peugeot</option><option>Shell</option><option>Stihl</option><option>Texaco</option><option>Trix</option>
         </select>
         <select              id="f_fsetor"                                 onchange="applyFilters()">
           <option value="">Setor</option>
@@ -1264,6 +1275,138 @@
     </div>
   </div><!-- /page_dashboard -->
 
+  <!-- PÁGINA RECEBIMENTO -->
+  <div class="page" id="page_recebimento">
+    <div style="background:linear-gradient(135deg,#050f3d 0%,#071d6b 100%);color:white;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 6px rgba(0,0,0,0.15);flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;background:rgba(255,255,255,0.18);border-radius:8px;padding:2px 14px;border:1px solid rgba(255,255,255,0.25);">📦</span>
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;">Recebimento de Materiais</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.65);">Inspeção de entrada</div>
+        </div>
+      </div>
+      <div id="rec_datetime" style="font-size:11px;color:rgba(255,255,255,0.75);text-align:right;line-height:1.7;"></div>
+    </div>
+    <!-- ID BAR RECEBIMENTO -->
+    <div class="id-bar" style="margin:20px 24px 0;">
+      <div class="id-bar-left">
+        <span class="id-val" id="rec_id_display">#1</span>
+        <div class="id-bar-info">
+          <span class="id-bar-title">Recebimento</span>
+          <span class="id-bar-sub">ID gerado automaticamente — somente leitura</span>
+        </div>
+      </div>
+      <div class="id-bar-date" id="rec_id_datetime"><span>Data / Hora</span>—</div>
+    </div>
+
+    <div style="padding:20px 24px;max-width:1200px;margin:0 auto;width:100%;overflow-y:auto;flex:1;">
+      <div class="panel" style="margin-bottom:20px;">
+        <div class="panel-header">📋 Novo Recebimento</div>
+        <div class="panel-body" style="padding:20px;">
+
+          <div class="section-label">Produto</div>
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-bottom:14px;">
+            <div class="field"><label>Código Interno <span class="req">*</span></label><input type="text" id="rec_codigo" placeholder="Ex: 0270350015"/><span class="error-msg" id="rec_err_codigo" style="display:none;">Obrigatório</span></div>
+            <div class="field"><label>Descrição do Produto <span class="req">*</span></label><input type="text" id="rec_descricao" placeholder="Descrição do produto"/><span class="error-msg" id="rec_err_descricao" style="display:none;">Obrigatório</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px;">
+            <div class="field"><label>Material</label>
+              <select id="rec_material">
+                <option value="">— Selecione —</option>
+                <option>ACM</option>
+                <option>Acrílico</option>
+                <option>Adesivo</option>
+                <option>Chapa</option>
+                <option>Eletrônico</option>
+                <option>PVC</option>
+                <option>Tinta</option>
+                <option>Tubo</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;">
+            <div class="field"><label>Lote</label><input type="text" id="rec_lote"/></div>
+            <div class="field"><label>Validade</label><input type="text" id="rec_validade"/></div>
+            
+            <div class="field"><label>Cor</label><input type="text" id="rec_cor"/></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;">
+            <div class="field"><label>Certificado</label><input type="text" id="rec_certificado"/></div>
+            <div class="field"><label>Embalagem</label><input type="text" id="rec_embalagem"/></div>
+            <div class="field"><label>Modelo</label><input type="text" id="rec_modelo"/></div>
+            <div class="field"><label>Status</label>
+              <select id="rec_status_produto"><option value="">Selecione...</option><option>LIBERADO</option><option>LIBERADO (SEM CERT.)</option><option>Ñ. CONFOME (MATERIAL)</option><option>RETIDO</option><option>DEVOLVIDO</option></select></div>
+          </div>
+          <div class="section-label">Dimensões</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <label style="font-size:13px;font-weight:600;color:var(--text);">Possui dimensões?</label>
+            <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;">
+              <button type="button" id="dim_nao" onclick="toggleDim(false)" style="padding:7px 18px;font-family:Barlow,sans-serif;font-size:13px;font-weight:600;border:none;cursor:pointer;background:var(--blue);color:white;transition:all 0.15s;">Não</button>
+              <button type="button" id="dim_sim" onclick="toggleDim(true)"  style="padding:7px 18px;font-family:Barlow,sans-serif;font-size:13px;font-weight:600;border:none;cursor:pointer;background:#f4f6f9;color:var(--muted);transition:all 0.15s;">Sim</button>
+            </div>
+          </div>
+          <div id="dim_fields" style="display:none;">
+            <div id="dim_rows_container"></div>
+            <button type="button" onclick="addDimRow()" style="margin-top:6px;background:var(--blue-light);color:var(--blue);border:1px solid rgba(16,56,193,0.25);border-radius:6px;padding:6px 14px;font-family:Barlow,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+              ＋ Adicionar linha
+            </button>
+          </div>
+          <div class="section-label">Fornecedor e Nota Fiscal</div>
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-bottom:14px;">
+            <div class="field"><label>Cód. Fornecedor</label><input type="text" id="rec_cod_fornecedor"/></div>
+            <div class="field"><label>Fornecedor <span class="req">*</span></label><input type="text" id="rec_fornecedor" placeholder="Nome do fornecedor"/><span class="error-msg" id="rec_err_fornecedor" style="display:none;">Obrigatório</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+            <div class="field"><label>Nº NF</label><input type="text" id="rec_nf"/></div>
+            <div class="field"><label>Nº Pedido</label><input type="text" id="rec_pedido"/></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+            <div class="field"><label>Unidade</label>
+              <select id="rec_unidade"><option value="">—</option><option>CT</option><option>UN</option><option>PC</option><option>KG</option><option>M</option><option>M2</option><option>L</option><option>GL</option><option>RL</option></select></div>
+            <div class="field"><label>Qtda. Verificada</label><input type="number" id="rec_qtda_verificada" step="0.01"/></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px;">
+            <div class="field"><label>SNC</label><input type="text" id="rec_snc"/></div>
+          </div>
+          <div class="section-label" style="margin-top:4px;">Observação</div>
+          <textarea id="rec_observacao" placeholder="Observações sobre o recebimento..." style="font-family:'Barlow',sans-serif;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:4px;color:var(--text);background:var(--surface);width:100%;min-height:80px;resize:vertical;outline:none;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor=''"></textarea>
+        </div>
+        <div class="action-bar">
+          <button onclick="saveRecebimento()" style="background:#0a2590;color:white;border:none;padding:12px 28px;font-size:13px;font-family:Barlow,sans-serif;font-weight:700;cursor:pointer;border-radius:4px;">💾 Salvar Recebimento</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header" style="background:#071d6b;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <span>📦 Recebimentos Salvos</span>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <input type="text" id="rec_filtro_fornecedor" placeholder="Fornecedor" oninput="renderRecebimentos()" style="padding:4px 8px;font-size:12px;border-radius:4px;border:none;width:130px;"/>
+            <input type="text" id="rec_filtro_codigo" placeholder="Código" oninput="renderRecebimentos()" style="padding:4px 8px;font-size:12px;border-radius:4px;border:none;width:100px;"/>
+            <select id="rec_filtro_status" onchange="renderRecebimentos()" style="padding:4px 8px;font-size:12px;border-radius:4px;border:none;"><option value="">Status</option><option>LIBERADO</option><option>LIBERADO (SEM CERT.)</option><option>Ñ. CONFOME (MATERIAL)</option><option>RETIDO</option></select>
+            <button onclick="loadRecebimentos()" style="background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:4px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:Barlow,sans-serif;">↺</button>
+          </div>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th style="min-width:42px;">ID</th><th style="min-width:90px;">Chegada</th><th style="min-width:90px;">Cód. Interno</th>
+                <th style="min-width:180px;">Descrição</th><th style="min-width:140px;">Fornecedor</th><th style="min-width:60px;">NF</th>
+                <th style="min-width:50px;">Unid.</th><th style="min-width:70px;">Qtda. Ver.</th>
+                <th style="min-width:90px;">Status</th><th style="min-width:50px;">Qual.</th><th style="min-width:50px;">Pont.</th>
+                <th style="min-width:50px;">Qtda.</th><th style="min-width:50px;">Nota</th><th style="min-width:110px;">Observação</th>
+                <th style="min-width:100px;">Data/Hora</th><th style="min-width:60px;">Ações</th>
+              </tr></thead>
+              <tbody id="rec_tbody"><tr><td colspan="17" style="text-align:center;color:var(--muted);padding:20px;">Nenhum registro.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /page_recebimento -->
+
+    </div><!-- /main-content -->
+  </div><!-- /app-shell -->
 
   <!-- MODAL EDITAR REGISTRO -->
   <div id="editModal">
@@ -1286,8 +1429,7 @@
         <div class="edit-field">
           <label>Bandeira</label>
           <select id="edit_bandeira">
-            <option>Bandeira Branca</option><option>BR</option><option>Citroën</option><option>Honda</option><option>Incoleed</option><option>Ipiranga</option>
-            <option>Petronas</option><option>Peugeot</option><option>Shell</option><option>Texaco</option>
+            <option>Bandeira Branca</option><option>BR</option><option>Chiquinho</option><option>Citroën</option><option>Honda</option><option>Incoleed</option><option>Ipiranga</option><option>McDonald's</option><option>Petronas</option><option>Peugeot</option><option>Shell</option><option>Stihl</option><option>Texaco</option><option>Trix</option>
           </select>
         </div>
         <div class="edit-field">
@@ -1473,12 +1615,11 @@ let nextId = 1;
 
 // AUTH — usuários válidos (login local simples)
 const USERS = [
-  { user: 'rafael.barbosa', pass: 'poliusu!@#456', name: 'Rafael Barbosa' },
-  { user: 'pedro.costa',    pass: 'poliusu!@#456', name: 'Pedro Costa' },
-  { user: 'keli.medici',    pass: 'poliusu!@#456', name: 'Keli Medici' },
-  { user: 'bruna.freitas',  pass: 'poliusu!@#456', name: 'Bruna Freitas' },
-  { user: 'julio.gomes',    pass: 'poliusu!@#456', name: 'Julio Gomes' },
-  { user: 'inspetor',       pass: 'insp@2024',     name: 'Inspetor' }
+  { user: 'rafael.barbosa', pass: 'qua123', name: 'Rafael Barbosa' },
+  { user: 'pedro.costa',    pass: 'qua123', name: 'Pedro Costa' },
+  { user: 'keli.medici',    pass: 'qua123', name: 'Keli Medici' },
+  { user: 'bruna.freitas',  pass: 'qua123', name: 'Bruna Freitas' },
+  { user: 'julio.caldeira', pass: 'qua123', name: 'Julio Caldeira' },
 ];
 
 function doLogin() {
@@ -1522,6 +1663,7 @@ function showApp(name) {
     updateIdField();
     // câmera agora é aberta via modal
     loadFromSupabase();
+    try { loadRecebimentos(); } catch(ex) {}
   }, 3000);
 }
 
@@ -2556,7 +2698,7 @@ function toggleSidebar() {
 
 // NAVEGAÇÃO ENTRE PÁGINAS
 function switchPage(page) {
-  ['inspecao','nc_page','dashboard'].forEach(p => {
+  ['inspecao','nc_page','dashboard','recebimento'].forEach(p => {
     document.getElementById('page_' + p).classList.toggle('active', p === page);
     document.getElementById('tab_' + p).classList.toggle('active', p === page);
   });
@@ -2911,6 +3053,152 @@ async function saveNcPage() {
   }
 }
 
+
+// RECEBIMENTO
+let recebimentos = [];
+
+function updateRecDatetime() {
+  const el = document.getElementById('rec_datetime'); if(!el) return;
+  const now = new Date();
+  el.innerHTML = '<span style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;">Data / Hora</span><br>'+now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+// ── RECEBIMENTO: ID automático ────────────────────────────────────
+let nextRecId = 1;
+async function initRecId() {
+  try {
+    const { data } = await db.from('recebimentos').select('id').order('id',{ascending:false}).limit(1);
+    nextRecId = data && data.length ? data[0].id + 1 : 1;
+  } catch(e) { nextRecId = 1; }
+  const d = document.getElementById('rec_id_display');
+  if (d) d.textContent = '#' + nextRecId;
+  const dt = document.getElementById('rec_id_datetime');
+  if (dt) {
+    const now = new Date();
+    dt.innerHTML = '<span>Data / Hora</span>' + now.toLocaleDateString('pt-BR') + '<br>' + now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+// ── RECEBIMENTO: Dimensões dinâmicas ─────────────────────────────
+let dimAtivo = false;
+let dimRowCount = 0;
+
+function toggleDim(ativo) {
+  dimAtivo = ativo;
+  const fields   = document.getElementById('dim_fields');
+  const btnSim   = document.getElementById('dim_sim');
+  const btnNao   = document.getElementById('dim_nao');
+  if (ativo) {
+    fields.style.display = 'block';
+    btnSim.style.background = 'var(--blue)'; btnSim.style.color = 'white';
+    btnNao.style.background = '#f4f6f9';     btnNao.style.color = 'var(--muted)';
+    if (dimRowCount === 0) addDimRow();
+  } else {
+    fields.style.display = 'none';
+    btnNao.style.background = 'var(--blue)'; btnNao.style.color = 'white';
+    btnSim.style.background = '#f4f6f9';     btnSim.style.color = 'var(--muted)';
+  }
+}
+
+function addDimRow() {
+  dimRowCount++;
+  const n = dimRowCount;
+  const container = document.getElementById('dim_rows_container');
+  const row = document.createElement('div');
+  row.id = 'dim_row_' + n;
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;margin-bottom:8px;align-items:end;';
+  row.innerHTML =
+    '<div class="field"><label>Comprimento</label><input type="text" id="dim_comp_'+n+'" placeholder="Ex: 1200mm"/></div>' +
+    '<div class="field"><label>Largura</label><input type="text" id="dim_larg_'+n+'" placeholder="Ex: 600mm"/></div>' +
+    '<div class="field"><label>Espessura</label><input type="text" id="dim_esp_'+n+'" placeholder="Ex: 2mm"/></div>' +
+    (n > 1 ? '<button type="button" onclick="removeDimRow('+n+')" style="height:38px;padding:0 10px;background:#fce8e8;color:var(--danger);border:1px solid rgba(168,0,0,0.25);border-radius:4px;font-size:16px;cursor:pointer;margin-bottom:0;">✕</button>' : '<div></div>');
+  container.appendChild(row);
+}
+
+function removeDimRow(n) {
+  const row = document.getElementById('dim_row_' + n);
+  if (row) row.remove();
+}
+
+function getDimValues() {
+  if (!dimAtivo) return null;
+  const rows = [];
+  document.querySelectorAll('[id^="dim_row_"]').forEach(function(row) {
+    const n = row.id.replace('dim_row_','');
+    const comp = document.getElementById('dim_comp_'+n)?.value.trim() || '';
+    const larg = document.getElementById('dim_larg_'+n)?.value.trim() || '';
+    const esp  = document.getElementById('dim_esp_'+n)?.value.trim()  || '';
+    if (comp || larg || esp) rows.push({comprimento:comp,largura:larg,espessura:esp});
+  });
+  return rows.length ? JSON.stringify(rows) : null;
+}
+
+function resetDim() {
+  dimAtivo = false; dimRowCount = 0;
+  const container = document.getElementById('dim_rows_container');
+  if (container) container.innerHTML = '';
+  const fields = document.getElementById('dim_fields');
+  if (fields) fields.style.display = 'none';
+  const btnSim = document.getElementById('dim_sim');
+  const btnNao = document.getElementById('dim_nao');
+  if (btnNao) { btnNao.style.background='var(--blue)'; btnNao.style.color='white'; }
+  if (btnSim) { btnSim.style.background='#f4f6f9';     btnSim.style.color='var(--muted)'; }
+}
+
+async function loadRecebimentos() {
+  try {
+    const {data,error} = await db.from('recebimentos').select('*').order('criado_em',{ascending:false});
+    if(error) return; recebimentos=data||[]; renderRecebimentos();
+  } catch(ex){}
+}
+function renderRecebimentos() {
+  const tbody = document.getElementById('rec_tbody'); if(!tbody) return;
+  const fF=(document.getElementById('rec_filtro_fornecedor')?.value||'').toLowerCase();
+  const fC=(document.getElementById('rec_filtro_codigo')?.value||'').toLowerCase();
+  const fS=document.getElementById('rec_filtro_status')?.value||'';
+  const rows=recebimentos.filter(function(r){
+    return(!fF||(r.fornecedor||'').toLowerCase().includes(fF))&&(!fC||(r.codigo||'').toLowerCase().includes(fC))&&(!fS||r.status_produto===fS);
+  });
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="17" style="text-align:center;color:var(--muted);padding:20px;">Nenhum registro.</td></tr>';return;}
+  const sc=function(s){if(!s)return'';if(s.includes('LIBER'))return'color:#107C10;font-weight:600;';if(s.includes('CONF')||s.includes('RETID')||s.includes('DEVOLV'))return'color:#a80000;font-weight:600;';return'';};
+  tbody.innerHTML=rows.map(function(r){
+    const dt=r.criado_em?new Date(r.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+    const ch=r.data_chegada?new Date(r.data_chegada+'T00:00').toLocaleDateString('pt-BR'):'—';
+    return '<tr><td><strong style="color:var(--blue);">#'+r.id+'</strong></td><td style="font-size:12px;">'+ch+'</td><td style="font-size:12px;">'+(r.codigo||'—')+'</td><td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+(r.descricao||'')+'">'+(r.descricao||'—')+'</td><td style="font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+(r.fornecedor||'')+'">'+(r.fornecedor||'—')+'</td><td style="font-size:12px;">'+(r.nf||'—')+'</td><td style="font-size:12px;">'+(r.qtda_nf!=null?r.qtda_nf:'—')+'</td><td style="font-size:12px;">'+(r.unidade||'—')+'</td><td style="font-size:12px;">'+(r.qtda_verificada!=null?r.qtda_verificada:'—')+'</td><td style="font-size:11px;'+sc(r.status_produto)+'">'+(r.status_produto||'—')+'</td><td style="font-size:12px;text-align:center;">'+(r.qualidade!=null?r.qualidade:'—')+'</td><td style="font-size:12px;text-align:center;">'+(r.pontualidade!=null?r.pontualidade:'—')+'</td><td style="font-size:12px;text-align:center;">'+(r.qtda_nota!=null?r.qtda_nota:'—')+'</td><td style="font-size:12px;text-align:center;font-weight:700;color:var(--blue);">'+(r.nota_final!=null?r.nota_final:'—')+'</td><td style="font-size:12px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+(r.observacao||'')+'">'+(r.observacao||'—')+'</td><td style="font-size:11px;color:var(--muted);">'+dt+'</td><td><button onclick="deleteRecebimento('+r.id+')" style="background:#fce8e8;color:var(--danger);border:1px solid rgba(168,0,0,0.25);border-radius:4px;padding:4px 7px;font-size:12px;cursor:pointer;">🗑</button></td></tr>';
+  }).join('');
+}
+async function saveRecebimento() {
+  let ok=true;
+  [['rec_codigo','rec_err_codigo'],['rec_descricao','rec_err_descricao'],['rec_fornecedor','rec_err_fornecedor']].forEach(function(p){
+    const v=document.getElementById(p[0])?document.getElementById(p[0]).value.trim():'';
+    const e=document.getElementById(p[1]);
+    if(!v){if(e)e.style.display='block';ok=false;}else{if(e)e.style.display='none';}
+  });
+  if(!ok){showToast('Preencha os campos obrigatórios.',false);return;}
+  const g=function(id){const el=document.getElementById(id);return el&&el.value.trim()?el.value.trim():null;};
+  const gn=function(id){const el=document.getElementById(id);const v=el?el.value:'';return(v!==''&&v!=null)?parseFloat(v):null;};
+  const collab=document.getElementById('sidebarUserName')?document.getElementById('sidebarUserName').textContent:'';
+  const hoje=new Date().toISOString().slice(0,10);const dimVals=getDimValues();const payload={data_chegada:hoje,codigo:g('rec_codigo'),descricao:g('rec_descricao'),lote:g('rec_lote'),validade:g('rec_validade'),material:g('rec_material'),certificado:g('rec_certificado'),cor:g('rec_cor'),embalagem:g('rec_embalagem'),modelo:g('rec_modelo'),status_produto:g('rec_status_produto'),cod_fornecedor:g('rec_cod_fornecedor'),fornecedor:g('rec_fornecedor'),nf:g('rec_nf'),pedido:g('rec_pedido'),unidade:g('rec_unidade'),qtda_verificada:gn('rec_qtda_verificada'),snc:g('rec_snc'),observacao:g('rec_observacao'),colaborador:collab,espessura:dimVals};
+  try{
+    const{error}=await db.from('recebimentos').insert(payload);
+    if(error){showToast('Erro ao salvar: '+(error.message||''),false);return;}
+    showToast('Recebimento salvo!',true);
+    ['rec_codigo','rec_descricao','rec_lote','rec_validade','rec_certificado','rec_cor','rec_embalagem','rec_modelo','rec_cod_fornecedor','rec_fornecedor','rec_nf','rec_pedido','rec_qtda_verificada','rec_snc','rec_observacao'].forEach(function(id){const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('rec_status_produto').value='';document.getElementById('rec_unidade').value='';document.getElementById('rec_material').value='';
+    resetDim();
+    initRecId();
+    await loadRecebimentos();
+  }catch(e){showToast('Erro ao salvar.',false);}
+}
+async function deleteRecebimento(id) {
+  if(!confirm('Excluir recebimento #'+id+'?'))return;
+  try{
+    const{error}=await db.from('recebimentos').delete().eq('id',id);
+    if(error){showToast('Erro ao excluir.',false);return;}
+    recebimentos=recebimentos.filter(function(r){return r.id!==id;});
+    renderRecebimentos();showToast('Recebimento #'+id+' excluído.',true);
+  }catch(e){showToast('Erro ao excluir.',false);}
+}
+
 // ── TEMA ESCURO / CLARO ─────────────────────────────────────────────
 function toggleTheme() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -2938,5 +3226,3 @@ function showToast(msg, success = true) {
 </script>
 </body>
 </html>
-    </div><!-- /main-content -->
-  </div><!-- /app-shell -->
