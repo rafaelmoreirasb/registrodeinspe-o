@@ -636,6 +636,10 @@
           <span class="s-icon">📋</span>
           <span class="s-label">Registro de Inspeção</span>
         </div>
+        <div class="sidebar-item" id="tab_salvos" onclick="switchPage('salvos')">
+          <span class="s-icon">📋</span>
+          <span class="s-label">Registros Salvos</span>
+        </div>
         <div class="sidebar-item" id="tab_nc_page" onclick="switchPage('nc_page')">
           <span class="s-icon">🚫</span>
           <span class="s-label">Não Conformidade</span>
@@ -1021,6 +1025,11 @@
 <input type="hidden" id="toggleVideo" />
 
   <!-- TABELA DE REGISTROS -->
+
+  </div><!-- /page_inspecao -->
+
+  <!-- PÁGINA REGISTROS SALVOS -->
+  <div class="page" id="page_salvos">
   <div class="records-section">
     <div class="panel">
       <div class="panel-header" style="background:#071d6b;">
@@ -1089,7 +1098,8 @@
       </div>
     </div>
   </div>
-  </div><!-- /page_inspecao -->
+
+  </div><!-- /page_salvos -->
 
   <!-- PÁGINA NÃO CONFORMIDADE -->
   <div class="page" id="page_nc_page">
@@ -1458,8 +1468,25 @@
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Características do Produto</div>
       <div id="edit_caract_grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:5px;margin-bottom:16px;"></div>
 
+      <!-- Fotos existentes + adicionar novas -->
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-bottom:6px;border-top:1px solid var(--border);padding-top:14px;">Fotos do Registro</div>
+
+      <!-- Fotos já salvas -->
+      <div id="edit_fotos_existentes" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;"></div>
+
+      <!-- Adicionar novas fotos -->
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <button type="button" onclick="openCamModal('photo')" style="background:#0a2590;color:white;border:none;border-radius:4px;padding:8px 14px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">📷 Adicionar Foto</button>
+        <button type="button" onclick="openCamModal('nc')" style="background:#7a1a1a;color:white;border:none;border-radius:4px;padding:8px 14px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">🚫 Adicionar Foto NC</button>
+        <button type="button" onclick="document.getElementById('edit_galeria_input').click()" style="background:#1a5c1a;color:white;border:none;border-radius:4px;padding:8px 14px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">🖼️ Galeria</button>
+      </div>
+      <!-- Input oculto para selecionar fotos da galeria -->
+      <input type="file" id="edit_galeria_input" accept="image/*" multiple style="display:none;" onchange="editGaleriaSelected(this)"/>
+      <!-- Novas fotos capturadas pela câmera (sincronizadas pelo camModal) -->
+      <div id="edit_novas_fotos_grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
+
       <div class="edit-actions">
-        <button class="btn btn-danger btn-sm" onclick="document.getElementById('editModal').classList.remove('open')">Cancelar</button>
+        <button class="btn btn-danger btn-sm" onclick="cancelEdit()">Cancelar</button>
         <button class="btn btn-primary btn-sm" onclick="saveEdit()">💾 Salvar Alterações</button>
       </div>
     </div>
@@ -1506,6 +1533,52 @@ const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIs
 const db = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 const BUCKET    = 'imagens-inspecao';
 
+// ── COMPRESSÃO DE IMAGEM ─────────────────────────────────────────
+// Reduz fotos para no máximo 1280px e qualidade JPEG 75%
+// Reduz arquivos de ~3MB para ~200KB sem perda visual perceptível
+function compressImage(dataUrl, maxWidth, maxHeight, quality) {
+  maxWidth  = maxWidth  || 1280;
+  maxHeight = maxHeight || 1280;
+  quality   = quality   || 0.75;
+  return new Promise(function(resolve) {
+    var img = new Image();
+    img.onload = function() {
+      var w = img.width;
+      var h = img.height;
+      // Redimensionar mantendo proporção
+      if (w > maxWidth || h > maxHeight) {
+        var ratio = Math.min(maxWidth / w, maxHeight / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width  = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = function() { resolve(dataUrl); }; // fallback sem compressão
+    img.src = dataUrl;
+  });
+}
+
+async function compressBlob(blob, maxWidth, maxHeight, quality) {
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = async function(e) {
+      var compressed = await compressImage(e.target.result, maxWidth, maxHeight, quality);
+      var arr = compressed.split(',');
+      var mime = arr[0].match(/:(.*?);/)[1];
+      var bstr = atob(arr[1]);
+      var n = bstr.length;
+      var u8arr = new Uint8Array(n);
+      while (n--) u8arr[n] = bstr.charCodeAt(n);
+      resolve(new Blob([u8arr], { type: mime }));
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
 // Salvar inspeção no Supabase
 async function saveToSupabase(rec, imgs, videoBlob) {
   try {
@@ -1525,37 +1598,39 @@ async function saveToSupabase(rec, imgs, videoBlob) {
     if (error) throw error;
     const inspecaoId = data.id;
 
-    // 2. Upload de imagens anexadas
+    // 2. Upload de imagens anexadas (comprimidas)
     for (const img of imgs) {
-      const resp = await fetch(img.url);
-      const blob = await resp.blob();
-      const path = `${inspecaoId}/${Date.now()}_${img.name}`;
-      await db.storage.from(BUCKET).upload(path, blob, { contentType: blob.type });
+      var rawBlobImg = await fetch(img.url).then(r => r.blob());
+      var cmpBlobImg = await compressBlob(rawBlobImg, 1280, 1280, 0.75);
+      const path = `${inspecaoId}/${Date.now()}_${img.name.replace(/\.\w+$/, '')}.jpg`;
+      await db.storage.from(BUCKET).upload(path, cmpBlobImg, { contentType: 'image/jpeg' });
       const { data: pub } = db.storage.from(BUCKET).getPublicUrl(path);
       await db.from('inspecoes_imagens').insert([{ inspecao_id: inspecaoId, url: pub.publicUrl, nome: img.name }]);
     }
 
-    // 3. Upload de fotos da câmera
+    // 3. Upload de fotos da câmera (comprimidas)
     for (const p of rec.camPhotos) {
-      const resp = await fetch(p.dataUrl);
-      const blob = await resp.blob();
-      const path = `${inspecaoId}/cam_${Date.now()}.png`;
-      await db.storage.from(BUCKET).upload(path, blob, { contentType: 'image/png' });
+      var rawBlob = await fetch(p.dataUrl).then(r => r.blob());
+      var cmpBlob = await compressBlob(rawBlob, 1280, 1280, 0.75);
+      const path = `${inspecaoId}/cam_${Date.now()}.jpg`;
+      await db.storage.from(BUCKET).upload(path, cmpBlob, { contentType: 'image/jpeg' });
       const { data: pub } = db.storage.from(BUCKET).getPublicUrl(path);
-      await db.from('inspecoes_imagens').insert([{ inspecao_id: inspecaoId, url: pub.publicUrl, nome: 'foto_camera.png' }]);
+      await db.from('inspecoes_imagens').insert([{ inspecao_id: inspecaoId, url: pub.publicUrl, nome: 'foto_camera.jpg' }]);
     }
 
     // 4. Upload fotos de não conformidade
     const ncUrls = [];
     for (const p of (rec.ncPhotos || [])) {
       try {
-        const resp = await fetch(p.dataUrl);
-        const blob = await resp.blob();
-        const path = `${inspecaoId}/nc_${Date.now()}_${Math.random().toString(36).slice(2)}.png`;
-        await db.storage.from(BUCKET).upload(path, blob, { contentType: 'image/png' });
+        var rawBlobNc = await fetch(p.dataUrl).then(r => r.blob());
+        var cmpBlobNc = await compressBlob(rawBlobNc, 1280, 1280, 0.75);
+        const path = `${inspecaoId}/nc_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+        await db.storage.from(BUCKET).upload(path, cmpBlobNc, { contentType: 'image/jpeg' });
         const { data: pub } = db.storage.from(BUCKET).getPublicUrl(path);
         ncUrls.push(pub.publicUrl);
-      } catch(e) { console.warn('Erro upload NC:', e); }
+        // Também salvar na tabela inspecoes_imagens com flag nc_
+        await db.from('inspecoes_imagens').insert([{ inspecao_id: inspecaoId, url: pub.publicUrl, nome: 'nc_foto.jpg' }]);
+      } catch(e) { /* continuar */ }
     }
     // Atualizar coluna nc_fotos com URLs públicas (não dataURLs)
     if (ncUrls.length > 0) {
@@ -1581,32 +1656,60 @@ async function saveToSupabase(rec, imgs, videoBlob) {
 // Carregar registros do Supabase ao iniciar
 async function loadFromSupabase() {
   try {
-    const { data, error } = await db
-      .from('inspecoes')
-      .select('*, inspecoes_imagens(url, nome)')
-      .order('id', { ascending: false });
-    if (error || !data) return;
-    records = data.map(r => ({
-      id:          r.id,
-      item:        r.item,
-      op:          r.op,
-      quantidade:  r.quantidade,
-      bandeira:    r.bandeira,
-      setor:       r.setor,
-      colaborador: r.colaborador,
-      mediaType:   r.media_type,
-      observacoes:     r.observacoes || '',
-      caracteristicas: r.caracteristicas || {},
-      ncPhotos:        (r.nc_fotos || []).map((url, i) => ({ id: i, dataUrl: url })),
-      mediaSrc:        null,
-      imageFiles:  (r.inspecoes_imagens || []).map(i => ({ url: i.url, name: i.nome })),
-      camPhotos:   [],
-      date:        new Date(r.criado_em).toLocaleString('pt-BR')
-    }));
-    nextId = records.length > 0 ? Math.max(...records.map(r => r.id)) + 1 : 1;
+    if (!db) { showToast('Banco nao inicializado.', false); return; }
+
+    // Passo 1: pegar ultimo ID rapidamente
+    const { data: idData } = await db
+      .from('inspecoes').select('id').order('id', { ascending: false }).limit(1);
+    if (idData && idData.length > 0) {
+      nextId = idData[0].id + 1;
+      updateIdField();
+    }
+
+    // Passo 2: buscar dados via Edge Function
+    const resp = await fetch('https://tbpgmccjfwxkzenyhkgi.supabase.co/functions/v1/get-inspecoes', {
+      headers: { 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRicGdtY2NqZnd4a3plbnloa2dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MjA5OTcsImV4cCI6MjA5MDk5Njk5N30.Wn-R823F10rEd1e9gIBRTVVWzfNqh1XilCNTUTjVkoA', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRicGdtY2NqZnd4a3plbnloa2dpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MjA5OTcsImV4cCI6MjA5MDk5Njk5N30.Wn-R823F10rEd1e9gIBRTVVWzfNqh1XilCNTUTjVkoA' }
+    });
+    if (!resp.ok) { showToast('Erro ao carregar. Tente recarregar.', false); return; }
+
+    const json = await resp.json();
+    if (json.error || !json.data) { showToast('Erro ao carregar. Tente recarregar.', false); return; }
+
+    const data       = json.data;
+    const imagensMap = json.imagensMap || {};
+    const ncMap      = json.ncMap      || {};
+
+    // Passo 3: montar records com fotos normais e NC
+    records = data.map(function(r) {
+      var urls    = imagensMap[String(r.id)] || [];
+      var ncUrls  = ncMap[String(r.id)]      || [];
+      return {
+        id:              r.id,
+        item:            r.item,
+        op:              r.op,
+        quantidade:      r.quantidade,
+        bandeira:        r.bandeira,
+        setor:           r.setor,
+        colaborador:     r.colaborador,
+        mediaType:       r.media_type,
+        observacoes:     r.observacoes || '',
+        caracteristicas: r.caracteristicas || {},
+        ncPhotos:        ncUrls.map(function(url, i) { return { id: i, dataUrl: url }; }),
+        mediaSrc:        null,
+        imageFiles:      urls.map(function(url) { return { url: url, name: 'foto.jpg' }; }),
+        camPhotos:       [],
+        date:            new Date(r.criado_em).toLocaleString('pt-BR')
+      };
+    });
+
+    nextId = records.length > 0 ? Math.max.apply(null, records.map(function(r){ return r.id; })) + 1 : 1;
     renderTable();
     updateIdField();
-  } catch(e) { console.warn('Não foi possível carregar do Supabase:', e); }
+
+  } catch(e) {
+    const msg = e && e.message ? e.message : String(e);
+    showToast('Erro: ' + msg.substring(0, 60), false);
+  }
 }
 
 let records = [], camPhotos = [], imageFiles = [], ncPhotos = [];
@@ -1621,6 +1724,7 @@ const USERS = [
   { user: 'pedro.costa',    pass: 'poli123', name: 'Pedro Costa' },
   { user: 'keli.medici',    pass: 'poli123', name: 'Keli Medici' },
   { user: 'julio.caldeira', pass: 'poli123', name: 'Julio Caldeira' },
+  { user: 'polimetal',      pass: '123',     name: 'Polimetal',      role: 'producao' },
 ];
 
 function doLogin() {
@@ -1655,22 +1759,20 @@ function showApp(name, role) {
   const siEl = document.getElementById('sidebarUserInitial');
   if (snEl) snEl.textContent = name;
   if (siEl) siEl.textContent = name ? name.charAt(0).toUpperCase() : 'U';
-  // Controle de acesso: ocultar abas restritas para não-admin
-  const isAdmin = role === 'admin';
-  ['tab_nc_page', 'tab_recebimento'].forEach(function(id) {
-    const el = document.getElementById(id);
-    if (el) el.style.display = isAdmin ? 'flex' : 'none';
-  });
+  var isAdmin    = role === 'admin';
+  var isProducao = role === 'producao';
+  var tabRules = { 'tab_inspecao': !isProducao, 'tab_salvos': true, 'tab_nc_page': isAdmin, 'tab_dashboard': true, 'tab_recebimento': isAdmin };
+  Object.keys(tabRules).forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = tabRules[id] ? 'flex' : 'none'; });
   sessionStorage.setItem('userRole', role || 'user');
+  if (isProducao) { setTimeout(function(){ switchPage('salvos'); }, 200); }
   document.getElementById('splash').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   setTimeout(() => {
     document.getElementById('splash').classList.add('hidden');
     document.getElementById('app').style.display = 'flex';
     document.getElementById('app').classList.add('visible');
-    updateIdField();
-    // câmera agora é aberta via modal
-    loadFromSupabase();
+    // Carregar banco e atualizar ID após app ficar visível
+    loadFromSupabase().then(() => updateIdField());
     try { loadRecebimentos(); } catch(ex) {}
   }, 3000);
 }
@@ -1895,6 +1997,39 @@ function syncCamGalleries() {
     });
   }
 
+  // ── Sincronizar grade de novas fotos no modal de edição ─────────
+  if (editMode) {
+    var editGrid = document.getElementById('edit_novas_fotos_grid');
+    if (editGrid) {
+      editGrid.innerHTML = '';
+      var todasEdit = camPhotos.concat(ncPhotos);
+      todasEdit.forEach(function(p, idx) {
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;width:64px;height:64px;border-radius:6px;overflow:hidden;border:1px solid var(--border);';
+        var img = document.createElement('img');
+        img.src = p.dataUrl;
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+        var btn = document.createElement('button');
+        btn.textContent = '✕';
+        btn.style.cssText = 'position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(168,0,0,0.85);color:white;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+        btn.onclick = function() {
+          camPhotos = camPhotos.filter(function(x){ return x.id !== p.id; });
+          ncPhotos  = ncPhotos.filter(function(x){ return x.id !== p.id; });
+          syncCamGalleries();
+        };
+        wrap.appendChild(img); wrap.appendChild(btn);
+        editGrid.appendChild(wrap);
+      });
+      // Mostrar contador
+      if (todasEdit.length > 0) {
+        var cnt = document.createElement('div');
+        cnt.style.cssText = 'font-size:11px;color:var(--muted);align-self:center;';
+        cnt.textContent = todasEdit.length + ' nova(s) foto(s)';
+        editGrid.appendChild(cnt);
+      }
+    }
+  }
+
   // ── Sincronizar galerias do Recebimento ────────────────────────
   const recCamGrid = document.getElementById('rec_cam_photos_grid');
   const recCamCnt  = document.getElementById('rec_cam_photo_count');
@@ -1964,13 +2099,15 @@ function showCameraOffline(offId, vidId) {
   document.getElementById(vidId).style.display = 'none';
 }
 
-function takePhoto() {
+async function takePhoto() {
   const video = document.getElementById('cameraFeed');
   if (!cameraStream || video.readyState < 2) { showToast('Câmera não está ativa.', false); return; }
   const canvas = document.getElementById('capturedCanvas');
   canvas.width = video.videoWidth; canvas.height = video.videoHeight;
   canvas.getContext('2d').drawImage(video, 0, 0);
-  const dataUrl = canvas.toDataURL('image/png');
+  // Comprimir: máx 1280px, JPEG 75% (~200KB vs ~3MB original)
+  const rawDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+  const dataUrl = await compressImage(rawDataUrl, 1280, 1280, 0.75);
   const id = Date.now();
   if (_camModalMode === 'nc') {
     ncPhotos.push({ id, dataUrl });
@@ -2261,6 +2398,19 @@ function clearForm() {
 }
 
 // TABLE
+function getActionBtns(id) {
+  var role = sessionStorage.getItem('userRole') || 'user';
+  var isProd = role === 'producao';
+  var s = '';
+  s += '<button onclick="downloadZip(' + id + ')" title="Baixar ZIP" style="background:var(--blue-light);color:var(--blue);border:1px solid rgba(16,56,193,0.25);border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">⬇</button>';
+  if (!isProd) {
+    s += '<button onclick="openEdit(' + id + ')" title="Editar" style="background:#fff8e1;color:#b45309;border:1px solid #fcd34d;border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">✏️</button>';
+    s += '<button onclick="openDelete(' + id + ')" title="Excluir" style="background:#fce8e8;color:var(--danger);border:1px solid rgba(168,0,0,0.25);border-radius:4px;padding:4px 7px;font-size:12px;cursor:pointer;">🗑</button>';
+  }
+  s += '<button onclick="shareWhatsApp(' + id + ')" title="Compartilhar" style="background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;border-radius:4px;padding:4px 7px;font-size:12px;cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></button>';
+  return s;
+}
+
 function buildRow(r) {
   // COLUNA NÃO CONFORMIDADE — fotos NC
   let ncCell = '<span style="color:var(--muted);font-size:12px;">—</span>';
@@ -2355,12 +2505,7 @@ function buildRow(r) {
     <td style="color:var(--muted);font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${obsCell}</td>
     <td style="color:var(--muted);font-size:11px;white-space:nowrap;">${r.date}</td>
     <td style="white-space:nowrap;">
-      <div style="display:flex;gap:3px;align-items:center;">
-        <button onclick="downloadZip(${r.id})" title="Baixar ZIP" style="background:var(--blue-light);color:var(--blue);border:1px solid rgba(16,56,193,0.25);border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">⬇</button>
-        <button onclick="openEdit(${r.id})" title="Editar" style="background:#fff8e1;color:#b45309;border:1px solid #fcd34d;border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">✏️</button>
-        <button onclick="openDelete(${r.id})" title="Excluir" style="background:#fce8e8;color:var(--danger);border:1px solid rgba(168,0,0,0.25);border-radius:4px;padding:4px 7px;font-size:12px;font-weight:600;cursor:pointer;">🗑</button>
-        <button onclick="shareWhatsApp(${r.id})" title="Compartilhar" style="background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;border-radius:4px;padding:4px 7px;font-size:12px;cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></button>
-      </div>
+      <div style="display:flex;gap:3px;align-items:center;">${getActionBtns(r.id)}</div>
     </td>
   </tr>`;
 }
@@ -2638,6 +2783,8 @@ function gerarRelatorio() {
 
 // EDITAR REGISTRO
 let editingId = null;
+let editMode  = false;   // true quando o modal de edição está aberto
+let editFotosRemovidas = []; // URLs de fotos existentes removidas pelo usuário
 function openEdit(recId) {
   const rec = records.find(r => r.id === recId);
   if (!rec) return;
@@ -2689,7 +2836,69 @@ function openEdit(recId) {
     grid.appendChild(div);
   });
 
+  // Fotos existentes
+  editMode = true;
+  editFotosRemovidas = [];
+  // Limpar novas fotos da câmera
+  camPhotos = []; ncPhotos = [];
+  syncCamGalleries();
+
+  const fotosDiv = document.getElementById('edit_fotos_existentes');
+  fotosDiv.innerHTML = '';
+  (rec.imageFiles || []).forEach(function(f) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;width:64px;height:64px;border-radius:6px;overflow:hidden;border:1px solid var(--border);';
+    const img = document.createElement('img');
+    img.src = f.url;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;cursor:zoom-in;';
+    img.onclick = function() { openLightbox(f.url, [f.url]); };
+    const btn = document.createElement('button');
+    btn.textContent = '✕';
+    btn.title = 'Remover esta foto';
+    btn.style.cssText = 'position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(168,0,0,0.85);color:white;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+    btn.onclick = function() {
+      editFotosRemovidas.push(f.url);
+      wrap.remove();
+    };
+    wrap.appendChild(img);
+    wrap.appendChild(btn);
+    fotosDiv.appendChild(wrap);
+  });
+
+  // Limpar grade de novas fotos
+  document.getElementById('edit_novas_fotos_grid').innerHTML = '';
+
   document.getElementById('editModal').classList.add('open');
+}
+
+function editGaleriaSelected(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  var pending = files.length;
+  files.forEach(function(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      compressImage(e.target.result, 1280, 1280, 0.75).then(function(compressed) {
+        const id = 'gal_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        camPhotos.push({ id: id, dataUrl: compressed, name: file.name });
+        pending--;
+        if (pending === 0) {
+          syncCamGalleries();
+          showToast(files.length + ' foto(s) adicionada(s) da galeria', true);
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+  // Limpar o input para permitir selecionar os mesmos arquivos novamente
+  input.value = '';
+}
+
+function cancelEdit() {
+  editMode = false;
+  editFotosRemovidas = [];
+  camPhotos = []; ncPhotos = [];
+  document.getElementById('editModal').classList.remove('open');
 }
 
 function updateEditCaract(item, radio) {
@@ -2708,8 +2917,9 @@ function updateEditCaract(item, radio) {
 }
 async function saveEdit() {
   const recId = editingId;
-  const rec = records.find(r => r.id === recId);
+  const rec   = records.find(r => r.id === recId);
   if (!rec) return;
+
   rec.op          = document.getElementById('edit_op').value.trim();
   rec.item        = document.getElementById('edit_item').value;
   rec.quantidade  = document.getElementById('edit_quantidade').value;
@@ -2727,16 +2937,69 @@ async function saveEdit() {
   });
   rec.caracteristicas = newCaract;
 
-  renderTable();
-  // Atualizar no Supabase
+  showToast('⏳ Salvando...', true);
+
   try {
+    // 1. Atualizar campos textuais no banco
     await db.from('inspecoes').update({
       op: rec.op, item: parseInt(rec.item), quantidade: parseInt(rec.quantidade),
       bandeira: rec.bandeira, setor: rec.setor, colaborador: rec.colaborador,
       observacoes: rec.observacoes, caracteristicas: newCaract
     }).eq('id', recId);
+
+    // 2. Remover fotos excluídas do Storage e do banco
+    for (var i = 0; i < editFotosRemovidas.length; i++) {
+      var url = editFotosRemovidas[i];
+      // Extrair path relativo do Storage a partir da URL pública
+      var storageBase = SUPA_URL + '/storage/v1/object/public/imagens-inspecao/';
+      var path = url.replace(storageBase, '');
+      try {
+        await db.storage.from('imagens-inspecao').remove([path]);
+        await db.from('inspecoes_imagens').delete().eq('url', url);
+        rec.imageFiles = rec.imageFiles.filter(function(f){ return f.url !== url; });
+      } catch(re) { /* continuar mesmo se uma foto falhar */ }
+    }
+
+    // 3. Fazer upload das novas fotos da câmera
+    var novasUrls = [];
+    var todasNovas = camPhotos.concat(ncPhotos);
+    for (var j = 0; j < todasNovas.length; j++) {
+      var photo = todasNovas[j];
+      try {
+        var rawBlobEdit = await fetch(photo.dataUrl).then(function(r){ return r.blob(); });
+        var blob = await compressBlob(rawBlobEdit, 1280, 1280, 0.75);
+        var ts   = Date.now();
+        var filePath = recId + '/edit_' + ts + '_' + j + '.jpg';
+        var { data: upData, error: upErr } = await db.storage
+          .from('imagens-inspecao')
+          .upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
+        if (!upErr) {
+          var { data: pubData } = db.storage
+            .from('imagens-inspecao')
+            .getPublicUrl(filePath);
+          var novaUrl = pubData.publicUrl;
+          novasUrls.push(novaUrl);
+          // Inserir na tabela inspecoes_imagens
+          await db.from('inspecoes_imagens').insert({
+            inspecao_id: recId,
+            url: novaUrl,
+            nome: 'foto_edit_' + j + '.png'
+          });
+          rec.imageFiles.push({ url: novaUrl, name: 'foto_edit_' + j + '.png' });
+        }
+      } catch(ue) { /* continuar mesmo se upload falhar */ }
+    }
+
+    // 4. Limpar câmera e fechar modal
+    editMode = false;
+    editFotosRemovidas = [];
+    camPhotos = []; ncPhotos = [];
+
+    renderTable();
     showToast('✅ Registro atualizado com sucesso!', true);
-  } catch(e) { showToast('⚠️ Erro ao atualizar no banco.', false); }
+  } catch(e) {
+    showToast('⚠️ Erro ao atualizar: ' + (e && e.message ? e.message : ''), false);
+  }
   document.getElementById('editModal').classList.remove('open');
 }
 
@@ -2814,7 +3077,7 @@ function toggleSidebar() {
 
 // NAVEGAÇÃO ENTRE PÁGINAS
 function switchPage(page) {
-  ['inspecao','nc_page','dashboard','recebimento'].forEach(p => {
+  ['inspecao','salvos','nc_page','dashboard','recebimento'].forEach(p => {
     document.getElementById('page_' + p).classList.toggle('active', p === page);
     document.getElementById('tab_' + p).classList.toggle('active', p === page);
   });
