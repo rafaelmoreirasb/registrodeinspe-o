@@ -101,7 +101,16 @@
   [data-theme="dark"] .gallery-item,
   [data-theme="dark"] .nc-photo-thumb   { background: #1e2540; border-color: var(--border); }
 
-  /* ── Botão toggle tema ─────────────────────────────────────── */
+  /* ── Seleção em massa ──────────────────────────────────────────── */
+  .row-check { width:16px;height:16px;cursor:pointer;accent-color:var(--blue); }
+  .bulk-bar { display:none;align-items:center;gap:10px;padding:8px 16px;background:var(--blue-light);border-bottom:1px solid var(--border);flex-wrap:wrap; }
+  .bulk-bar.show { display:flex; }
+  .bulk-bar span { font-size:13px;font-weight:600;color:var(--blue); }
+  .btn-bulk-down { background:#0a2590;color:white;border:none;border-radius:6px;padding:7px 16px;font-family:Barlow,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px; }
+  .btn-bulk-down:hover { background:#071d6b; }
+  .btn-bulk-clear { background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:7px 12px;font-family:Barlow,sans-serif;font-size:12px;cursor:pointer; }
+  .btn-bulk-clear:hover { background:var(--border); }
+  /* ── Botão toggle tema ─────────────────────────────────────────── */
   .btn-theme {
     background: rgba(255,255,255,0.13);
     color: white; border: 1px solid rgba(255,255,255,0.25);
@@ -1062,10 +1071,19 @@
         <input type="text"   id="f_fdate"    placeholder="🔍 Data"        oninput="applyFilters()" />
         <div class="filter-clear"><button onclick="clearFilters()">✕ Limpar filtros</button></div>
       </div>
+      <!-- Barra de ações em massa -->
+      <div class="bulk-bar" id="bulk_bar">
+        <span id="bulk_count">0 selecionado(s)</span>
+        <button class="btn-bulk-down" onclick="bulkDownloadPhotos()">⬇ Baixar Fotos Selecionadas</button>
+        <button class="btn-bulk-clear" onclick="clearSelection()">✕ Limpar seleção</button>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
+              <th style="min-width:36px;text-align:center;">
+                <input type="checkbox" id="check_all" class="row-check" title="Selecionar todos" onchange="toggleSelectAll(this)"/>
+              </th>
               <th style="min-width:42px;">ID</th>
               <th style="min-width:70px;">OP</th>
               <th style="min-width:46px;">Item</th>
@@ -1904,11 +1922,21 @@ function setCamMode(mode) {
 }
 
 // CÂMERA MODAL
-let _camModalMode = 'photo'; // 'photo' | 'nc'
+let _camModalMode = 'photo';
+let _camCalledFromEdit = false; // 'photo' | 'nc'
 
 async function openCamModal(mode) {
   _camModalMode = mode || 'photo';
   camMode = 'photo';
+  // Se o modal de edição estiver aberto, escondê-lo temporariamente
+  // para evitar conflito de z-index (overflow-y:auto cria stacking context)
+  const editModal = document.getElementById('editModal');
+  if (editModal && editModal.classList.contains('open')) {
+    editModal.style.display = 'none';
+    _camCalledFromEdit = true;
+  } else {
+    _camCalledFromEdit = false;
+  }
   const modal = document.getElementById('camModal');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -1919,6 +1947,12 @@ function closeCamModal() {
   if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
   document.getElementById('camModal').style.display = 'none';
   document.body.style.overflow = '';
+  // Restaurar modal de edição se estava aberto antes da câmera
+  if (_camCalledFromEdit) {
+    const editModal = document.getElementById('editModal');
+    if (editModal) editModal.style.display = 'flex';
+    _camCalledFromEdit = false;
+  }
   // Sincronizar galerias visíveis
   syncCamGalleries();
 }
@@ -2314,13 +2348,21 @@ function validateCaracteristicas() {
   return allFilled;
 }
 function validateNcPhotos() {
-  const c = getCaracteristicas();
-  const hasNC = Object.values(c).some(v => v === 'NC');
+  const ch = getCaracteristicas();
+  const hasNC = Object.values(ch).some(v => v === 'NC');
   if (hasNC && ncPhotos.length === 0) {
-    document.getElementById('nc_photo_err').classList.add('show');
+    const errEl = document.getElementById('nc_photo_err');
+    if (errEl) {
+      errEl.classList.add('show');
+      errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    // Também mostrar o nc_alert com destaque
+    const alertEl = document.getElementById('nc_alert');
+    if (alertEl) alertEl.classList.add('show');
     return false;
   }
-  document.getElementById('nc_photo_err').classList.remove('show');
+  const errEl2 = document.getElementById('nc_photo_err');
+  if (errEl2) errEl2.classList.remove('show');
   return true;
 }
 function clearCaracteristicas() {
@@ -2481,7 +2523,8 @@ function buildRow(r) {
     ? `<span title="${obs.replace(/"/g,'&quot;')}">${obs.substring(0,40)}${obs.length>40?'…':''}</span>`
     : '<span style="color:var(--muted)">—</span>';
 
-  return `<tr>
+  return `<tr id="row_${r.id}" data-id="${r.id}">
+    <td style="text-align:center;"><input type="checkbox" class="row-check record-check" data-id="${r.id}" onchange="onRowCheck()"/></td>
     <td style="font-size:12px;"><strong style="color:var(--blue);">#${r.id}</strong></td>
     <td style="font-size:12px;">${r.op || '—'}</td>
     <td style="font-size:12px;">${r.item}</td>
@@ -3595,6 +3638,142 @@ function applyTheme() {
   if (btn) btn.innerHTML = saved === 'dark' ? '☀️ Claro' : '🌙 Escuro';
 }
 document.addEventListener('DOMContentLoaded', applyTheme);
+
+
+// ── SELEÇÃO EM MASSA ─────────────────────────────────────────────
+function onRowCheck() {
+  const checked = document.querySelectorAll('.record-check:checked');
+  const total   = document.querySelectorAll('.record-check');
+  const bar     = document.getElementById('bulk_bar');
+  const countEl = document.getElementById('bulk_count');
+  const checkAll= document.getElementById('check_all');
+
+  if (bar)     bar.classList.toggle('show', checked.length > 0);
+  if (countEl) countEl.textContent = checked.length + ' selecionado(s)';
+  if (checkAll) {
+    checkAll.indeterminate = checked.length > 0 && checked.length < total.length;
+    checkAll.checked = checked.length === total.length && total.length > 0;
+  }
+}
+
+function toggleSelectAll(cb) {
+  document.querySelectorAll('.record-check').forEach(function(el) {
+    el.checked = cb.checked;
+  });
+  onRowCheck();
+}
+
+function clearSelection() {
+  document.querySelectorAll('.record-check').forEach(function(el) {
+    el.checked = false;
+  });
+  const checkAll = document.getElementById('check_all');
+  if (checkAll) { checkAll.checked = false; checkAll.indeterminate = false; }
+  onRowCheck();
+}
+
+async function bulkDownloadPhotos() {
+  const checked = Array.from(document.querySelectorAll('.record-check:checked'));
+  if (!checked.length) { showToast('Selecione ao menos 1 registro.', false); return; }
+
+  const ids = checked.map(function(el) { return parseInt(el.dataset.id); });
+  showToast('⏳ Preparando download de ' + ids.length + ' registro(s)...', true);
+
+  try {
+    const zip = new JSZip();
+    var totalFotos = 0;
+
+    for (var i = 0; i < ids.length; i++) {
+      var id  = ids[i];
+      var rec = records.find(function(r) { return r.id === id; });
+      if (!rec) continue;
+
+      var pastaId = String(id);   // pasta principal ex: "109"
+      var folder  = zip.folder(pastaId);
+
+      // ── Relatório .txt (mesmo formato do WhatsApp) ────────────────
+      var ch      = rec.caracteristicas || {};
+      var ncItems = CARACT_ITEMS.filter(function(item) { return ch[item] === 'NC'; });
+      var confItems = CARACT_ITEMS.filter(function(item) { return ch[item] === 'C'; });
+      var naItems   = CARACT_ITEMS.filter(function(item) { return ch[item] === 'NA'; });
+
+      var NL = '\n';
+      var SEP = '=====================================\n';
+      var rel = '';
+      rel += SEP;
+      rel += 'REGISTRO DE INSPECAO - POLIMETAL' + NL;
+      rel += SEP + NL;
+      rel += 'ID:          #' + rec.id + NL;
+      rel += 'OP:          ' + (rec.op || '-') + NL;
+      rel += 'Item:        ' + (rec.item || '-') + NL;
+      rel += 'Quantidade:  ' + (rec.quantidade || '-') + NL;
+      rel += 'Bandeira:    ' + (rec.bandeira || '-') + NL;
+      rel += 'Setor:       ' + (rec.setor || '-') + NL;
+      rel += 'Colaborador: ' + (rec.colaborador || '-') + NL;
+      rel += 'Data/Hora:   ' + (rec.date || '-') + NL + NL;
+      rel += '--- CARACTERISTICAS DO PRODUTO ---' + NL;
+      if (confItems.length) rel += 'Conforme:       ' + confItems.join(', ') + NL;
+      if (ncItems.length)   rel += 'Nao Conforme:   ' + ncItems.join(', ') + NL;
+      if (naItems.length)   rel += 'Nao Aplicavel:  ' + naItems.join(', ') + NL;
+      if (rec.observacoes)  rel += NL + 'Observacoes: ' + rec.observacoes + NL;
+      rel += NL + SEP;
+      rel += 'Fotos normais: ' + (rec.imageFiles || []).length + NL;
+      rel += 'Fotos NC:      ' + (rec.ncPhotos || []).filter(function(p){ return p.dataUrl||p.url; }).length + NL;
+      rel += SEP;
+
+      folder.file('relatorio_ID' + id + '.txt', rel);
+
+      // ── Fotos normais na pasta raiz do ID ─────────────────────────
+      var fotoIdx = 1;
+      var fotoUrls = (rec.imageFiles || []).map(function(f) { return f.url; }).filter(Boolean);
+      for (var j = 0; j < fotoUrls.length; j++) {
+        try {
+          var resp = await fetch(fotoUrls[j]);
+          var blob = await resp.blob();
+          var ext  = fotoUrls[j].split('.').pop().split('?')[0].toLowerCase();
+          if (!['jpg','jpeg','png','webp'].includes(ext)) ext = 'jpg';
+          folder.file('foto_' + (fotoIdx++) + '.' + ext, blob);
+          totalFotos++;
+        } catch(e) { /* pular foto indisponível */ }
+      }
+
+      // ── Fotos NC em subpasta "NC_<id>" ────────────────────────────
+      var ncFotos = (rec.ncPhotos || []);
+      if (ncItems.length > 0 || ncFotos.length > 0) {
+        var ncFolder = folder.folder('NC_' + id);
+        var ncIdx    = 1;
+        for (var k = 0; k < ncFotos.length; k++) {
+          var src = ncFotos[k].dataUrl || ncFotos[k].url || ncFotos[k];
+          if (!src) continue;
+          try {
+            var resp2 = await fetch(src);
+            var blob2 = await resp2.blob();
+            var ext2  = src.startsWith('http') ? (src.split('.').pop().split('?')[0].toLowerCase() || 'jpg') : 'jpg';
+            if (!['jpg','jpeg','png','webp'].includes(ext2)) ext2 = 'jpg';
+            ncFolder.file('nc_' + (ncIdx++) + '.' + ext2, blob2);
+            totalFotos++;
+          } catch(e) { /* pular */ }
+        }
+      }
+    }
+
+    if (totalFotos === 0 && ids.length > 0) {
+      showToast('⚠️ Nenhuma foto encontrada. Os relatórios .txt serão incluídos.', true);
+    } else {
+      showToast('⏳ Gerando ZIP com ' + totalFotos + ' foto(s) em ' + ids.length + ' pasta(s)...', true);
+    }
+
+    var content = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+    var filename = 'inspecao_IDs_' + ids.join('-') + '.zip';
+    saveAs(content, filename);
+    showToast('✅ Download: ' + totalFotos + ' foto(s) + ' + ids.length + ' relatório(s) em ' + ids.length + ' pasta(s).', true);
+    clearSelection();
+
+  } catch(e) {
+    showToast('Erro ao gerar ZIP: ' + (e && e.message ? e.message : String(e)), false);
+  }
+}
+// ── FIM SELEÇÃO EM MASSA ─────────────────────────────────────────
 
 // TOAST
 function showToast(msg, success = true) {
