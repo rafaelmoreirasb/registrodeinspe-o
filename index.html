@@ -709,13 +709,14 @@
 
             <div class="field">
               <label>OP <span class="req">*</span></label>
-              <input type="text" id="f_op" placeholder="Ex: 001234" />
+              <input type="text" id="f_op" placeholder="Ex: 001234" onblur="buscarProdutoPorPedidoItem()" />
               <span class="error-msg" id="err_op">Campo obrigatório</span>
             </div>
 
             <div class="field">
               <label>Item <span class="req">*</span></label>
-              <input type="number" id="f_item" placeholder="Ex: 1001" min="0" step="1" />
+              <input type="number" id="f_item" placeholder="Ex: 1001" min="0" step="1"
+                onblur="buscarProdutoPorPedidoItem()" />
               <span class="error-msg" id="err_item">Campo obrigatório</span>
             </div>
 
@@ -725,6 +726,22 @@
               <span class="error-msg" id="err_quantidade">Campo obrigatório</span>
             </div>
 
+          </div>
+
+          <!-- Resultado da busca PEDIDO+ITEM -->
+          <div id="lookup_result" style="display:none;background:var(--blue-light);border:1px solid rgba(16,56,193,0.3);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+              <div>
+                <span style="color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Produto encontrado</span><br>
+                <span id="lookup_produto" style="font-weight:700;color:var(--blue);font-size:13px;"></span>
+                <span style="color:var(--muted);margin:0 6px;">—</span>
+                <span id="lookup_descricao" style="color:var(--text);font-size:13px;"></span>
+              </div>
+              <span style="font-size:10px;color:var(--muted);" id="lookup_cliente"></span>
+            </div>
+          </div>
+          <div id="lookup_notfound" style="display:none;background:#fff3f3;border:1px solid #f5c6c6;border-radius:8px;padding:8px 14px;margin-bottom:14px;font-size:12px;color:#a80000;">
+            ⚠️ Nenhum produto encontrado para este Pedido + Item.
           </div>
 
           <!-- Bandeira + Setor + Colaborador (dropdowns) -->
@@ -1091,27 +1108,20 @@
               <th style="min-width:78px;">Bandeira</th>
               <th style="min-width:100px;">Setor</th>
               <th style="min-width:110px;">Colaborador</th>
+              <th style="min-width:110px;font-size:11px;">Produto (PL Pai)</th>
+              <th style="min-width:160px;font-size:11px;">Descrição do Produto</th>
+              <th style="min-width:140px;font-size:11px;">Cliente</th>
               <th style="min-width:58px;">Vídeo</th>
               <th style="min-width:80px;">Fotos</th>
               <th style="min-width:80px;font-size:10px;">NC Fotos</th>
-              <th style="font-size:10px;min-width:48px;">Amassado</th>
-              <th style="font-size:10px;min-width:54px;">Pintura/Cor</th>
-              <th style="font-size:10px;min-width:66px;">Adesivo/Imp.</th>
-              <th style="font-size:10px;min-width:66px;">Peça/Gab.</th>
-              <th style="font-size:10px;min-width:42px;">Risco</th>
-              <th style="font-size:10px;min-width:66px;">Mont./Art.</th>
-              <th style="font-size:10px;min-width:52px;">Vazão Luz</th>
-              <th style="font-size:10px;min-width:52px;">Inst.Elét.</th>
-              <th style="font-size:10px;min-width:42px;">Router</th>
-              <th style="font-size:10px;min-width:46px;">Rebarba</th>
-              <th style="font-size:10px;min-width:40px;">Solda</th>
+              <th style="min-width:160px;font-size:11px;">Características</th>
               <th style="min-width:100px;">Observações</th>
               <th style="min-width:110px;">Data/Hora</th>
               <th style="min-width:118px;">Ações</th>
             </tr>
           </thead>
           <tbody id="recordsBody">
-            <tr><td colspan="22"><div class="empty-state">Nenhum registro ainda. Preencha o formulário e clique em Salvar.</div></td></tr>
+            <tr><td colspan="18"><div class="empty-state">Nenhum registro ainda. Preencha o formulário e clique em Salvar.</div></td></tr>
           </tbody>
         </table>
       </div>
@@ -1490,19 +1500,37 @@
       <!-- Fotos existentes + adicionar novas -->
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-bottom:6px;border-top:1px solid var(--border);padding-top:14px;">Fotos do Registro</div>
 
-      <!-- Fotos já salvas -->
-      <div id="edit_fotos_existentes" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;"></div>
+      <!-- Fotos existentes do produto -->
+      <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:6px;">📷 Fotos do Produto</div>
+      <div id="edit_fotos_existentes" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
 
-      <!-- Adicionar novas fotos -->
-      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-        <button type="button" onclick="openCamModal('photo')" style="background:#0a2590;color:white;border:none;border-radius:4px;padding:8px 14px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">📷 Adicionar Foto</button>
-        <button type="button" onclick="openCamModal('nc')" style="background:#7a1a1a;color:white;border:none;border-radius:4px;padding:8px 14px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">🚫 Adicionar Foto NC</button>
-        <button type="button" onclick="document.getElementById('edit_galeria_input').click()" style="background:#1a5c1a;color:white;border:none;border-radius:4px;padding:8px 14px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">🖼️ Galeria</button>
+      <!-- Fotos NC existentes -->
+      <div style="font-size:11px;color:#a80000;font-weight:600;margin-bottom:6px;" id="edit_nc_existentes_label" style="display:none;">🚫 Fotos de Não Conformidade</div>
+      <div id="edit_fotos_nc_existentes" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
+
+      <!-- 2 botões que abrem galeria do dispositivo -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <button type="button" onclick="document.getElementById('edit_input_foto').click()"
+          style="background:#0a2590;color:white;border:none;border-radius:4px;padding:10px 8px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;line-height:1.3;text-align:center;">
+          📷 Registro Fotográfico do Produto
+        </button>
+        <button type="button" onclick="document.getElementById('edit_input_nc').click()"
+          style="background:#7a1a1a;color:white;border:none;border-radius:4px;padding:10px 8px;font-family:Barlow,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;line-height:1.3;text-align:center;">
+          🚫 Registro Fotográfico da Não Conformidade
+        </button>
       </div>
-      <!-- Input oculto para selecionar fotos da galeria -->
-      <input type="file" id="edit_galeria_input" accept="image/*" multiple style="display:none;" onchange="editGaleriaSelected(this)"/>
-      <!-- Novas fotos capturadas pela câmera (sincronizadas pelo camModal) -->
-      <div id="edit_novas_fotos_grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
+
+      <!-- Inputs file ocultos separados -->
+      <input type="file" id="edit_input_foto" accept="image/*" multiple style="display:none;" onchange="editSelecionarFotos(this,'foto')"/>
+      <input type="file" id="edit_input_nc"   accept="image/*" multiple style="display:none;" onchange="editSelecionarFotos(this,'nc')"/>
+
+      <!-- Novas fotos selecionadas — produto -->
+      <div id="edit_novas_fotos_label" style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px;display:none;">Novas fotos do produto a adicionar:</div>
+      <div id="edit_novas_fotos_grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
+
+      <!-- Novas fotos NC selecionadas -->
+      <div id="edit_novas_nc_label" style="font-size:11px;color:#a80000;font-weight:600;margin-bottom:4px;display:none;">Novas fotos NC a adicionar:</div>
+      <div id="edit_novas_nc_grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
 
       <div class="edit-actions">
         <button class="btn btn-danger btn-sm" onclick="cancelEdit()">Cancelar</button>
@@ -1697,11 +1725,14 @@ async function loadFromSupabase() {
     const data       = json.data;
     const imagensMap = json.imagensMap || {};
     const ncMap      = json.ncMap      || {};
+    const prodMap    = json.prodMap    || {};
 
-    // Passo 3: montar records com fotos normais e NC
+    // Passo 3: montar records com fotos + dados do produto (pedido+item)
     records = data.map(function(r) {
       var urls    = imagensMap[String(r.id)] || [];
       var ncUrls  = ncMap[String(r.id)]      || [];
+      var prodKey = String(r.op) + '|' + String(r.item);
+      var prod    = prodMap[prodKey] || {};
       return {
         id:              r.id,
         item:            r.item,
@@ -1710,6 +1741,9 @@ async function loadFromSupabase() {
         bandeira:        r.bandeira,
         setor:           r.setor,
         colaborador:     r.colaborador,
+        pl_produto:      prod.produto      || null,
+        pl_descricao:    prod.descricao    || null,
+        pl_cliente:      prod.nome_cliente || null,
         mediaType:       r.media_type,
         observacoes:     r.observacoes || '',
         caracteristicas: r.caracteristicas || {},
@@ -1928,8 +1962,31 @@ let _camCalledFromEdit = false; // 'photo' | 'nc'
 async function openCamModal(mode) {
   _camModalMode = mode || 'photo';
   camMode = 'photo';
+
+  // Se for modo NC, verificar se há pelo menos 1 característica NC marcada
+  if (mode === 'nc') {
+    var temNcMarcado = false;
+    // Verificar no formulário de registro (f_caract_*)
+    CARACT_ITEMS.forEach(function(item) {
+      var key = item.replace(/[\/\s]/g, '_').toLowerCase();
+      var checked = document.querySelector('input[name="caract_' + key + '"]:checked');
+      if (checked && checked.value === 'NC') temNcMarcado = true;
+    });
+    // Verificar também no modal de edição (ec_*) se estiver aberto
+    if (!temNcMarcado) {
+      CARACT_ITEMS.forEach(function(item) {
+        var safeId = 'ec_' + item.replace(/[^a-zA-Z0-9]/g, '_');
+        var checked = document.querySelector('input[name="' + safeId + '"]:checked');
+        if (checked && checked.value === 'NC') temNcMarcado = true;
+      });
+    }
+    if (!temNcMarcado) {
+      showToast('⚠️ Marque pelo menos 1 característica como "NC" antes de registrar foto de não conformidade.', false);
+      return;
+    }
+  }
+
   // Se o modal de edição estiver aberto, escondê-lo temporariamente
-  // para evitar conflito de z-index (overflow-y:auto cria stacking context)
   const editModal = document.getElementById('editModal');
   if (editModal && editModal.classList.contains('open')) {
     editModal.style.display = 'none';
@@ -2409,6 +2466,10 @@ async function saveRecord() {
     bandeira:    document.getElementById('f_bandeira').value,
     setor:       document.getElementById('f_setor').value,
     colaborador: document.getElementById('f_colaborador').value,
+    // Capturar produto/descrição/cliente do painel de lookup (se visível)
+    pl_produto:   (document.getElementById('lookup_result') && document.getElementById('lookup_result').style.display !== 'none') ? (document.getElementById('lookup_produto').textContent || null) : null,
+    pl_descricao: (document.getElementById('lookup_result') && document.getElementById('lookup_result').style.display !== 'none') ? (document.getElementById('lookup_descricao').textContent || null) : null,
+    pl_cliente:   (document.getElementById('lookup_result') && document.getElementById('lookup_result').style.display !== 'none') ? (document.getElementById('lookup_cliente').textContent.replace('👤 ','') || null) : null,
     mediaSrc, mediaType,
     imageFiles:   imageFiles.map(f => ({ url: f.url, name: f.name })),
     camPhotos:    [...camPhotos],
@@ -2429,6 +2490,13 @@ async function saveRecord() {
 
 // CLEAR
 function clearForm() {
+  // Limpar resultado da busca
+  var resultDiv   = document.getElementById('lookup_result');
+  var notFoundDiv = document.getElementById('lookup_notfound');
+  if (resultDiv)   resultDiv.style.display   = 'none';
+  if (notFoundDiv) notFoundDiv.style.display = 'none';
+  window._lastLookupKey = '';
+
   ['item','op','quantidade','bandeira','setor','colaborador'].forEach(f => {
     const el = document.getElementById(`f_${f}`);
     el.value = ''; el.classList.remove('error');
@@ -2496,29 +2564,27 @@ function buildRow(r) {
     photosCell = `<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">${thumbs}${extra}</div>`;
   }
 
-  const _c_amassado = (r.caracteristicas||{})['Amassado'];
-  const _badge_amassado = _c_amassado === 'C' ? '<span class="badge-c">✓</span>' : _c_amassado === 'NC' ? '<span class="badge-nc">✗</span>' : _c_amassado === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
-  const _c_pintura_cor = (r.caracteristicas||{})['Pintura/Cor'];
-  const _badge_pintura_cor = _c_pintura_cor === 'C' ? '<span class="badge-c">✓</span>' : _c_pintura_cor === 'NC' ? '<span class="badge-nc">✗</span>' : _c_pintura_cor === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
-  const _c_adesivo_impressão = (r.caracteristicas||{})['Adesivo/Impressão'];
-  const _badge_adesivo_impressão = _c_adesivo_impressão === 'C' ? '<span class="badge-c">✓</span>' : _c_adesivo_impressão === 'NC' ? '<span class="badge-nc">✗</span>' : _c_adesivo_impressão === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
-  const _c_conjunto_peça_gabarito = (r.caracteristicas||{})['Conjunto Peça/Gabarito'];
-  const _badge_conjunto_peça_gabarito = _c_conjunto_peça_gabarito === 'C' ? '<span class="badge-c">✓</span>' : _c_conjunto_peça_gabarito === 'NC' ? '<span class="badge-nc">✗</span>' : _c_conjunto_peça_gabarito === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
-  const _c_risco = (r.caracteristicas||{})['Risco'];
-  const _badge_risco = _c_risco === 'C' ? '<span class="badge-c">✓</span>' : _c_risco === 'NC' ? '<span class="badge-nc">✗</span>' : _c_risco === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
-  const _c_conjunto_montado_articulação = (r.caracteristicas||{})['Conjunto Montado/Articulação'];
-  const _badge_conjunto_montado_articulação = _c_conjunto_montado_articulação === 'C' ? '<span class="badge-c">✓</span>' : _c_conjunto_montado_articulação === 'NC' ? '<span class="badge-nc">✗</span>' : _c_conjunto_montado_articulação === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
-  const _c_vazão_de_luz = (r.caracteristicas||{})['Vazão de Luz'];
-  const _badge_vazão_de_luz = _c_vazão_de_luz === 'C' ? '<span class="badge-c">✓</span>' : _c_vazão_de_luz === 'NC' ? '<span class="badge-nc">✗</span>' : _c_vazão_de_luz === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
-  const _c_instalação_elétrica = (r.caracteristicas||{})['Instalação Elétrica'];
-  const _badge_instalação_elétrica = _c_instalação_elétrica === 'C' ? '<span class="badge-c">✓</span>' : _c_instalação_elétrica === 'NC' ? '<span class="badge-nc">✗</span>' : _c_instalação_elétrica === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
-  const _c_router = (r.caracteristicas||{})['Router'];
-  const _badge_router = _c_router === 'C' ? '<span class="badge-c">✓</span>' : _c_router === 'NC' ? '<span class="badge-nc">✗</span>' : _c_router === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
-  const _c_rebarba = (r.caracteristicas||{})['Rebarba'];
-  const _badge_rebarba = _c_rebarba === 'C' ? '<span class="badge-c">✓</span>' : _c_rebarba === 'NC' ? '<span class="badge-nc">✗</span>' : _c_rebarba === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
-  const _c_solda = (r.caracteristicas||{})['Solda'];
-  const _badge_solda = _c_solda === 'C' ? '<span class="badge-c">✓</span>' : _c_solda === 'NC' ? '<span class="badge-nc">✗</span>' : _c_solda === 'NA' ? '<span class="badge-na">—</span>' : '<span style="color:var(--muted)">—</span>';
-  const obs = r.observacoes || '';
+  // ── 1 coluna "Características" compacta ───────────────────────
+  var _ch = r.caracteristicas || {};
+  var _ncItems = CARACT_ITEMS.filter(function(k){ return _ch[k] === 'NC'; });
+  var _cCount  = CARACT_ITEMS.filter(function(k){ return _ch[k] === 'C';  }).length;
+  var _naCount = CARACT_ITEMS.filter(function(k){ return _ch[k] === 'NA'; }).length;
+  var _total   = CARACT_ITEMS.filter(function(k){ return _ch[k]; }).length;
+  var caractCell;
+  if (_total === 0) {
+    caractCell = '<span style="color:var(--muted);font-size:11px;">—</span>';
+  } else if (_ncItems.length > 0) {
+    var ncBadges = _ncItems.map(function(k){
+      return '<span style="background:#fce8e8;color:#a80000;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700;white-space:nowrap;">✗ '+k+'</span>';
+    }).join(' ');
+    var resumoOk = _cCount > 0 ? '<span style="color:#2e7d32;font-size:10px;font-weight:600;"> ✓'+_cCount+'</span>' : '';
+    var resumoNa = _naCount > 0 ? '<span style="color:var(--muted);font-size:10px;"> NA'+_naCount+'</span>' : '';
+    caractCell = '<div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center;">'+ncBadges+resumoOk+resumoNa+'</div>';
+  } else {
+    var textoConf = '✓ '+_cCount+' Conf.'+(_naCount ? ' · NA '+_naCount : '');
+    caractCell = '<span style="background:#e8f5e9;color:#2e7d32;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;">'+textoConf+'</span>';
+  }
+    const obs = r.observacoes || '';
   const obsCell = obs
     ? `<span title="${obs.replace(/"/g,'&quot;')}">${obs.substring(0,40)}${obs.length>40?'…':''}</span>`
     : '<span style="color:var(--muted)">—</span>';
@@ -2532,20 +2598,13 @@ function buildRow(r) {
     <td style="font-size:12px;">${r.bandeira}</td>
     <td style="font-size:12px;">${r.setor}</td>
     <td style="font-size:12px;">${r.colaborador}</td>
+    <td style="font-size:11px;color:var(--blue);font-weight:600;">${r.pl_produto || '—'}</td>
+    <td style="font-size:11px;max-width:200px;white-space:normal;line-height:1.3;">${r.pl_descricao || '—'}</td>
+    <td style="font-size:11px;color:var(--muted);max-width:180px;white-space:normal;line-height:1.3;">${r.pl_cliente || '—'}</td>
     <td>${videoCell}</td>
     <td>${photosCell}</td>
     <td>${ncCell}</td>
-    <td style="text-align:center;">${_badge_amassado}</td>
-    <td style="text-align:center;">${_badge_pintura_cor}</td>
-    <td style="text-align:center;">${_badge_adesivo_impressão}</td>
-    <td style="text-align:center;">${_badge_conjunto_peça_gabarito}</td>
-    <td style="text-align:center;">${_badge_risco}</td>
-    <td style="text-align:center;">${_badge_conjunto_montado_articulação}</td>
-    <td style="text-align:center;">${_badge_vazão_de_luz}</td>
-    <td style="text-align:center;">${_badge_instalação_elétrica}</td>
-    <td style="text-align:center;">${_badge_router}</td>
-    <td style="text-align:center;">${_badge_rebarba}</td>
-    <td style="text-align:center;">${_badge_solda}</td>
+    <td style="max-width:200px;">${caractCell}</td>
     <td style="color:var(--muted);font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${obsCell}</td>
     <td style="color:var(--muted);font-size:11px;white-space:nowrap;">${r.date}</td>
     <td style="white-space:nowrap;">
@@ -2909,33 +2968,134 @@ function openEdit(recId) {
     fotosDiv.appendChild(wrap);
   });
 
-  // Limpar grade de novas fotos
+  // Fotos NC existentes (rec.ncPhotos vem do ncMap da Edge Function)
+  var ncExistDiv = document.getElementById('edit_fotos_nc_existentes');
+  var ncExistLbl = document.getElementById('edit_nc_existentes_label');
+  if (ncExistDiv) {
+    ncExistDiv.innerHTML = '';
+    var ncExist = (rec.ncPhotos || []).filter(function(p){ return (p.dataUrl || ''); });
+    if (ncExist.length > 0) {
+      if (ncExistLbl) ncExistLbl.style.display = 'block';
+      ncExist.forEach(function(p) {
+        var src = p.dataUrl || '';
+        if (!src) return;
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;width:64px;height:64px;border-radius:6px;overflow:hidden;border:1.5px solid #cc0000;';
+        var img = document.createElement('img');
+        img.src = src; img.style.cssText = 'width:100%;height:100%;object-fit:cover;cursor:zoom-in;';
+        var capSrc = src;
+        img.onclick = function(){ openLightbox(capSrc, [capSrc]); };
+        var btn = document.createElement('button');
+        btn.textContent = 'x';
+        btn.style.cssText = 'position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(168,0,0,0.85);color:white;border:none;border-radius:50%;font-size:10px;cursor:pointer;line-height:1;';
+        var capWrap = wrap;
+        btn.onclick = function(){
+          if (capSrc.startsWith('http')) editFotosRemovidas.push(capSrc);
+          capWrap.remove();
+        };
+        wrap.appendChild(img); wrap.appendChild(btn);
+        ncExistDiv.appendChild(wrap);
+      });
+    } else {
+      if (ncExistLbl) ncExistLbl.style.display = 'none';
+    }
+  }
+
+  // Limpar grids de novas fotos
   document.getElementById('edit_novas_fotos_grid').innerHTML = '';
+  const ncGrid2 = document.getElementById('edit_novas_nc_grid');
+  if (ncGrid2) ncGrid2.innerHTML = '';
+  const lblNF = document.getElementById('edit_novas_fotos_label');
+  if (lblNF) lblNF.style.display = 'none';
+  const lblNN = document.getElementById('edit_novas_nc_label');
+  if (lblNN) lblNN.style.display = 'none';
+
+  // Limpar fotos da câmera (modo edição começa sem novas fotos)
+  camPhotos = []; ncPhotos = [];
 
   document.getElementById('editModal').classList.add('open');
 }
 
 function editGaleriaSelected(input) {
-  const files = Array.from(input.files);
+  editSelecionarFotos(input, 'foto');
+}
+
+function editSelecionarFotos(input, tipo) {
+  var files = Array.from(input.files);
   if (!files.length) return;
+
+  // Se for foto NC, obrigar pelo menos 1 característica NC marcada
+  if (tipo === 'nc') {
+    var temNcMarcado = false;
+    CARACT_ITEMS.forEach(function(item) {
+      var safeId = 'ec_' + item.replace(/[^a-zA-Z0-9]/g, '_');
+      var checked = document.querySelector('input[name="' + safeId + '"]:checked');
+      if (checked && checked.value === 'NC') temNcMarcado = true;
+    });
+    if (!temNcMarcado) {
+      showToast('⚠️ Marque pelo menos 1 característica como "NC" antes de adicionar foto de não conformidade.', false);
+      input.value = '';
+      return;
+    }
+  }
   var pending = files.length;
   files.forEach(function(file) {
-    const reader = new FileReader();
+    var reader = new FileReader();
     reader.onload = function(e) {
       compressImage(e.target.result, 1280, 1280, 0.75).then(function(compressed) {
-        const id = 'gal_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-        camPhotos.push({ id: id, dataUrl: compressed, name: file.name });
+        var id = tipo + '_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        if (tipo === 'nc') {
+          ncPhotos.push({ id: id, dataUrl: compressed, name: file.name });
+        } else {
+          camPhotos.push({ id: id, dataUrl: compressed, name: file.name });
+        }
         pending--;
         if (pending === 0) {
-          syncCamGalleries();
-          showToast(files.length + ' foto(s) adicionada(s) da galeria', true);
+          renderEditNovasFotos();
+          showToast(files.length + ' foto(s) — ' + (tipo === 'nc' ? 'NC' : 'Produto'), true);
         }
       });
     };
     reader.readAsDataURL(file);
   });
-  // Limpar o input para permitir selecionar os mesmos arquivos novamente
   input.value = '';
+}
+
+function renderEditNovasFotos() {
+  var gridFoto = document.getElementById('edit_novas_fotos_grid');
+  var lblFoto  = document.getElementById('edit_novas_fotos_label');
+  if (gridFoto) {
+    gridFoto.innerHTML = '';
+    if (lblFoto) lblFoto.style.display = camPhotos.length ? 'block' : 'none';
+    camPhotos.forEach(function(p) {
+      var wrap = _editThumb(p, '#0a2590', function(pid){ camPhotos = camPhotos.filter(function(x){ return x.id !== pid; }); renderEditNovasFotos(); });
+      gridFoto.appendChild(wrap);
+    });
+  }
+  var gridNC = document.getElementById('edit_novas_nc_grid');
+  var lblNC  = document.getElementById('edit_novas_nc_label');
+  if (gridNC) {
+    gridNC.innerHTML = '';
+    if (lblNC) lblNC.style.display = ncPhotos.length ? 'block' : 'none';
+    ncPhotos.forEach(function(p) {
+      var wrap = _editThumb(p, '#cc0000', function(pid){ ncPhotos = ncPhotos.filter(function(x){ return x.id !== pid; }); renderEditNovasFotos(); });
+      gridNC.appendChild(wrap);
+    });
+  }
+}
+
+function _editThumb(p, borderColor, onRemove) {
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:relative;width:64px;height:64px;border-radius:6px;overflow:hidden;border:1.5px solid ' + borderColor + ';';
+  var img = document.createElement('img');
+  img.src = p.dataUrl;
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+  var btn = document.createElement('button');
+  btn.textContent = 'x';
+  btn.style.cssText = 'position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(168,0,0,0.85);color:white;border:none;border-radius:50%;font-size:10px;cursor:pointer;line-height:1;';
+  btn.onclick = (function(pid){ return function(){ onRemove(pid); }; })(p.id);
+  wrap.appendChild(img); wrap.appendChild(btn);
+  return wrap;
 }
 
 function cancelEdit() {
@@ -2984,12 +3144,16 @@ async function saveEdit() {
   showToast('⏳ Salvando...', true);
 
   try {
-    // 1. Atualizar campos textuais no banco
-    await db.from('inspecoes').update({
+    // 1. Atualizar campos textuais + características no banco
+    const { error: updErr } = await db.from('inspecoes').update({
       op: rec.op, item: parseInt(rec.item), quantidade: parseInt(rec.quantidade),
       bandeira: rec.bandeira, setor: rec.setor, colaborador: rec.colaborador,
       observacoes: rec.observacoes, caracteristicas: newCaract
     }).eq('id', recId);
+    if (updErr) {
+      showToast('⚠️ Erro ao salvar no banco: ' + (updErr.message || ''), false);
+      return;
+    }
 
     // 2. Remover fotos excluídas do Storage e do banco
     for (var i = 0; i < editFotosRemovidas.length; i++) {
@@ -3004,34 +3168,50 @@ async function saveEdit() {
       } catch(re) { /* continuar mesmo se uma foto falhar */ }
     }
 
-    // 3. Fazer upload das novas fotos da câmera
+    // 3. Upload fotos normais (camPhotos) → nome foto_edit_* → coluna Fotos
     var novasUrls = [];
-    var todasNovas = camPhotos.concat(ncPhotos);
-    for (var j = 0; j < todasNovas.length; j++) {
-      var photo = todasNovas[j];
+    for (var j = 0; j < camPhotos.length; j++) {
+      var photo = camPhotos[j];
       try {
         var rawBlobEdit = await fetch(photo.dataUrl).then(function(r){ return r.blob(); });
-        var blob = await compressBlob(rawBlobEdit, 1280, 1280, 0.75);
-        var ts   = Date.now();
-        var filePath = recId + '/edit_' + ts + '_' + j + '.jpg';
-        var { data: upData, error: upErr } = await db.storage
+        var blobEdit = await compressBlob(rawBlobEdit, 1280, 1280, 0.75);
+        var tsEdit   = Date.now();
+        var fpEdit   = recId + '/foto_edit_' + tsEdit + '_' + j + '.jpg';
+        var { error: upErrEdit } = await db.storage
           .from('imagens-inspecao')
-          .upload(filePath, blob, { contentType: 'image/jpeg', upsert: true });
-        if (!upErr) {
-          var { data: pubData } = db.storage
-            .from('imagens-inspecao')
-            .getPublicUrl(filePath);
-          var novaUrl = pubData.publicUrl;
-          novasUrls.push(novaUrl);
-          // Inserir na tabela inspecoes_imagens
+          .upload(fpEdit, blobEdit, { contentType: 'image/jpeg', upsert: true });
+        if (!upErrEdit) {
+          var { data: pubEdit } = db.storage.from('imagens-inspecao').getPublicUrl(fpEdit);
+          novasUrls.push(pubEdit.publicUrl);
           await db.from('inspecoes_imagens').insert({
-            inspecao_id: recId,
-            url: novaUrl,
-            nome: 'foto_edit_' + j + '.png'
+            inspecao_id: recId, url: pubEdit.publicUrl, nome: 'foto_edit_' + j + '.jpg'
           });
-          rec.imageFiles.push({ url: novaUrl, name: 'foto_edit_' + j + '.png' });
+          rec.imageFiles.push({ url: pubEdit.publicUrl, name: 'foto_edit_' + j + '.jpg' });
         }
-      } catch(ue) { /* continuar mesmo se upload falhar */ }
+      } catch(ue) { /* continuar */ }
+    }
+
+    // 3b. Upload fotos NC (ncPhotos) → nome nc_edit_* → coluna NC Fotos
+    for (var k = 0; k < ncPhotos.length; k++) {
+      var ncPhoto = ncPhotos[k];
+      try {
+        var rawBlobNc = await fetch(ncPhoto.dataUrl).then(function(r){ return r.blob(); });
+        var blobNc    = await compressBlob(rawBlobNc, 1280, 1280, 0.75);
+        var tsNc      = Date.now();
+        var fpNc      = recId + '/nc_edit_' + tsNc + '_' + k + '.jpg';
+        var { error: upErrNc } = await db.storage
+          .from('imagens-inspecao')
+          .upload(fpNc, blobNc, { contentType: 'image/jpeg', upsert: true });
+        if (!upErrNc) {
+          var { data: pubNc } = db.storage.from('imagens-inspecao').getPublicUrl(fpNc);
+          await db.from('inspecoes_imagens').insert({
+            inspecao_id: recId, url: pubNc.publicUrl, nome: 'nc_edit_' + k + '.jpg'
+          });
+          // Adicionar ao ncPhotos do record local
+          if (!rec.ncPhotos) rec.ncPhotos = [];
+          rec.ncPhotos.push({ id: k, dataUrl: pubNc.publicUrl });
+        }
+      } catch(ue) { /* continuar */ }
     }
 
     // 4. Limpar câmera e fechar modal
@@ -3774,6 +3954,57 @@ async function bulkDownloadPhotos() {
   }
 }
 // ── FIM SELEÇÃO EM MASSA ─────────────────────────────────────────
+
+
+// ── BUSCA AUTOMÁTICA PEDIDO + ITEM ──────────────────────────────
+var _lastLookupKey = '';
+
+async function buscarProdutoPorPedidoItem() {
+  var op   = (document.getElementById('f_op').value || '').trim();
+  var item = (document.getElementById('f_item').value || '').trim();
+
+  var resultDiv    = document.getElementById('lookup_result');
+  var notFoundDiv  = document.getElementById('lookup_notfound');
+
+  if (!op || !item) {
+    if (resultDiv)   resultDiv.style.display   = 'none';
+    if (notFoundDiv) notFoundDiv.style.display = 'none';
+    return;
+  }
+
+  var key = op + '|' + item;
+  if (key === _lastLookupKey) return; // evitar busca repetida
+  _lastLookupKey = key;
+
+  try {
+    // Buscar na tabela produtos_pedido por pedido + item
+    var pedidoNum = parseInt(op);
+    var { data, error } = await db
+      .from('produtos_pedido')
+      .select('produto, descricao, nome_cliente')
+      .eq('pedido', pedidoNum)
+      .eq('item', item)
+      .limit(1);
+
+    if (error || !data || data.length === 0) {
+      if (resultDiv)   resultDiv.style.display   = 'none';
+      if (notFoundDiv) notFoundDiv.style.display = 'block';
+      return;
+    }
+
+    var found = data[0];
+    if (resultDiv) {
+      document.getElementById('lookup_produto').textContent   = found.produto   || '';
+      document.getElementById('lookup_descricao').textContent = found.descricao || '';
+      document.getElementById('lookup_cliente').textContent   = found.nome_cliente ? '👤 ' + found.nome_cliente : '';
+      resultDiv.style.display   = 'flex';
+      notFoundDiv.style.display = 'none';
+    }
+  } catch(e) {
+    // Falha silenciosa — não bloqueia o preenchimento manual
+  }
+}
+// ── FIM BUSCA AUTOMÁTICA ─────────────────────────────────────────
 
 // TOAST
 function showToast(msg, success = true) {
