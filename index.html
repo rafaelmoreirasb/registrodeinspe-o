@@ -709,7 +709,7 @@
 
             <div class="field">
               <label>OP <span class="req">*</span></label>
-              <input type="text" id="f_op" placeholder="Ex: 001234" onblur="buscarProdutoPorPedidoItem()" />
+              <input type="text" id="f_op" placeholder="Ex: 001234" onblur="normalizarOP(); buscarProdutoPorPedidoItem();" oninput="this.value=this.value.replace(/[^0-9]/g,'')" maxlength="6" inputmode="numeric" />
               <span class="error-msg" id="err_op">Campo obrigatório</span>
             </div>
 
@@ -806,7 +806,7 @@
 
           <!-- Características do Produto -->
           <div class="section-label" style="margin-top:16px;">Características do Produto</div>
-          <div class="caract-grid">
+          <div id="caract_section"><div class="caract-grid">
 
           <div class="caract-item">
             <span class="caract-item-name" title="Amassado">Amassado</span>
@@ -930,9 +930,10 @@
             </div>
           </div>
 
-          </div>
+          </div><!-- /caract-grid -->
           <div class="caract-err" id="caract_err">Preencha <strong>todas</strong> as características antes de salvar.</div>
           <div class="nc-alert" id="nc_alert">🚫 Há itens "Não Conforme" — tire fotos na câmera usando o botão vermelho "Registrar Não Conformidade".</div>
+          </div><!-- /caract_section -->
 
           <!-- Imagem -->
           <div class="section-label" style="margin-top:20px;">Imagem em Anexo</div>
@@ -1731,7 +1732,7 @@ async function loadFromSupabase() {
     records = data.map(function(r) {
       var urls    = imagensMap[String(r.id)] || [];
       var ncUrls  = ncMap[String(r.id)]      || [];
-      var prodKey = String(r.op) + '|' + String(r.item);
+      var prodKey = String(r.op).replace(/\D/g,'').padStart(6,'0') + '|' + String(r.item);
       var prod    = prodMap[prodKey] || {};
       return {
         id:              r.id,
@@ -2389,11 +2390,28 @@ document.addEventListener('change', function(e) {
 });
 
 function getCaracteristicas() {
-  const res = {};
-  CARACT_ITEMS.forEach(item => {
-    const key = item.replace(/[\/\s]/g, '_').toLowerCase();
-    const sel = document.querySelector(`input[name="caract_${key}"]:checked`);
-    res[item] = sel ? sel.value : null;
+  var res = {};
+  // Buscar dentro do container do formulário para não pegar radios do modal de edição
+  var formSection = document.getElementById('caract_section');
+  CARACT_ITEMS.forEach(function(item) {
+    var radios = formSection
+      ? formSection.querySelectorAll('input[type="radio"][value]')
+      : [];
+    // Filtrar pelo value C/NC/NA e verificar qual está checked para este item
+    // Como os radios do form têm id "c_<key>_c", "c_<key>_nc", "c_<key>_na"
+    // usamos getElementsByName que funciona com qualquer charset
+    var key  = item.replace(/[\/\s]/g, '_').toLowerCase();
+    var name = 'caract_' + key;
+    var itemRadios = document.getElementsByName(name);
+    var val = null;
+    for (var i = 0; i < itemRadios.length; i++) {
+      // Garantir que é do formulário (não do modal de edição que usa "ec_")
+      if (itemRadios[i].name && itemRadios[i].name.startsWith('caract_') && itemRadios[i].checked) {
+        val = itemRadios[i].value;
+        break;
+      }
+    }
+    res[item] = val;
   });
   return res;
 }
@@ -2423,13 +2441,19 @@ function validateNcPhotos() {
   return true;
 }
 function clearCaracteristicas() {
-  CARACT_ITEMS.forEach(item => {
-    const key = item.replace(/[\/\s]/g, '_').toLowerCase();
-    document.querySelectorAll(`input[name="caract_${key}"]`).forEach(r => r.checked = false);
-  });
-  document.getElementById('caract_err').classList.remove('show');
-  document.getElementById('nc_alert').classList.remove('show');
-  document.getElementById('nc_photo_err').classList.remove('show');
+  // Selecionar todos os radios do FORMULÁRIO DE REGISTRO pelo ID do container
+  // (evita afetar radios do modal de edição que têm prefixo "ec_")
+  var formSection = document.getElementById('caract_section');
+  var radios = formSection
+    ? formSection.querySelectorAll('input[type="radio"]')
+    : document.querySelectorAll('.caract-radio');
+  for (var i = 0; i < radios.length; i++) { radios[i].checked = false; }
+  var caractErr = document.getElementById('caract_err');
+  if (caractErr) caractErr.classList.remove('show');
+  var ncAlert = document.getElementById('nc_alert');
+  if (ncAlert) ncAlert.classList.remove('show');
+  var ncPhotoErr = document.getElementById('nc_photo_err');
+  if (ncPhotoErr) ncPhotoErr.classList.remove('show');
 }
 
 // VALIDATION
@@ -2461,7 +2485,7 @@ async function saveRecord() {
   const rec = {
     id:          nextId,
     item:        document.getElementById('f_item').value,
-    op:          document.getElementById('f_op').value,
+    op:          (document.getElementById('f_op').value.replace(/\D/g,'').padStart(6,'0')),
     quantidade:  document.getElementById('f_quantidade').value,
     bandeira:    document.getElementById('f_bandeira').value,
     setor:       document.getElementById('f_setor').value,
@@ -2497,14 +2521,40 @@ function clearForm() {
   if (notFoundDiv) notFoundDiv.style.display = 'none';
   window._lastLookupKey = '';
 
+  // Limpar campos de texto
   ['item','op','quantidade','bandeira','setor','colaborador'].forEach(f => {
-    const el = document.getElementById(`f_${f}`);
-    el.value = ''; el.classList.remove('error');
-    document.getElementById(`err_${f}`).classList.remove('show');
+    const el = document.getElementById('f_' + f);
+    if (el) { el.value = ''; el.classList.remove('error'); }
+    const err = document.getElementById('err_' + f);
+    if (err) err.classList.remove('show');
   });
-  clearImage(); clearVideo(); updateIdField();
+
+  // Limpar observações
+  var obsEl = document.getElementById('f_observacoes');
+  if (obsEl) obsEl.value = '';
+
+  // Limpar fotos tiradas (câmera + galeria + NC)
+  camPhotos  = [];
+  imageFiles = [];
+  ncPhotos   = [];
+
+  // Limpar grids de fotos na tela
+  var camGrid = document.getElementById('cam_photos_grid');
+  if (camGrid) camGrid.innerHTML = '';
+  var ncGrid = document.getElementById('nc_photos_grid');
+  if (ncGrid) ncGrid.innerHTML = '';
+
+  // Limpar pré-visualização de imagem/vídeo
+  clearImage();
+  clearVideo();
+
+  // Atualizar próximo ID
+  updateIdField();
+
+  // Limpar fotos NC do formulário
   clearNcPhotos();
-  document.getElementById('f_observacoes').value = '';
+
+  // Limpar características
   clearCaracteristicas();
 }
 
@@ -2661,68 +2711,98 @@ function clearFilters() {
 
 // DOWNLOAD ZIP (usa JSZip via CDN)
 async function downloadZip(recId) {
-  const rec = records.find(r => r.id === recId);
+  var rec = records.find(function(r){ return r.id === recId; });
   if (!rec) return;
-  const hasContent = (rec.imageFiles&&rec.imageFiles.length) ||
-                     (rec.camPhotos&&rec.camPhotos.length)   ||
-                     (rec.ncPhotos&&rec.ncPhotos.length)     ||
-                     rec.mediaType === 'video';
-  if (!hasContent) { showToast('Nenhuma imagem ou vídeo neste registro.', false); return; }
-  showToast('Preparando download...', true);
-  const JSZip = window.JSZip;
-  if (!JSZip) { showToast('Biblioteca ZIP não carregada.', false); return; }
-  const zip = new JSZip();
-  const folder = zip.folder(`ID_${recId}`);
 
-  // Fotos normais (imagens anexadas + câmera)
-  const imgs = [
-    ...(rec.imageFiles||[]).map(f => ({ url: f.url, name: f.name })),
-    ...(rec.camPhotos ||[]).map(p => ({ url: p.dataUrl, name: 'foto_camera.png' }))
-  ];
-  let idx = 1;
-  for (const img of imgs) {
+  if (!window.JSZip) { showToast('Biblioteca ZIP não carregada.', false); return; }
+  showToast('⏳ Preparando download...', true);
+
+  var zip    = new JSZip();
+  var folder = zip.folder(String(recId)); // pasta com número do ID (igual ao bulk)
+
+  // ── Relatório .txt (igual ao bulkDownloadPhotos) ──────────────
+  var NL  = '\n';
+  var SEP = '=====================================\n';
+  var ch  = rec.caracteristicas || {};
+  var confItems = CARACT_ITEMS.filter(function(k){ return ch[k] === 'C';  });
+  var ncItems   = CARACT_ITEMS.filter(function(k){ return ch[k] === 'NC'; });
+  var naItems   = CARACT_ITEMS.filter(function(k){ return ch[k] === 'NA'; });
+
+  var rel = '';
+  rel += SEP;
+  rel += 'REGISTRO DE INSPECAO - POLIMETAL' + NL;
+  rel += SEP + NL;
+  rel += 'ID:          #' + rec.id          + NL;
+  rel += 'OP:          ' + (rec.op || '-')          + NL;
+  rel += 'Item:        ' + (rec.item || '-')         + NL;
+  rel += 'Quantidade:  ' + (rec.quantidade || '-')   + NL;
+  rel += 'Bandeira:    ' + (rec.bandeira || '-')     + NL;
+  rel += 'Setor:       ' + (rec.setor || '-')        + NL;
+  rel += 'Colaborador: ' + (rec.colaborador || '-')  + NL;
+  rel += 'Data/Hora:   ' + (rec.date || '-')         + NL;
+  if (rec.pl_produto)   rel += 'Produto:     ' + rec.pl_produto   + NL;
+  if (rec.pl_descricao) rel += 'Descricao:   ' + rec.pl_descricao + NL;
+  if (rec.pl_cliente)   rel += 'Cliente:     ' + rec.pl_cliente   + NL;
+  rel += NL + '--- CARACTERISTICAS DO PRODUTO ---' + NL;
+  if (confItems.length) rel += 'Conforme:       ' + confItems.join(', ') + NL;
+  if (ncItems.length)   rel += 'Nao Conforme:   ' + ncItems.join(', ')   + NL;
+  if (naItems.length)   rel += 'Nao Aplicavel:  ' + naItems.join(', ')   + NL;
+  if (rec.observacoes)  rel += NL + 'Observacoes: ' + rec.observacoes     + NL;
+  rel += NL + SEP;
+  rel += 'Fotos normais: ' + ((rec.imageFiles||[]).length + (rec.camPhotos||[]).length) + NL;
+  rel += 'Fotos NC:      ' + (rec.ncPhotos||[]).filter(function(p){ return p.dataUrl||p.url||p; }).length + NL;
+  rel += SEP;
+
+  folder.file('relatorio_ID' + recId + '.txt', rel);
+
+  // ── Fotos normais na pasta raiz do ID ─────────────────────────
+  var fotoUrls = [
+    ...(rec.imageFiles||[]).map(function(f){ return f.url; }),
+    ...(rec.camPhotos ||[]).map(function(p){ return p.dataUrl; })
+  ].filter(Boolean);
+
+  var fotoIdx = 1;
+  for (var j = 0; j < fotoUrls.length; j++) {
     try {
-      const resp = await fetch(img.url);
-      const blob = await resp.blob();
-      const ext = blob.type.includes('png') ? 'png' : blob.type.includes('webm') ? 'webm' : blob.type.includes('mp4') ? 'mp4' : 'jpg';
-      folder.file(`fotos/${String(idx).padStart(3,'0')}_${img.name||'imagem'}.${ext}`, blob);
-      idx++;
-    } catch(e) { console.warn('Erro imagem:', e); }
+      var resp = await fetch(fotoUrls[j]);
+      var blob = await resp.blob();
+      var ext  = fotoUrls[j].split('.').pop().split('?')[0].toLowerCase();
+      if (!['jpg','jpeg','png','webp'].includes(ext)) ext = 'jpg';
+      folder.file('foto_' + (fotoIdx++) + '.' + ext, blob);
+    } catch(e) { /* pular foto indisponível */ }
   }
 
-  // Fotos de não conformidade (pasta separada)
-  if (rec.ncPhotos && rec.ncPhotos.length > 0) {
-    let nci = 1;
-    for (const p of rec.ncPhotos) {
+  // ── Fotos NC em subpasta NC_<id> (igual ao bulk) ─────────────
+  var ncFotos = (rec.ncPhotos || []);
+  if (ncItems.length > 0 || ncFotos.length > 0) {
+    var ncFolder = folder.folder('NC_' + recId);
+    var ncIdx    = 1;
+    for (var k = 0; k < ncFotos.length; k++) {
+      var src = ncFotos[k].dataUrl || ncFotos[k].url || ncFotos[k];
+      if (!src) continue;
       try {
-        const url = p.dataUrl || p;
-        const resp = await fetch(url);
-        const blob = await resp.blob();
-        folder.file(`nao_conformidade/${String(nci).padStart(3,'0')}_nc.png`, blob);
-        nci++;
-      } catch(e) { console.warn('Erro foto NC:', e); }
+        var resp2 = await fetch(src);
+        var blob2 = await resp2.blob();
+        var ext2  = src.startsWith('http') ? (src.split('.').pop().split('?')[0].toLowerCase() || 'jpg') : 'jpg';
+        if (!['jpg','jpeg','png','webp'].includes(ext2)) ext2 = 'jpg';
+        ncFolder.file('nc_' + (ncIdx++) + '.' + ext2, blob2);
+      } catch(e) { /* pular */ }
     }
   }
 
-  // Vídeo gravado
+  // ── Vídeo (se houver) ─────────────────────────────────────────
   if (rec.mediaType === 'video' && rec.mediaSrc) {
     try {
-      const resp = await fetch(rec.mediaSrc);
-      const blob = await resp.blob();
-      const ext  = blob.type.includes('mp4') ? 'mp4' : 'webm';
-      folder.file(`video/video_ID_${recId}.${ext}`, blob);
-    } catch(e) { console.warn('Erro vídeo:', e); }
+      var vresp = await fetch(rec.mediaSrc);
+      var vblob = await vresp.blob();
+      var vext  = vblob.type.includes('mp4') ? 'mp4' : 'webm';
+      folder.file('video_ID' + recId + '.' + vext, vblob);
+    } catch(e) { /* pular */ }
   }
 
-  // Observações em txt
-  if (rec.observacoes) folder.file('observacoes.txt', rec.observacoes);
-
-  const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `ID_${recId}.zip`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  var content = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+  saveAs(content, 'inspecao_ID' + recId + '.zip');
+  showToast('✅ Download concluído — ID #' + recId, true);
 }
 
 // EXPORTAR EXCEL (SheetJS)
@@ -3158,14 +3238,34 @@ async function saveEdit() {
     // 2. Remover fotos excluídas do Storage e do banco
     for (var i = 0; i < editFotosRemovidas.length; i++) {
       var url = editFotosRemovidas[i];
-      // Extrair path relativo do Storage a partir da URL pública
       var storageBase = SUPA_URL + '/storage/v1/object/public/imagens-inspecao/';
       var path = url.replace(storageBase, '');
       try {
         await db.storage.from('imagens-inspecao').remove([path]);
         await db.from('inspecoes_imagens').delete().eq('url', url);
-        rec.imageFiles = rec.imageFiles.filter(function(f){ return f.url !== url; });
+        // Remover do array local correto (fotos normais OU fotos NC)
+        rec.imageFiles = (rec.imageFiles || []).filter(function(f){ return f.url !== url; });
+        rec.ncPhotos   = (rec.ncPhotos   || []).filter(function(p){ return (p.dataUrl || p.url) !== url; });
       } catch(re) { /* continuar mesmo se uma foto falhar */ }
+    }
+    // Também remover nc_fotos base64 do campo legado, se houver
+    if (editFotosRemovidas.length > 0) {
+      await db.from('inspecoes').update({
+        nc_fotos: (rec.ncPhotos || [])
+          .filter(function(p){ return p.dataUrl && !p.dataUrl.startsWith('http'); })
+          .map(function(p){ return p.dataUrl; })
+      }).eq('id', recId);
+    }
+
+    // helper: base64 dataUrl → Blob (sem fetch, funciona em todos os browsers)
+    function dataUrlToBlob(dataUrl) {
+      var arr  = dataUrl.split(',');
+      var mime = arr[0].match(/:(.*?);/)[1];
+      var bstr = atob(arr[1]);
+      var n    = bstr.length;
+      var u8   = new Uint8Array(n);
+      while (n--) u8[n] = bstr.charCodeAt(n);
+      return new Blob([u8], { type: mime });
     }
 
     // 3. Upload fotos normais (camPhotos) → nome foto_edit_* → coluna Fotos
@@ -3173,10 +3273,10 @@ async function saveEdit() {
     for (var j = 0; j < camPhotos.length; j++) {
       var photo = camPhotos[j];
       try {
-        var rawBlobEdit = await fetch(photo.dataUrl).then(function(r){ return r.blob(); });
-        var blobEdit = await compressBlob(rawBlobEdit, 1280, 1280, 0.75);
-        var tsEdit   = Date.now();
-        var fpEdit   = recId + '/foto_edit_' + tsEdit + '_' + j + '.jpg';
+        var rawBlobEdit = dataUrlToBlob(photo.dataUrl);
+        var blobEdit    = await compressBlob(rawBlobEdit, 1280, 1280, 0.75);
+        var tsEdit      = Date.now();
+        var fpEdit      = recId + '/foto_edit_' + tsEdit + '_' + j + '.jpg';
         var { error: upErrEdit } = await db.storage
           .from('imagens-inspecao')
           .upload(fpEdit, blobEdit, { contentType: 'image/jpeg', upsert: true });
@@ -3187,15 +3287,19 @@ async function saveEdit() {
             inspecao_id: recId, url: pubEdit.publicUrl, nome: 'foto_edit_' + j + '.jpg'
           });
           rec.imageFiles.push({ url: pubEdit.publicUrl, name: 'foto_edit_' + j + '.jpg' });
+        } else {
+          showToast('⚠️ Erro upload foto ' + (j+1) + ': ' + (upErrEdit.message||''), false);
         }
-      } catch(ue) { /* continuar */ }
+      } catch(ue) {
+        showToast('⚠️ Falha foto ' + (j+1) + ': ' + (ue && ue.message ? ue.message : String(ue)), false);
+      }
     }
 
     // 3b. Upload fotos NC (ncPhotos) → nome nc_edit_* → coluna NC Fotos
     for (var k = 0; k < ncPhotos.length; k++) {
       var ncPhoto = ncPhotos[k];
       try {
-        var rawBlobNc = await fetch(ncPhoto.dataUrl).then(function(r){ return r.blob(); });
+        var rawBlobNc = dataUrlToBlob(ncPhoto.dataUrl);
         var blobNc    = await compressBlob(rawBlobNc, 1280, 1280, 0.75);
         var tsNc      = Date.now();
         var fpNc      = recId + '/nc_edit_' + tsNc + '_' + k + '.jpg';
@@ -3207,11 +3311,14 @@ async function saveEdit() {
           await db.from('inspecoes_imagens').insert({
             inspecao_id: recId, url: pubNc.publicUrl, nome: 'nc_edit_' + k + '.jpg'
           });
-          // Adicionar ao ncPhotos do record local
           if (!rec.ncPhotos) rec.ncPhotos = [];
           rec.ncPhotos.push({ id: k, dataUrl: pubNc.publicUrl });
+        } else {
+          showToast('⚠️ Erro upload NC ' + (k+1) + ': ' + (upErrNc.message||''), false);
         }
-      } catch(ue) { /* continuar */ }
+      } catch(ue) {
+        showToast('⚠️ Falha NC ' + (k+1) + ': ' + (ue && ue.message ? ue.message : String(ue)), false);
+      }
     }
 
     // 4. Limpar câmera e fechar modal
@@ -3956,6 +4063,17 @@ async function bulkDownloadPhotos() {
 // ── FIM SELEÇÃO EM MASSA ─────────────────────────────────────────
 
 
+
+// ── NORMALIZAÇÃO DO CAMPO OP ─────────────────────────────────────
+function normalizarOP() {
+  var el = document.getElementById('f_op');
+  if (!el) return;
+  var val = el.value.replace(/\D/g, '').trim();
+  if (val && val.length > 0) {
+    el.value = val.padStart(6, '0'); // "5037" → "005037"
+  }
+}
+// ─────────────────────────────────────────────────────────────────
 // ── BUSCA AUTOMÁTICA PEDIDO + ITEM ──────────────────────────────
 var _lastLookupKey = '';
 
