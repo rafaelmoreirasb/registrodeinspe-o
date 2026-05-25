@@ -1112,7 +1112,7 @@
               <th style="min-width:110px;font-size:11px;">Produto (PL Pai)</th>
               <th style="min-width:160px;font-size:11px;">Descrição do Produto</th>
               <th style="min-width:140px;font-size:11px;">Cliente</th>
-              <th style="min-width:58px;">Vídeo</th>
+
               <th style="min-width:80px;">Fotos</th>
               <th style="min-width:80px;font-size:10px;">NC Fotos</th>
               <th style="min-width:160px;font-size:11px;">Características</th>
@@ -1122,7 +1122,7 @@
             </tr>
           </thead>
           <tbody id="recordsBody">
-            <tr><td colspan="18"><div class="empty-state">Nenhum registro ainda. Preencha o formulário e clique em Salvar.</div></td></tr>
+            <tr><td colspan="17"><div class="empty-state">Nenhum registro ainda. Preencha o formulário e clique em Salvar.</div></td></tr>
           </tbody>
         </table>
       </div>
@@ -2441,13 +2441,25 @@ function validateNcPhotos() {
   return true;
 }
 function clearCaracteristicas() {
-  // Selecionar todos os radios do FORMULÁRIO DE REGISTRO pelo ID do container
-  // (evita afetar radios do modal de edição que têm prefixo "ec_")
+  // Resetar todos os radios do formulário de características
+  // Usar tanto checked=false quanto removeAttribute para garantir reset visual do CSS :checked
   var formSection = document.getElementById('caract_section');
   var radios = formSection
     ? formSection.querySelectorAll('input[type="radio"]')
     : document.querySelectorAll('.caract-radio');
-  for (var i = 0; i < radios.length; i++) { radios[i].checked = false; }
+  for (var i = 0; i < radios.length; i++) {
+    radios[i].checked = false;
+    radios[i].removeAttribute('checked'); // remove atributo HTML caso exista
+  }
+  // Forçar repaint das labels adjacentes removendo e re-adicionando a classe
+  if (formSection) {
+    var labels = formSection.querySelectorAll('.caract-label');
+    for (var j = 0; j < labels.length; j++) {
+      labels[j].style.background = '';
+      labels[j].style.borderColor = '';
+      labels[j].style.color = '';
+    }
+  }
   var caractErr = document.getElementById('caract_err');
   if (caractErr) caractErr.classList.remove('show');
   var ncAlert = document.getElementById('nc_alert');
@@ -2588,13 +2600,7 @@ function buildRow(r) {
     ncCell = `<div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">${ncThumbs}${ncExtra}</div>`;
   }
 
-  // COLUNA VÍDEO — player inline ou badge
-  let videoCell = '<span style="color:var(--muted);font-size:12px;">—</span>';
-  if (r.mediaType === 'video' && r.mediaSrc) {
-    videoCell = `<video src="${r.mediaSrc}" controls style="width:80px;height:60px;border-radius:4px;border:1px solid var(--border);object-fit:cover;" preload="metadata"></video>`;
-  } else if (r.mediaType === 'video') {
-    videoCell = '<span class="video-badge" title="Vídeo salvo no servidor">🎥 Vídeo</span>';
-  }
+
 
   // COLUNA FOTOS — imagens anexadas + fotos de câmera juntas
   const allImgs = [
@@ -2651,7 +2657,6 @@ function buildRow(r) {
     <td style="font-size:11px;color:var(--blue);font-weight:600;">${r.pl_produto || '—'}</td>
     <td style="font-size:11px;max-width:200px;white-space:normal;line-height:1.3;">${r.pl_descricao || '—'}</td>
     <td style="font-size:11px;color:var(--muted);max-width:180px;white-space:normal;line-height:1.3;">${r.pl_cliente || '—'}</td>
-    <td>${videoCell}</td>
     <td>${photosCell}</td>
     <td>${ncCell}</td>
     <td style="max-width:200px;">${caractCell}</td>
@@ -3070,7 +3075,8 @@ function openEdit(recId) {
         btn.style.cssText = 'position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(168,0,0,0.85);color:white;border:none;border-radius:50%;font-size:10px;cursor:pointer;line-height:1;';
         var capWrap = wrap;
         btn.onclick = function(){
-          if (capSrc.startsWith('http')) editFotosRemovidas.push(capSrc);
+          // Adicionar à lista de remoção (http ou base64)
+          editFotosRemovidas.push(capSrc);
           capWrap.remove();
         };
         wrap.appendChild(img); wrap.appendChild(btn);
@@ -3235,26 +3241,30 @@ async function saveEdit() {
       return;
     }
 
-    // 2. Remover fotos excluídas do Storage e do banco
+    // 2. Remover fotos excluídas
     for (var i = 0; i < editFotosRemovidas.length; i++) {
       var url = editFotosRemovidas[i];
-      var storageBase = SUPA_URL + '/storage/v1/object/public/imagens-inspecao/';
-      var path = url.replace(storageBase, '');
-      try {
-        await db.storage.from('imagens-inspecao').remove([path]);
-        await db.from('inspecoes_imagens').delete().eq('url', url);
-        // Remover do array local correto (fotos normais OU fotos NC)
-        rec.imageFiles = (rec.imageFiles || []).filter(function(f){ return f.url !== url; });
-        rec.ncPhotos   = (rec.ncPhotos   || []).filter(function(p){ return (p.dataUrl || p.url) !== url; });
-      } catch(re) { /* continuar mesmo se uma foto falhar */ }
+      // Remover do array local IMEDIATAMENTE (http ou base64)
+      rec.imageFiles = (rec.imageFiles || []).filter(function(f){ return f.url !== url; });
+      rec.ncPhotos   = (rec.ncPhotos   || []).filter(function(p){
+        return (p.dataUrl || p.url || '') !== url;
+      });
+      // Se for URL do Storage → remover do storage e banco
+      if (url.startsWith('http')) {
+        try {
+          var storageBase = SUPA_URL + '/storage/v1/object/public/imagens-inspecao/';
+          var path = url.replace(storageBase, '');
+          await db.storage.from('imagens-inspecao').remove([path]);
+          await db.from('inspecoes_imagens').delete().eq('url', url);
+        } catch(re) { /* continuar */ }
+      }
     }
-    // Também remover nc_fotos base64 do campo legado, se houver
+    // Sempre atualizar nc_fotos no banco com o que sobrou (limpa base64 removidas)
     if (editFotosRemovidas.length > 0) {
-      await db.from('inspecoes').update({
-        nc_fotos: (rec.ncPhotos || [])
-          .filter(function(p){ return p.dataUrl && !p.dataUrl.startsWith('http'); })
-          .map(function(p){ return p.dataUrl; })
-      }).eq('id', recId);
+      var ncRestantes = (rec.ncPhotos || [])
+        .filter(function(p){ return p.dataUrl && !p.dataUrl.startsWith('http'); })
+        .map(function(p){ return p.dataUrl; });
+      await db.from('inspecoes').update({ nc_fotos: ncRestantes }).eq('id', recId);
     }
 
     // helper: base64 dataUrl → Blob (sem fetch, funciona em todos os browsers)
