@@ -101,6 +101,14 @@
   [data-theme="dark"] .gallery-item,
   [data-theme="dark"] .nc-photo-thumb   { background: #1e2540; border-color: var(--border); }
 
+  /* ── Toggle switch parâmetros ──────────────────────────────────── */
+  .param-toggle { position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0; }
+  .param-toggle input { opacity:0;width:0;height:0; }
+  .param-toggle .slider { position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:20px;transition:.2s; }
+  .param-toggle .slider:before { position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.2s; }
+  .param-toggle input:checked + .slider { background:#2e7d32; }
+  .param-toggle input:checked + .slider:before { transform:translateX(16px); }
+  .param-item-disabled { opacity:.45; }
   /* ── Seleção em massa ──────────────────────────────────────────── */
   .row-check { width:16px;height:16px;cursor:pointer;accent-color:var(--blue); }
   .bulk-bar { display:none;align-items:center;gap:10px;padding:8px 16px;background:var(--blue-light);border-bottom:1px solid var(--border);flex-wrap:wrap; }
@@ -661,6 +669,10 @@
           <span class="s-icon">📦</span>
           <span class="s-label">Recebimento</span>
         </div>
+        <div class="sidebar-item admin-only" id="tab_parametros" onclick="switchPage('parametros')" style="display:none;">
+          <span class="s-icon">⚙️</span>
+          <span class="s-label">Parâmetros</span>
+        </div>
       </nav>
 
       <!-- Footer: usuário + sair -->
@@ -1069,23 +1081,9 @@
       <div class="filter-bar">
         <input type="text"   id="f_fid"      placeholder="🔍 ID"          oninput="applyFilters()" />
         <input type="text"   id="f_fop"      placeholder="🔍 OP"          oninput="applyFilters()" />
-        <select              id="f_fbandeira"                              onchange="applyFilters()">
-          <option value="">Bandeira</option>
-          <option>Bandeira Branca</option><option>BR</option><option>Chiquinho</option><option>Citroën</option><option>Dpaschoal</option><option>Honda</option><option>Incoleed</option><option>Ipiranga</option><option>McDonald's</option><option>Petronas</option><option>Peugeot</option><option>Shell</option><option>Stihl</option><option>Texaco</option><option>Trix</option>
-        </select>
-        <select              id="f_fsetor"                                 onchange="applyFilters()">
-          <option value="">Setor</option>
-          <option>ACM</option><option>Adesivagem</option><option>Almoxarifado</option>
-          <option>Caldeiraria Leve</option><option>Caldeiraria Pesada</option>
-          <option>Composto Plástico</option><option>Corte a Laser</option><option>Dobra</option>
-          <option>Embalagem</option><option>Estoque</option><option>Expedição</option>
-          <option>Montagem Leve/Elétrica</option>
-        </select>
-        <select              id="f_fcolab"                                 onchange="applyFilters()">
-          <option value="">Colaborador</option>
-          <option>Bruna Garcia</option><option>Júlio Caldeira</option>
-          <option>Keli Medici</option><option>Rafael Barbosa</option>
-        </select>
+        <select id="f_fbandeira" onchange="applyFilters()"><option value="">Bandeira</option></select>
+        <select id="f_fsetor" onchange="applyFilters()"><option value="">Setor</option></select>
+        <select id="f_fcolab" onchange="applyFilters()"><option value="">Colaborador</option></select>
         <input type="text"   id="f_fdate"    placeholder="🔍 Data"        oninput="applyFilters()" />
         <div class="filter-clear"><button onclick="clearFilters()">✕ Limpar filtros</button></div>
       </div>
@@ -1442,6 +1440,67 @@
     </div>
   </div><!-- /page_recebimento -->
 
+  <!-- ════════════════════════════════════════════════════════════
+       PARÂMETROS
+  ════════════════════════════════════════════════════════════ -->
+  <div class="page" id="page_parametros">
+    <div class="page-header" style="background:var(--blue-dark);padding:14px 20px;color:white;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;">
+      ⚙️ Parâmetros do Sistema
+    </div>
+    <div style="padding:20px;max-width:960px;margin:0 auto;">
+
+      <!-- 3 cards lado a lado -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+
+        <!-- BANDEIRAS -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="background:#0a2590;color:white;padding:12px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;">
+            🏁 Bandeiras
+            <span id="count_bandeira" style="margin-left:auto;background:rgba(255,255,255,0.2);border-radius:10px;padding:2px 8px;font-size:11px;"></span>
+          </div>
+          <div style="padding:12px;">
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <input type="text" id="inp_bandeira" placeholder="Nova bandeira..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:Barlow,sans-serif;background:var(--card);color:var(--text);" onkeydown="if(event.key==='Enter') addParam('bandeira')"/>
+              <button onclick="addParam('bandeira')" style="background:#0a2590;color:white;border:none;border-radius:6px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">+</button>
+            </div>
+            <ul id="list_bandeira" style="list-style:none;padding:0;margin:0;max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></ul>
+          </div>
+        </div>
+
+        <!-- SETORES -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="background:#1a4f1a;color:white;padding:12px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;">
+            🏭 Setores
+            <span id="count_setor" style="margin-left:auto;background:rgba(255,255,255,0.2);border-radius:10px;padding:2px 8px;font-size:11px;"></span>
+          </div>
+          <div style="padding:12px;">
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <input type="text" id="inp_setor" placeholder="Novo setor..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:Barlow,sans-serif;background:var(--card);color:var(--text);" onkeydown="if(event.key==='Enter') addParam('setor')"/>
+              <button onclick="addParam('setor')" style="background:#1a4f1a;color:white;border:none;border-radius:6px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">+</button>
+            </div>
+            <ul id="list_setor" style="list-style:none;padding:0;margin:0;max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></ul>
+          </div>
+        </div>
+
+        <!-- COLABORADORES -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="background:#5a1a7a;color:white;padding:12px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;">
+            👤 Colaboradores
+            <span id="count_colaborador" style="margin-left:auto;background:rgba(255,255,255,0.2);border-radius:10px;padding:2px 8px;font-size:11px;"></span>
+          </div>
+          <div style="padding:12px;">
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <input type="text" id="inp_colaborador" placeholder="Novo colaborador..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:Barlow,sans-serif;background:var(--card);color:var(--text);" onkeydown="if(event.key==='Enter') addParam('colaborador')"/>
+              <button onclick="addParam('colaborador')" style="background:#5a1a7a;color:white;border:none;border-radius:6px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">+</button>
+            </div>
+            <ul id="list_colaborador" style="list-style:none;padding:0;margin:0;max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></ul>
+          </div>
+        </div>
+
+      </div><!-- /grid -->
+    </div>
+  </div><!-- /page_parametros -->
+
     </div><!-- /main-content -->
   </div><!-- /app-shell -->
 
@@ -1759,6 +1818,8 @@ async function loadFromSupabase() {
     nextId = records.length > 0 ? Math.max.apply(null, records.map(function(r){ return r.id; })) + 1 : 1;
     renderTable();
     updateIdField();
+    // Carregar parâmetros para preencher selects
+    loadParametros();
 
   } catch(e) {
     const msg = e && e.message ? e.message : String(e);
@@ -1775,9 +1836,9 @@ let nextId = 1;
 // AUTH — usuários válidos (login local simples)
 const USERS = [
   { user: 'rafael.barbosa', pass: 'poli123', name: 'Rafael Barbosa', role: 'admin' },
-  { user: 'pedro.costa',    pass: 'poli123', name: 'Pedro Costa' },
-  { user: 'keli.medici',    pass: 'poli123', name: 'Keli Medici' },
-  { user: 'julio.caldeira', pass: 'poli123', name: 'Julio Caldeira' },
+  { user: 'pedro.costa',    pass: 'poli123', name: 'Pedro Costa',    role: 'parametros' },
+  { user: 'keli.medici',    pass: 'poli123', name: 'Keli Medici',    role: 'parametros' },
+  { user: 'julio.caldeira', pass: 'poli123', name: 'Julio Caldeira', role: 'parametros' },
   { user: 'polimetal',      pass: '123',     name: 'Polimetal',      role: 'producao' },
 ];
 
@@ -1815,10 +1876,14 @@ function showApp(name, role) {
   if (siEl) siEl.textContent = name ? name.charAt(0).toUpperCase() : 'U';
   var isAdmin    = role === 'admin';
   var isProducao = role === 'producao';
+  var isParam    = role === 'admin' || role === 'parametros';
   var tabRules = { 'tab_inspecao': !isProducao, 'tab_salvos': true, 'tab_nc_page': isAdmin, 'tab_dashboard': true, 'tab_recebimento': isAdmin };
   Object.keys(tabRules).forEach(function(id) { var el = document.getElementById(id); if (el) el.style.display = tabRules[id] ? 'flex' : 'none'; });
   sessionStorage.setItem('userRole', role || 'user');
   if (isProducao) { setTimeout(function(){ switchPage('salvos'); }, 200); }
+  // Mostrar aba Parâmetros para admin e role parametros
+  var tabParam = document.getElementById('tab_parametros');
+  if (tabParam) tabParam.style.display = isParam ? 'flex' : 'none';
   document.getElementById('splash').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   setTimeout(() => {
@@ -3418,12 +3483,13 @@ function toggleSidebar() {
 
 // NAVEGAÇÃO ENTRE PÁGINAS
 function switchPage(page) {
-  ['inspecao','salvos','nc_page','dashboard','recebimento'].forEach(p => {
+  ['inspecao','salvos','nc_page','dashboard','recebimento','parametros'].forEach(p => {
     document.getElementById('page_' + p).classList.toggle('active', p === page);
     document.getElementById('tab_' + p).classList.toggle('active', p === page);
   });
   if (page === 'nc_page')  { /* câmera NC via modal */ }
-  if (page === 'dashboard') loadDashboard();
+  if (page === 'dashboard')  loadDashboard();
+  if (page === 'parametros') loadParametros();
 }
 
 // ── DASHBOARD ────────────────────────────────────────────────────────
@@ -4133,6 +4199,142 @@ async function buscarProdutoPorPedidoItem() {
   }
 }
 // ── FIM BUSCA AUTOMÁTICA ─────────────────────────────────────────
+
+
+// ── PARÂMETROS ───────────────────────────────────────────────────
+var _params = { bandeira: [], setor: [], colaborador: [] };
+
+async function loadParametros() {
+  try {
+    var { data, error } = await db.from('parametros').select('*').order('valor');
+    if (error) throw error;
+    _params = { bandeira: [], setor: [], colaborador: [] };
+    (data || []).forEach(function(p) {
+      if (_params[p.tipo] !== undefined)
+        _params[p.tipo].push({ id: p.id, valor: p.valor, ativo: p.ativo !== false });
+    });
+    renderParamList('bandeira');
+    renderParamList('setor');
+    renderParamList('colaborador');
+    fillSelects();
+  } catch(e) {
+    showToast('Erro ao carregar parâmetros: ' + (e.message || ''), false);
+  }
+}
+
+function renderParamList(tipo) {
+  var ul  = document.getElementById('list_' + tipo);
+  var cnt = document.getElementById('count_' + tipo);
+  if (!ul) return;
+  var items = _params[tipo] || [];
+  var ativos = items.filter(function(i){ return i.ativo; }).length;
+  if (cnt) cnt.textContent = ativos + '/' + items.length;
+  ul.innerHTML = '';
+  items.forEach(function(item) {
+    var li = document.createElement('li');
+    li.className = 'param-li' + (item.ativo ? '' : ' param-item-disabled');
+    li.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--blue-light);border-radius:6px;font-size:13px;';
+    // Toggle switch
+    var toggleId = 'tog_' + item.id;
+    var toggleHtml = '<label class="param-toggle" title="' + (item.ativo ? 'Ativo — clique para desativar' : 'Inativo — clique para ativar') + '">' +
+      '<input type="checkbox" id="' + toggleId + '"' + (item.ativo ? ' checked' : '') +
+      ' onchange="toggleParam(' + item.id + ',\'' + tipo + '\',this.checked)">' +
+      '<span class="slider"></span></label>';
+    li.innerHTML = toggleHtml +
+      '<span style="flex:1;">' + item.valor + '</span>' +
+      '<span style="font-size:10px;color:' + (item.ativo ? '#2e7d32' : '#a80000') + ';font-weight:600;min-width:44px;text-align:right;">' + (item.ativo ? 'Ativo' : 'Inativo') + '</span>' +
+      '<button onclick="deleteParam(' + item.id + ',\'' + tipo + '\')" style="background:transparent;border:none;color:#a80000;font-size:18px;cursor:pointer;padding:0 2px;line-height:1;" title="Excluir">×</button>';
+    ul.appendChild(li);
+  });
+}
+
+async function addParam(tipo) {
+  var inp = document.getElementById('inp_' + tipo);
+  var val = (inp.value || '').trim();
+  if (!val) { showToast('Digite um valor para adicionar.', false); return; }
+  if (_params[tipo].some(function(p){ return p.valor.toLowerCase() === val.toLowerCase(); })) {
+    showToast('"' + val + '" já existe.', false); return;
+  }
+  try {
+    var { data, error } = await db.from('parametros').insert({ tipo: tipo, valor: val, ativo: true }).select().single();
+    if (error) throw error;
+    _params[tipo].push({ id: data.id, valor: data.valor, ativo: true });
+    _params[tipo].sort(function(a,b){ return a.valor.localeCompare(b.valor,'pt-BR'); });
+    inp.value = '';
+    renderParamList(tipo);
+    fillSelects();
+    showToast('✅ "' + val + '" adicionado!', true);
+  } catch(e) { showToast('Erro ao adicionar: ' + (e.message || ''), false); }
+}
+
+async function toggleParam(id, tipo, ativo) {
+  try {
+    var { error } = await db.from('parametros').update({ ativo: ativo }).eq('id', id);
+    if (error) throw error;
+    var item = (_params[tipo] || []).find(function(p){ return p.id === id; });
+    if (item) item.ativo = ativo;
+    renderParamList(tipo);
+    fillSelects();
+    showToast((ativo ? '✅ Ativado: ' : '⏸ Desativado: ') + (item ? item.valor : ''), true);
+  } catch(e) { showToast('Erro: ' + (e.message || ''), false); }
+}
+
+async function deleteParam(id, tipo) {
+  var item = (_params[tipo] || []).find(function(p){ return p.id === id; });
+  if (!item) return;
+  if (!confirm('Excluir "' + item.valor + '" permanentemente?')) return;
+  try {
+    var { error } = await db.from('parametros').delete().eq('id', id);
+    if (error) throw error;
+    _params[tipo] = _params[tipo].filter(function(p){ return p.id !== id; });
+    renderParamList(tipo);
+    fillSelects();
+    showToast('🗑️ "' + item.valor + '" excluído.', true);
+  } catch(e) { showToast('Erro ao excluir: ' + (e.message || ''), false); }
+}
+
+function fillSelects() {
+  // Selects do formulário/edição — placeholder "— Selecione —"
+  var configs = [
+    { tipo: 'bandeira',    ids: ['f_bandeira','edit_bandeira','rec_bandeira','nc_bandeira'] },
+    { tipo: 'setor',       ids: ['f_setor','edit_setor','rec_setor','nc_setor'] },
+    { tipo: 'colaborador', ids: ['f_colaborador','edit_colaborador','rec_colaborador'] },
+  ];
+  configs.forEach(function(cfg) {
+    var opts = _params[cfg.tipo]
+      .filter(function(p){ return p.ativo; })
+      .map(function(p){
+        return '<option value="' + p.valor.replace(/"/g,'&quot;') + '">' + p.valor + '</option>';
+      }).join('');
+    cfg.ids.forEach(function(selId) {
+      var sel = document.getElementById(selId);
+      if (!sel) return;
+      var current = sel.value;
+      sel.innerHTML = '<option value="">— Selecione —</option>' + opts;
+      if (current) sel.value = current;
+    });
+  });
+
+  // Selects de filtro — placeholder diferente (nome do campo)
+  var filtros = [
+    { tipo: 'bandeira',    id: 'f_fbandeira', label: 'Bandeira' },
+    { tipo: 'setor',       id: 'f_fsetor',    label: 'Setor' },
+    { tipo: 'colaborador', id: 'f_fcolab',    label: 'Colaborador' },
+  ];
+  filtros.forEach(function(cfg) {
+    var sel = document.getElementById(cfg.id);
+    if (!sel) return;
+    var current = sel.value;
+    var opts = _params[cfg.tipo]
+      .filter(function(p){ return p.ativo; })
+      .map(function(p){
+        return '<option value="' + p.valor.replace(/"/g,'&quot;') + '">' + p.valor + '</option>';
+      }).join('');
+    sel.innerHTML = '<option value="">' + cfg.label + '</option>' + opts;
+    if (current) sel.value = current;
+  });
+}
+// ── FIM PARÂMETROS ───────────────────────────────────────────────
 
 // TOAST
 function showToast(msg, success = true) {
