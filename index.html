@@ -380,6 +380,8 @@
   .dash-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
   .dash-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   .dash-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .dash-grid-1-col { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 16px; }
+  .dash-grid-1-col .dash-card-body { min-height: 220px; }
   .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
   .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
   .kpi-blue::before  { background: var(--blue); }
@@ -650,7 +652,7 @@
       <!-- Navegação -->
       <nav class="sidebar-nav">
         <div class="sidebar-item active" id="tab_inspecao" onclick="switchPage('inspecao')">
-          <span class="s-icon">📋</span>
+          <span class="s-icon">📝</span>
           <span class="s-label">Registro de Inspeção</span>
         </div>
         <div class="sidebar-item" id="tab_salvos" onclick="switchPage('salvos')">
@@ -721,7 +723,7 @@
 
             <div class="field">
               <label>OP <span class="req">*</span></label>
-              <input type="text" id="f_op" placeholder="Ex: 001234" onblur="normalizarOP(); buscarProdutoPorPedidoItem();" oninput="this.value=this.value.replace(/[^0-9]/g,'')" maxlength="6" inputmode="numeric" />
+              <input type="text" id="f_op" placeholder="Ex: 004687 ou E00265" onblur="normalizarOP(); buscarProdutoPorPedidoItem();" oninput="this.value=this.value.toUpperCase().replace(/[^0-9E]/g,'')" maxlength="7" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="characters" />
               <span class="error-msg" id="err_op">Campo obrigatório</span>
             </div>
 
@@ -1249,8 +1251,8 @@
         </div>
       </div>
 
-      <!-- Linha 3: Setores + Características + Taxa visual -->
-      <div class="dash-grid-3">
+      <!-- Linha 3: Setores + Características + Evolução Mensal -->
+      <div class="dash-grid-1-col">
         <div class="dash-card">
           <div class="dash-card-header">🏭 Inspeções por Setor</div>
           <div class="dash-card-body" id="chart_setor">
@@ -1264,32 +1266,18 @@
           </div>
         </div>
         <div class="dash-card">
-          <div class="dash-card-header">📈 Evolução Diária</div>
-          <div class="dash-card-body" id="chart_evolucao" style="display:flex;align-items:center;justify-content:center;min-height:120px;">
+          <div class="dash-card-header" style="justify-content:space-between;">
+            <span>📅 Evolução Mensal</span>
+            <button class="dash-refresh" onclick="loadDashboard()">↺ Atualizar</button>
+          </div>
+          <div class="dash-card-body" id="chart_evolucao" style="display:flex;align-items:flex-end;justify-content:center;min-height:140px;">
             <div style="color:var(--muted);font-size:12px;">Carregando...</div>
           </div>
         </div>
-      </div>
-
-      <!-- Linha 4: Últimos registros -->
-      <div class="dash-card">
-        <div class="dash-card-header" style="justify-content:space-between;">
-          <span>🕐 Últimos 5 Registros</span>
-          <button class="dash-refresh" onclick="loadDashboard()">↺ Atualizar</button>
-        </div>
-        <div class="dash-card-body" style="padding:0;">
-          <div class="table-wrap">
-            <table class="rec-table">
-              <thead>
-                <tr>
-                  <th>ID</th><th>OP</th><th>Bandeira</th><th>Setor</th>
-                  <th>Colaborador</th><th>Qtd.</th><th>Status</th><th>Data</th>
-                </tr>
-              </thead>
-              <tbody id="dash_recentes">
-                <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:16px;">Carregando...</td></tr>
-              </tbody>
-            </table>
+        <div class="dash-card">
+          <div class="dash-card-header">🚫 Não Conformidades por Mês</div>
+          <div class="dash-card-body" id="chart_nc_mensal" style="display:flex;align-items:flex-end;justify-content:center;min-height:140px;">
+            <div style="color:var(--muted);font-size:12px;">Carregando...</div>
           </div>
         </div>
       </div>
@@ -1791,7 +1779,10 @@ async function loadFromSupabase() {
     records = data.map(function(r) {
       var urls    = imagensMap[String(r.id)] || [];
       var ncUrls  = ncMap[String(r.id)]      || [];
-      var prodKey = String(r.op).replace(/\D/g,'').padStart(6,'0') + '|' + String(r.item);
+      var prodKey = (function(){
+        var v = String(r.op).trim().toUpperCase();
+        return (/^\d+$/.test(v) ? v.padStart(6,'0') : v) + '|' + String(r.item);
+      })();
       var prod    = prodMap[prodKey] || {};
       return {
         id:              r.id,
@@ -2562,7 +2553,10 @@ async function saveRecord() {
   const rec = {
     id:          nextId,
     item:        document.getElementById('f_item').value,
-    op:          (document.getElementById('f_op').value.replace(/\D/g,'').padStart(6,'0')),
+    op:          (function(){
+      var v = document.getElementById('f_op').value.trim().toUpperCase();
+      return /^\d+$/.test(v) ? v.padStart(6,'0') : v; // numérica → zeros; estoque → mantém
+    })(),
     quantidade:  document.getElementById('f_quantidade').value,
     bandeira:    document.getElementById('f_bandeira').value,
     setor:       document.getElementById('f_setor').value,
@@ -3501,15 +3495,11 @@ async function loadDashboard() {
       .order('criado_em', { ascending: false });
     if (error || !rows) return;
 
-    const total   = rows.length;
-    const comNC   = rows.filter(r => {
-      if (!r.caracteristicas) return false;
-      return Object.values(r.caracteristicas).some(v => v === 'NC');
-    }).length;
-    const conf    = total - comNC;
-    const taxa    = total > 0 ? Math.round((conf / total) * 100) : 0;
+    const total = rows.length;
+    const comNC = rows.filter(r => r.caracteristicas && Object.values(r.caracteristicas).some(v => v === 'NC')).length;
+    const conf  = total - comNC;
+    const taxa  = total > 0 ? Math.round((conf / total) * 100) : 0;
 
-    // KPIs
     document.getElementById('kpi_total').textContent = total;
     document.getElementById('kpi_conf').textContent  = conf;
     document.getElementById('kpi_nc').textContent    = comNC;
@@ -3520,94 +3510,192 @@ async function loadDashboard() {
       const max = new Date(Math.max(...datas)).toLocaleDateString('pt-BR');
       document.getElementById('kpi_periodo').textContent = min === max ? min : min + ' – ' + max;
     }
-    document.getElementById('kpi_conf_pct').textContent  = total > 0 ? Math.round((conf/total)*100) + '% dos registros' : '—';
-    document.getElementById('kpi_nc_pct').textContent    = total > 0 ? Math.round((comNC/total)*100) + '% dos registros' : '—';
+    document.getElementById('kpi_conf_pct').textContent = total > 0 ? Math.round((conf/total)*100) + '% dos registros' : '—';
+    document.getElementById('kpi_nc_pct').textContent   = total > 0 ? Math.round((comNC/total)*100) + '% dos registros' : '—';
 
-    // Agrupa por campo
+    // ── Paleta de cores por bandeira ────────────────────────────
+    var BAND_COLORS = {
+      'BR': '#058742', 'Shell': '#e97a1e', 'Ipiranga': '#fcd612',
+      'Dpaschoal': '#e0131b', 'Petronas': '#17a19c', 'Citroën': '#9f9f9f',
+      'Citroen': '#9f9f9f', 'Rede Trix': '#f5731a', 'Trix': '#f5731a',
+      'Honda': '#ca0c0c', 'Texaco': '#e11125', 'Cortfast': '#293b9d',
+      'Peugeot': '#9f9f9f', 'Jaguar': '#9f9f9f', 'Stihl': '#F07E26',
+      "McDonald's": '#ffbc0d', 'MCD': '#ffbc0d', 'Polimetal': '#2e9ab7',
+      'Bandeira Branca': '#4d7bff', 'Chiquinho': '#e97a1e', 'Incoleed': '#4d7bff',
+    };
+    var DEFAULT_COLORS = ['#1038c1','#107C10','#C17F24','#0078D4','#8764B8','#038387','#CA5010'];
+
     function agrupar(campo) {
-      const m = {};
-      rows.forEach(r => { m[r[campo]] = (m[r[campo]] || 0) + 1; });
-      return Object.entries(m).sort((a,b) => b[1]-a[1]);
-    }
-    const COLORS = ['#1038c1','#107C10','#C17F24','#0078D4','#8764B8','#038387','#CA5010'];
-    function renderBarras(elId, dados, cor) {
-      const el = document.getElementById(elId);
-      const max = dados[0]?.[1] || 1;
-      el.innerHTML = dados.map(([nome, val], i) =>
-        `<div class="bar-row">
-          <div class="bar-name" title="${nome}">${nome}</div>
-          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/max*100)}%;background:${cor||COLORS[i%COLORS.length]};"></div></div>
-          <div class="bar-val">${val}</div>
-        </div>`).join('');
+      var m = {};
+      rows.forEach(function(r){ m[r[campo]] = (m[r[campo]] || 0) + 1; });
+      return Object.entries(m).sort(function(a,b){ return b[1]-a[1]; });
     }
 
-    renderBarras('chart_bandeira', agrupar('bandeira'));
-    renderBarras('chart_colab',    agrupar('colaborador'), '#107C10');
-    renderBarras('chart_setor',    agrupar('setor'), '#C17F24');
+    // ── Barras — bandeira com paleta personalizada ──────────────
+    function renderBarrasBandeira(elId, dados) {
+      var el = document.getElementById(elId);
+      var max = dados[0] ? dados[0][1] : 1;
+      el.innerHTML = dados.map(function(entry, i) {
+        var nome = entry[0], val = entry[1];
+        var cor = BAND_COLORS[nome] || DEFAULT_COLORS[i % DEFAULT_COLORS.length];
+        return '<div class="bar-row">' +
+          '<div class="bar-name" title="' + nome + '">' + nome + '</div>' +
+          '<div class="bar-track"><div class="bar-fill" style="width:' + Math.round(val/max*100) + '%;background:' + cor + ';"></div></div>' +
+          '<div class="bar-val">' + val + '</div></div>';
+      }).join('');
+    }
 
-    // Características — NCs
-    const ncMap = {};
-    rows.forEach(r => {
+    // ── Pizza — colaboradores ───────────────────────────────────
+    function renderPizza(elId, dados) {
+      var el = document.getElementById(elId);
+      if (!dados.length) { el.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;">Sem dados</div>'; return; }
+      var total2 = dados.reduce(function(s, e){ return s + e[1]; }, 0);
+      var PIE_COLORS = ['#1038c1','#2e9ab7','#17a19c','#107C10','#C17F24','#8764B8','#CA5010','#038387','#0078D4','#e97a1e'];
+      var svgSize = 140, cx = svgSize/2, cy = svgSize/2, r = 58, rInner = 30;
+      var startAngle = -Math.PI / 2;
+      var slices = '';
+      var legendHtml = '';
+      dados.forEach(function(entry, i) {
+        var nome = entry[0], val = entry[1];
+        var pct = val / total2;
+        var angle = pct * 2 * Math.PI;
+        var endAngle = startAngle + angle;
+        var x1 = cx + r * Math.cos(startAngle), y1 = cy + r * Math.sin(startAngle);
+        var x2 = cx + r * Math.cos(endAngle),   y2 = cy + r * Math.sin(endAngle);
+        var xi1 = cx + rInner * Math.cos(startAngle), yi1 = cy + rInner * Math.sin(startAngle);
+        var xi2 = cx + rInner * Math.cos(endAngle),   yi2 = cy + rInner * Math.sin(endAngle);
+        var large = angle > Math.PI ? 1 : 0;
+        var cor = PIE_COLORS[i % PIE_COLORS.length];
+        var d = 'M ' + xi1 + ' ' + yi1 +
+                ' L ' + x1 + ' ' + y1 +
+                ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + x2 + ' ' + y2 +
+                ' L ' + xi2 + ' ' + yi2 +
+                ' A ' + rInner + ' ' + rInner + ' 0 ' + large + ' 0 ' + xi1 + ' ' + yi1 + ' Z';
+        var pctStr = Math.round(pct * 100) + '%';
+        slices += '<path d="' + d + '" fill="' + cor + '" stroke="var(--card)" stroke-width="1.5">' +
+                  '<title>' + nome + ': ' + val + ' (' + pctStr + ')</title></path>';
+        legendHtml += '<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin-bottom:3px;">' +
+          '<span style="width:10px;height:10px;border-radius:50%;background:' + cor + ';flex-shrink:0;display:inline-block;"></span>' +
+          '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + nome + '">' + nome + '</span>' +
+          '<span style="font-weight:700;color:var(--blue);">' + val + '</span>' +
+          '<span style="color:var(--muted);">(' + pctStr + ')</span></div>';
+        startAngle = endAngle;
+      });
+      el.innerHTML = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+        '<svg width="' + svgSize + '" height="' + svgSize + '" style="flex-shrink:0;">' + slices + '</svg>' +
+        '<div style="flex:1;min-width:120px;">' + legendHtml + '</div></div>';
+    }
+
+    renderBarrasBandeira('chart_bandeira', agrupar('bandeira'));
+    renderPizza('chart_colab', agrupar('colaborador'));
+    renderBarras2('chart_setor', agrupar('setor'));
+
+    // ── Barras com degradê azul (escuro → claro conforme valor diminui) ──
+    function renderBarras2(elId, dados) {
+      var el = document.getElementById(elId);
+      if (!dados.length) { el.innerHTML = '<div style="color:var(--muted);font-size:12px;">Sem dados</div>'; return; }
+      var max = dados[0][1];
+      el.innerHTML = dados.map(function(entry) {
+        var nome = entry[0], val = entry[1];
+        var pct = max > 0 ? val / max : 0;
+        var r = Math.round(107 + (10  - 107) * pct);
+        var g = Math.round(143 + (37  - 143) * pct);
+        var b = Math.round(232 + (144 - 232) * pct);
+        return '<div class="bar-row">' +
+          '<div class="bar-name" title="' + nome + '">' + nome + '</div>' +
+          '<div class="bar-track"><div class="bar-fill" style="width:' + Math.round(pct*100) + '%;background:rgb(' + r + ',' + g + ',' + b + ');"></div></div>' +
+          '<div class="bar-val">' + val + '</div></div>';
+      }).join('');
+    }
+
+    // ── Características NCs ─────────────────────────────────────
+    var ncMap2 = {};
+    rows.forEach(function(r) {
       if (!r.caracteristicas) return;
-      Object.entries(r.caracteristicas).forEach(([k, v]) => {
-        if (v === 'NC') ncMap[k] = (ncMap[k] || 0) + 1;
+      Object.entries(r.caracteristicas).forEach(function(kv) {
+        if (kv[1] === 'NC') ncMap2[kv[0]] = (ncMap2[kv[0]] || 0) + 1;
       });
     });
-    const ncEntries = Object.entries(ncMap).sort((a,b) => b[1]-a[1]);
-    const caractEl = document.getElementById('chart_caract');
+    var ncEntries = Object.entries(ncMap2).sort(function(a,b){ return b[1]-a[1]; });
+    var caractEl = document.getElementById('chart_caract');
     if (ncEntries.length === 0) {
       caractEl.innerHTML = '<div style="text-align:center;padding:20px;color:#107C10;font-size:13px;font-weight:600;">✅ Nenhuma NC registrada</div>';
     } else {
-      const maxNC = ncEntries[0][1];
-      caractEl.innerHTML = ncEntries.map(([nome, val]) =>
-        `<div class="bar-row">
-          <div class="bar-name" title="${nome}">${nome}</div>
-          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(val/maxNC*100)}%;background:#A80000;"></div></div>
-          <div class="bar-val">${val}</div>
-        </div>`).join('');
+      var maxNC = ncEntries[0][1];
+      caractEl.innerHTML = ncEntries.map(function(entry) {
+        return '<div class="bar-row"><div class="bar-name" title="' + entry[0] + '">' + entry[0] + '</div>' +
+          (function(pNC){
+            var r=Math.round(107+(10-107)*pNC), g=Math.round(143+(37-143)*pNC), b=Math.round(232+(144-232)*pNC);
+            return '<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(pNC*100)+'%;background:rgb('+r+','+g+','+b+');"></div></div>';
+          })(maxNC>0?entry[1]/maxNC:0) +
+          '<div class="bar-val">' + entry[1] + '</div></div>';
+      }).join('');
     }
 
-    // Evolução diária
-    const diasMap = {};
-    rows.forEach(r => {
-      const d = new Date(r.criado_em).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
-      diasMap[d] = (diasMap[d] || 0) + 1;
+    // ── Evolução Mensal ─────────────────────────────────────────
+    var mesesNome = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    var mesesMap = {};
+    rows.forEach(function(r) {
+      var d = new Date(r.criado_em);
+      var key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      mesesMap[key] = (mesesMap[key] || 0) + 1;
     });
-    const diasEntries = Object.entries(diasMap).sort((a,b) => {
-      const [da, ma] = a[0].split('/'); const [db, mb] = b[0].split('/');
-      return new Date(2026, ma-1, da) - new Date(2026, mb-1, db);
-    });
-    const maxDia = Math.max(...diasEntries.map(e => e[1]), 1);
-    const evoEl = document.getElementById('chart_evolucao');
-    evoEl.innerHTML = `<div style="width:100%;">
-      <div class="timeline-bars">
-        ${diasEntries.map(([d, v]) =>
-          `<div class="tbar-wrap">
-            <div style="font-size:10px;color:var(--blue);font-weight:700;">${v}</div>
-            <div class="tbar" style="height:${Math.max(8, Math.round(v/maxDia*48))}px;background:var(--blue);"></div>
-            <div class="tbar-label">${d}</div>
-          </div>`).join('')}
-      </div>
-    </div>`;
+    var mesesEntries = Object.entries(mesesMap).sort(function(a,b){ return a[0].localeCompare(b[0]); });
+    var maxMes = Math.max.apply(null, mesesEntries.map(function(e){ return e[1]; }).concat([1]));
+    var evoEl = document.getElementById('chart_evolucao');
+    var maxBarH = 120;
+    evoEl.innerHTML = '<div style="width:100%;overflow-x:auto;padding-bottom:4px;">' +
+      '<div style="display:flex;align-items:flex-end;gap:14px;padding:8px 4px 0;min-width:' + Math.max(mesesEntries.length * 64, 300) + 'px;">' +
+      mesesEntries.map(function(entry) {
+        var key = entry[0], val = entry[1];
+        var parts = key.split('-');
+        var label = mesesNome[parseInt(parts[1])-1] + '/' + parts[0].slice(2);
+        var h = Math.max(20, Math.round(val / maxMes * maxBarH));
+        return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">' +
+          '<span style="font-size:13px;font-weight:700;color:var(--blue);">' + val + '</span>' +
+          '<div style="width:44px;height:' + h + 'px;background:var(--blue);border-radius:4px 4px 0 0;"></div>' +
+          '<span style="font-size:11px;color:var(--muted);white-space:nowrap;">' + label + '</span>' +
+          '</div>';
+      }).join('') +
+    '</div></div>';
 
-    // Últimos registros
-    const recent = rows.slice(0, 5);
-    document.getElementById('dash_recentes').innerHTML = recent.map(r => {
-      const temNC = r.caracteristicas && Object.values(r.caracteristicas).some(v => v === 'NC');
-      const data  = new Date(r.criado_em).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
-      return `<tr>
-        <td><strong style="color:var(--blue);">#${r.id}</strong></td>
-        <td>${r.op || '—'}</td>
-        <td>${r.bandeira}</td>
-        <td>${r.setor}</td>
-        <td>${r.colaborador}</td>
-        <td>${r.quantidade}</td>
-        <td>${temNC
-          ? '<span class="dot-nc"></span><span style="color:var(--danger);font-weight:600;font-size:11px;">NC</span>'
-          : '<span class="dot-ok"></span><span style="color:#107C10;font-weight:600;font-size:11px;">Conforme</span>'}</td>
-        <td style="color:var(--muted);">${data}</td>
-      </tr>`;
-    }).join('');
+    // ── NC por Mês ──────────────────────────────────────────────
+    var ncMesMap = {};
+    rows.forEach(function(r) {
+      if (!r.caracteristicas) return;
+      var temNC = Object.values(r.caracteristicas).some(function(v){ return v === 'NC'; });
+      if (!temNC) return;
+      var d = new Date(r.criado_em);
+      var key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      ncMesMap[key] = (ncMesMap[key] || 0) + 1;
+    });
+    var ncMesEntries = Object.entries(ncMesMap).sort(function(a,b){ return a[0].localeCompare(b[0]); });
+    var maxNcMes = Math.max.apply(null, ncMesEntries.map(function(e){ return e[1]; }).concat([1]));
+    var ncMesEl = document.getElementById('chart_nc_mensal');
+    if (ncMesEntries.length === 0) {
+      ncMesEl.innerHTML = '<div style="text-align:center;padding:20px;color:#107C10;font-size:13px;font-weight:600;">✅ Nenhuma NC registrada</div>';
+    } else {
+      ncMesEl.innerHTML = '<div style="width:100%;overflow-x:auto;padding-bottom:4px;">' +
+        '<div style="display:flex;align-items:flex-end;gap:14px;padding:8px 4px 0;min-width:' + Math.max(ncMesEntries.length * 64, 300) + 'px;">' +
+        ncMesEntries.map(function(entry) {
+          var key = entry[0], val = entry[1];
+          var parts = key.split('-');
+          var label = mesesNome[parseInt(parts[1])-1] + '/' + parts[0].slice(2);
+          var pct = val / maxNcMes;
+          var h   = Math.max(20, Math.round(pct * 120));
+          // Degradê vermelho: escuro (#7a0000) → claro (#e87878)
+          var r = Math.round(232 + (122 - 232) * pct);
+          var g = Math.round(120 + (0   - 120) * pct);
+          var b = Math.round(120 + (0   - 120) * pct);
+          var cor = 'rgb(' + r + ',' + g + ',' + b + ')';
+          return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">' +
+            '<span style="font-size:13px;font-weight:700;color:#a80000;">' + val + '</span>' +
+            '<div style="width:44px;height:' + h + 'px;background:' + cor + ';border-radius:4px 4px 0 0;"></div>' +
+            '<span style="font-size:11px;color:var(--muted);white-space:nowrap;">' + label + '</span>' +
+            '</div>';
+        }).join('') +
+      '</div></div>';
+    }
 
   } catch(e) {
     console.error('Dashboard error:', e);
@@ -4144,9 +4232,14 @@ async function bulkDownloadPhotos() {
 function normalizarOP() {
   var el = document.getElementById('f_op');
   if (!el) return;
-  var val = el.value.replace(/\D/g, '').trim();
-  if (val && val.length > 0) {
-    el.value = val.padStart(6, '0'); // "5037" → "005037"
+  var val = el.value.trim().toUpperCase();
+  if (!val) return;
+  if (/^\d+$/.test(val)) {
+    // OP numérica pura: padStart com zeros → "5037" vira "004687"
+    el.value = val.padStart(6, '0');
+  } else {
+    // OP de estoque (ex: E00265): manter como está, sem alterar
+    el.value = val;
   }
 }
 // ─────────────────────────────────────────────────────────────────
@@ -4169,6 +4262,13 @@ async function buscarProdutoPorPedidoItem() {
   var key = op + '|' + item;
   if (key === _lastLookupKey) return; // evitar busca repetida
   _lastLookupKey = key;
+
+  // OP de estoque (começa com letra) — não tem produto cadastrado, esconder lookup
+  if (/^[A-Za-z]/.test(op)) {
+    if (resultDiv)   resultDiv.style.display   = 'none';
+    if (notFoundDiv) notFoundDiv.style.display = 'none';
+    return;
+  }
 
   try {
     // Buscar na tabela produtos_pedido por pedido + item
