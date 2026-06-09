@@ -729,8 +729,9 @@
 
             <div class="field">
               <label>Item <span class="req">*</span></label>
-              <input type="number" id="f_item" placeholder="Ex: 1001" min="0" step="1"
-                onblur="buscarProdutoPorPedidoItem()" />
+              <input type="text" id="f_item" placeholder="Ex: 01" inputmode="numeric"
+                oninput="this.value=this.value.replace(/[^0-9A-Za-z]/g,'')"
+                onblur="normalizarItem(); buscarProdutoPorPedidoItem();" />
               <span class="error-msg" id="err_item">Campo obrigatório</span>
             </div>
 
@@ -1779,9 +1780,20 @@ async function loadFromSupabase() {
     records = data.map(function(r) {
       var urls    = imagensMap[String(r.id)] || [];
       var ncUrls  = ncMap[String(r.id)]      || [];
+      // prodMap usa op_original e item EXATOS retornados pela Edge Function
+      // A função SQL já faz o match com/sem zero — a chave usa o valor da inspeção
       var prodKey = (function(){
-        var v = String(r.op).trim().toUpperCase();
-        return (/^\d+$/.test(v) ? v.padStart(6,'0') : v) + '|' + String(r.item);
+        var opV   = String(r.op).trim().toUpperCase();
+        var opN   = /^\d+$/.test(opV) ? opV.padStart(6,'0') : opV;
+        var itemV = String(r.item).trim();
+        // Tentar chave com item como está no registro
+        var key1  = opN + '|' + itemV;
+        // Tentar também com zero e sem zero para garantir match
+        var itemZ = /^\d+$/.test(itemV) ? itemV.padStart(2,'0') : itemV;
+        var itemS = itemV.replace(/^0+/, '') || itemV;
+        var key2  = opN + '|' + itemZ;
+        var key3  = opN + '|' + itemS;
+        return prodMap[key1] ? key1 : (prodMap[key2] ? key2 : key3);
       })();
       var prod    = prodMap[prodKey] || {};
       return {
@@ -2552,7 +2564,10 @@ async function saveRecord() {
   const now = new Date();
   const rec = {
     id:          nextId,
-    item:        document.getElementById('f_item').value,
+    item:        (function(){
+      var v = (document.getElementById('f_item').value || '').trim();
+      return (/^\d+$/.test(v) && v) ? v.padStart(2,'0') : v;
+    })(),
     op:          (function(){
       var v = document.getElementById('f_op').value.trim().toUpperCase();
       return /^\d+$/.test(v) ? v.padStart(6,'0') : v; // numérica → zeros; estoque → mantém
@@ -2874,31 +2889,36 @@ function exportExcel() {
   if (!records.length) { showToast('Nenhum registro para exportar.', false); return; }
   if (typeof XLSX === 'undefined') { showToast('Biblioteca Excel não carregada.', false); return; }
   const rows = records.map(r => ({
-    'ID':           r.id,
-    'OP':           r.op || '',
-    'Item':         r.item,
-    'Quantidade':   r.quantidade,
-    'Bandeira':     r.bandeira,
-    'Setor':        r.setor,
-    'Colaborador':  r.colaborador,
-    'Amassado':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Amassado']] || '',
-    'Pintura/Cor':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Pintura/Cor']] || '',
-    'Adesivo/Impressão':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Adesivo/Impressão']] || '',
-    'Conjunto Peça/Gabarito':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Conjunto Peça/Gabarito']] || '',
-    'Risco':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Risco']] || '',
-    'Conjunto Montado/Articulação':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Conjunto Montado/Articulação']] || '',
-    'Vazão de Luz':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Vazão de Luz']] || '',
-    'Instalação Elétrica':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Instalação Elétrica']] || '',
-    'Router':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Router']] || '',
-    'Rebarba':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Rebarba']] || '',
-    'Solda':        {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Solda']] || '',
-    'Observações':  r.observacoes || '',
-    'Data/Hora':    r.date
+    'ID':                    r.id,
+    'OP':                    r.op || '',
+    'Item':                  r.item,
+    'Quantidade':            r.quantidade,
+    'Bandeira':              r.bandeira,
+    'Setor':                 r.setor,
+    'Colaborador':           r.colaborador,
+    'Produto (PL Pai)':      r.pl_produto   || '',
+    'Descrição do Produto':  r.pl_descricao || '',
+    'Cliente':               r.pl_cliente   || '',
+    'Amassado':              {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Amassado']] || '',
+    'Pintura/Cor':           {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Pintura/Cor']] || '',
+    'Adesivo/Impressão':     {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Adesivo/Impressão']] || '',
+    'Conjunto Peça/Gabarito':{C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Conjunto Peça/Gabarito']] || '',
+    'Risco':                 {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Risco']] || '',
+    'Conjunto Montado/Articulação':{C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Conjunto Montado/Articulação']] || '',
+    'Vazão de Luz':          {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Vazão de Luz']] || '',
+    'Instalação Elétrica':   {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Instalação Elétrica']] || '',
+    'Router':                {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Router']] || '',
+    'Rebarba':               {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Rebarba']] || '',
+    'Solda':                 {C:'✓ Conforme',NC:'✗ Não Conforme',NA:'— N/A'}[(r.caracteristicas||{})['Solda']] || '',
+    'Observações':           r.observacoes || '',
+    'Data/Hora':             r.date
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
-  // Largura das colunas
   ws['!cols'] = [
-    {wch:6},{wch:14},{wch:8},{wch:10},{wch:16},{wch:22},{wch:18},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16},{wch:30},{wch:20}
+    {wch:6},{wch:10},{wch:8},{wch:10},{wch:16},{wch:24},{wch:20},
+    {wch:18},{wch:40},{wch:36},
+    {wch:14},{wch:14},{wch:18},{wch:22},{wch:10},{wch:28},{wch:14},{wch:18},{wch:10},{wch:12},{wch:10},
+    {wch:36},{wch:20}
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Inspeções');
@@ -4229,6 +4249,18 @@ async function bulkDownloadPhotos() {
 
 
 // ── NORMALIZAÇÃO DO CAMPO OP ─────────────────────────────────────
+function normalizarItem() {
+  var el = document.getElementById('f_item');
+  if (!el) return;
+  var val = el.value.trim();
+  if (!val) return;
+  // Se for numérico puro, padStart 2 dígitos: "1" → "01", "6" → "06"
+  if (/^\d+$/.test(val)) {
+    el.value = val.padStart(2, '0');
+  }
+  // Se for alfanumérico (9A, 9B...) manter como está
+}
+
 function normalizarOP() {
   var el = document.getElementById('f_op');
   if (!el) return;
@@ -4248,7 +4280,9 @@ var _lastLookupKey = '';
 
 async function buscarProdutoPorPedidoItem() {
   var op   = (document.getElementById('f_op').value || '').trim();
-  var item = (document.getElementById('f_item').value || '').trim();
+  var itemRaw = (document.getElementById('f_item').value || '').trim();
+  // Normalizar item: numérico → 2 dígitos com zero; alfanumérico → mantém
+  var item = (/^\d+$/.test(itemRaw) && itemRaw) ? itemRaw.padStart(2,'0') : itemRaw;
 
   var resultDiv    = document.getElementById('lookup_result');
   var notFoundDiv  = document.getElementById('lookup_notfound');
@@ -4273,14 +4307,21 @@ async function buscarProdutoPorPedidoItem() {
   try {
     // Buscar na tabela produtos_pedido por pedido + item
     var pedidoNum = parseInt(op);
-    var { data, error } = await db
-      .from('produtos_pedido')
-      .select('produto, descricao, nome_cliente')
-      .eq('pedido', pedidoNum)
-      .eq('item', item)
-      .limit(1);
-
-    if (error || !data || data.length === 0) {
+    // Tentar item como digitado, com zero e sem zero
+    var itemZ = /^\d+$/.test(item) ? item.padStart(2,'0') : item;
+    var itemS = item.replace(/^0+/,'') || item;
+    var itemVariants = [...new Set([item, itemZ, itemS])];
+    var data = null, error = null;
+    for (var vi = 0; vi < itemVariants.length; vi++) {
+      var res = await db.from('produtos_pedido')
+        .select('produto, descricao, nome_cliente')
+        .eq('pedido', pedidoNum)
+        .eq('item', itemVariants[vi])
+        .limit(1);
+      if (!res.error && res.data && res.data.length > 0) { data = res.data; break; }
+      error = res.error;
+    }
+    if (!data || data.length === 0) {
       if (resultDiv)   resultDiv.style.display   = 'none';
       if (notFoundDiv) notFoundDiv.style.display = 'block';
       return;
